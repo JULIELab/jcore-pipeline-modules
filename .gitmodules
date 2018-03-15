@@ -1,0 +1,6 @@
+[submodule "jcore-pipeline-builder-base"]
+	path = jcore-pipeline-builder-base
+	url = https://github.com/JULIELab/jcore-pipeline-builder-base
+[submodule "jcore-pipeline-builder-javafx"]
+	path = jcore-pipeline-builder-javafx
+	url = https://github.com/JULIELab/jcore-pipeline-builder-javafx
