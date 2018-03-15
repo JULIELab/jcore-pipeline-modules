@@ -7,3 +7,7 @@
 [submodule "jcore-pipeline-runner"]
 	path = jcore-pipeline-runner
 	url = https://github.com/JULIELab/jcore-pipeline-runner
+[submodule "jcore-pipeline-builder-cli"]
+        path = jcore-pipeline-builder-cli
+        url = https://github.com/JULIELab/jcore-pipeline-builder-cli
+
