@@ -11,12 +11,8 @@
     <parent>
         <groupId>de.julielab</groupId>
         <artifactId>jcore-base</artifactId>
-        <version>${jcoreVersion}</version>
+        <version>2.3.0-SNAPSHOT</version>
     </parent>
-
-    <properties>
-        <jcoreVersion>2.3.0-SNAPSHOT</jcoreVersion>
-    </properties>
 
 	<modules>
 		<module>jcore-pipeline-builder-base</module>
