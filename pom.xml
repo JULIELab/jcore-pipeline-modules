@@ -17,5 +17,6 @@
 	<modules>
 		<module>jcore-pipeline-builder-base</module>
         <module>jcore-pipeline-builder-javafx</module>
+        <module>jcore-pipeline-runner</module>
     </modules>
 </project>
