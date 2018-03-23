@@ -1,9 +1,6 @@
 [submodule "jcore-pipeline-builder-base"]
 	path = jcore-pipeline-builder-base
 	url = https://github.com/JULIELab/jcore-pipeline-builder-base
-[submodule "jcore-pipeline-builder-javafx"]
-	path = jcore-pipeline-builder-gui
-	url = https://github.com/JULIELab/jcore-pipeline-builder-javafx
 [submodule "jcore-pipeline-runner"]
 	path = jcore-pipeline-runner
 	url = https://github.com/JULIELab/jcore-pipeline-runner
@@ -11,3 +8,6 @@
         path = jcore-pipeline-builder-cli
         url = https://github.com/JULIELab/jcore-pipeline-builder-cli
 
+[submodule "jcore-pipeline-builder-gui"]
+	path = jcore-pipeline-builder-gui
+	url = https://github.com/JULIELab/jcore-pipeline-builder-gui
