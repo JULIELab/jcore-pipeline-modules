@@ -2,7 +2,7 @@
 	path = jcore-pipeline-builder-base
 	url = https://github.com/JULIELab/jcore-pipeline-builder-base
 [submodule "jcore-pipeline-builder-javafx"]
-	path = jcore-pipeline-builder-javafx
+	path = jcore-pipeline-builder-gui
 	url = https://github.com/JULIELab/jcore-pipeline-builder-javafx
 [submodule "jcore-pipeline-runner"]
 	path = jcore-pipeline-runner
