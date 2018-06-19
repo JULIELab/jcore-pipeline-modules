@@ -17,7 +17,6 @@
 
     <modules>
         <module>jcore-pipeline-builder-base</module>
-        <module>jcore-pipeline-builder-gui</module>
         <module>jcore-pipeline-runner</module>
         <module>jcore-pipeline-builder-cli</module>
     </modules>
