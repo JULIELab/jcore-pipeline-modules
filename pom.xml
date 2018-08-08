@@ -6,7 +6,7 @@
 
     <artifactId>jcore-pipeline-modules</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.1</version>
+    <version>0.2.1-SNAPSHOT</version>
 
     <parent>
         <groupId>de.julielab</groupId>
@@ -20,4 +20,16 @@
         <module>jcore-pipeline-runner</module>
         <module>jcore-pipeline-builder-cli</module>
     </modules>
+    <scm>
+        <developerConnection>scm:git:https://github.com/JULIELab/jcore-pipeline-modules.git</developerConnection>
+    </scm>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.3</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>
