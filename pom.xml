@@ -6,7 +6,7 @@
 
     <artifactId>jcore-pipeline-modules</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.1-SNAPSHOT</version>
+    <version>0.2.1</version>
     <dependencies>
         <dependency>
             <groupId>de.julielab</groupId>
