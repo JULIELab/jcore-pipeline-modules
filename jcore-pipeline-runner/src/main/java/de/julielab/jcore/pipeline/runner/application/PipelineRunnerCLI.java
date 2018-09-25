@@ -45,7 +45,7 @@ public class PipelineRunnerCLI implements ConfigurationTemplateGenerator {
             } catch (PipelineInstantiationException e) {
                 log.error("The given pipeline could not be created: {}", e.getMessage());
             } catch (PipelineRunningException e) {
-                log.debug("Pipeline crashed:", e);
+                log.error("Pipeline crashed:", e);
                 log.error("The given pipeline could not be run: {}", e.getMessage());
             } catch (org.apache.commons.configuration2.ex.ConfigurationException e) {
                 log.error("Configuration file {} could not be read: {}", configurationFile, e.getMessage());
