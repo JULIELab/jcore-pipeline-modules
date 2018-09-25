@@ -1,0 +1,11 @@
+-- Meta-Datei (in projekten)
+
+	* CPE builder-able (nicht alle base komps können/sollen benutzt werden)
+	* gruppierung (zu welcher kat. gehörts)
+	* descriptor location path
+	* description (from readme)
+
+
+-- Builder Service Access
+	* GitHub (creation of component list) --> reads Meta files
+	* Maven (loads artifacts)

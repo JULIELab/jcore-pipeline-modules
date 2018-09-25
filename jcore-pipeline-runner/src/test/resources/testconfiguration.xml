@@ -1,0 +1,14 @@
+<configuration>
+    <runners>
+        <runner>
+            <name>DuccRunner</name>
+            <pipelinepath></pipelinepath>
+            <configuration>
+                <jobfile></jobfile>
+                <jobdescription>
+
+                </jobdescription>
+            </configuration>
+        </runner>
+    </runners>
+</configuration>
