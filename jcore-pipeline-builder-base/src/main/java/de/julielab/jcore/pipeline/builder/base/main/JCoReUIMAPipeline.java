@@ -617,11 +617,11 @@ public class JCoReUIMAPipeline {
             // modified outside of the pipeline builder. But we want to make traditional editing possible.
             if (crDescription != null && !crDescs.isEmpty())
                 crDescription.setDescriptor(crDescs.get(0));
-            if (aaeCmDesc != null && cmDelegates != null)
+            if (aaeCmDesc != null && !cmDelegates.isEmpty())
                 setAaeDescriptors(aaeCmDesc, cmDelegates, "CAS Multiplier");
-            if (aaeDesc != null && aeDelegates != null)
+            if (aaeDesc != null && !aeDelegates.isEmpty())
                 setAaeDescriptors(aaeDesc, aeDelegates, "Analysis Engine");
-            if (ccDesc != null && ccDelegates != null && ccDesc instanceof AnalysisEngineDescription)
+            if (ccDesc != null && !ccDelegates.isEmpty() && ccDesc instanceof AnalysisEngineDescription)
                 setAaeDescriptors((AnalysisEngineDescription) ccDesc, ccDelegates, "CAS Consumer");
 
 
