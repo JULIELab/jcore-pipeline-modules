@@ -497,6 +497,12 @@ public class JCoReUIMAPipeline {
                     cmDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_CM_DESCS_FILE);
                     aeDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_AE_DESCS_FILE);
                     ccDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_CC_DESCS_FILE);
+                    // legacy support: early versions of the JCoReUIMAPipeline did not always have the lists
+                    // instantiated so when loading old pipelines they could be null. Then, nothing can be added
+                    // to these lists.
+                    if (cmDelegates == null) cmDelegates = new ArrayList<>();
+                    if (aeDelegates == null) aeDelegates = new ArrayList<>();
+                    if (ccDelegates == null) ccDelegates = new ArrayList<>();
                 }
             } catch (ClassNotFoundException e) {
                 throw new PipelineIOException(e);
