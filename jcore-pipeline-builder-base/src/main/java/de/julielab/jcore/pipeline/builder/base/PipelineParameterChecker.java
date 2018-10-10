@@ -115,7 +115,7 @@ public class PipelineParameterChecker {
             list.addAll(findMissingParameters(pipeline.getCrDescription().getDescriptorAsCollectionReaderDescription().getMetaData()));
         if (pipeline.getAaeDesc() == null && pipeline.getCcDesc() == null)
             list.add(new MissingComponentConfiguration(Missing.AE_AND_CC));
-        else {
+        else if (pipeline.getAaeDesc() != null) {
             try {
                 pipeline.getAaeDesc().getDelegateAnalysisEngineSpecifiers().values().stream().
                         // PEAR descriptors are not instances of AnalysisEngineDescription.
