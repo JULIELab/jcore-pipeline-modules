@@ -296,21 +296,18 @@ public class JCoReUIMAPipeline {
                     cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().clear();
                     if (cmFile != null) {
                         Import_impl cmImport = new Import_impl();
-                        cmImport.setName("Cas Multipliers");
                         cmImport.setLocation(cmFile.getName());
                         cmImport.setSourceUrl(cmFile.toURI().toURL());
                         cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(aaeCmDesc.getMetaData().getName(), cmImport);
                     }
                     if (aaeFile != null) {
                         Import_impl aaeImport = new Import_impl();
-                        aaeImport.setName("Analysis Engines");
                         aaeImport.setLocation(aaeFile.getName());
                         aaeImport.setSourceUrl(aaeFile.toURI().toURL());
                         cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(aaeDesc.getMetaData().getName(), aaeImport);
                     }
                     if (ccFile != null) {
                         Import_impl ccImport = new Import_impl();
-                        ccImport.setName("CAS Consumers");
                         ccImport.setLocation(ccFile.getName());
                         ccImport.setSourceUrl(ccFile.toURI().toURL());
                         cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(ccDesc.getMetaData().getName(), ccImport);
