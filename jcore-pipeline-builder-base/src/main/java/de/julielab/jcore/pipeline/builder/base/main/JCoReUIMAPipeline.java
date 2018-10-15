@@ -665,7 +665,15 @@ public class JCoReUIMAPipeline {
             for (int i = 0; i < flow.getFixedFlow().length; ++i) {
                 String component = flow.getFixedFlow()[i];
                 ResourceSpecifier descriptor = aae.getDelegateAnalysisEngineSpecifiers().get(component);
-                descriptions.get(i).setDescriptor(descriptor);
+                if (i < descriptions.size())
+                    descriptions.get(i).setDescriptor(descriptor);
+            }
+            if (flow.getFixedFlow().length != descriptions.size()) {
+                log.error("The fixed flow of the AAE with name {} is of length {} but there are {} descriptions available. Shortening the AAE. You need to check if the result is usable for you.", aae.getMetaData().getName(), flow.getFixedFlow().length, descriptions.size());
+                int newlength = Math.min(flow.getFixedFlow().length, descriptions.size());
+                List<Description> newDescList = descriptions.subList(0, newlength);
+                String[] newflow = newDescList.stream().map(desc -> desc.getDescriptorAsAnalysisEngineDescription().getMetaData().getName()).toArray(String[]::new);
+                flow.setFixedFlow(newflow);
             }
         } else {
             if (descriptions.size() > 1)
