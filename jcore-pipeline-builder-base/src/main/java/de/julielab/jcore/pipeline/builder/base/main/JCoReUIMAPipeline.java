@@ -271,7 +271,7 @@ public class JCoReUIMAPipeline {
                     for (Description desc : ccDelegates) {
                         AnalysisEngineDescription ae = desc.getDescriptorAsAnalysisEngineDescription();
                         Import_impl aeImport = new Import_impl();
-                        aeImport.setLocation(desc.getUri().toString());
+                        aeImport.setLocation(new File(desc.getUri()).getName());
                         aeImport.setSourceUrl(desc.getUri().toURL());
                         delegateAnalysisEngineSpecifiersWithImports.put(ae.getMetaData().getName(), aeImport);
                     }
@@ -517,8 +517,6 @@ public class JCoReUIMAPipeline {
                     cmDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_CM_DESCS_FILE);
                     aeDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_AE_DESCS_FILE);
                     ccDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_CC_DESCS_FILE);
-                    System.out.println("Loaded AE delegates: " + aeDelegates.stream().map(Description::getName).collect(joining(", ")));
-                    System.out.println("Loaded CC delegates: " + ccDelegates.stream().map(Description::getName).collect(joining(", ")));
                     // legacy support: early versions of the JCoReUIMAPipeline did not always have the lists
                     // instantiated so when loading old pipelines they could be null. Then, nothing can be added
                     // to these lists.
