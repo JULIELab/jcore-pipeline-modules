@@ -557,7 +557,7 @@ public class JCoReUIMAPipeline {
                             messages.add(cause.getMessage());
                             cause = cause.getCause();
                         } while (cause != null);
-                        log.debug("File {} could not be parsed as a UIMA component and is skipped: {}", xmlFile, messages.stream().collect(Collectors.joining("; ")));
+                        log.debug("File {} could not be parsed as a UIMA component and is skipped: {}", xmlFile, messages.stream().collect(joining("; ")));
                     }
                 }
                 if (spec != null) {
@@ -631,8 +631,8 @@ public class JCoReUIMAPipeline {
                 // This should work because the pipeline should only store valid configurations. If there are multiple
                 // consumers, they must be AAEs
                 List<AnalysisEngineDescription> ccAeDescs = ccDescs.stream().map(AnalysisEngineDescription.class::cast).collect(toList());
-                List<AnalysisEngineDescription> aaeAeCcDescs = aaeCcDescs.stream().map(AnalysisEngineDescription.class::cast).collect(toList());
-                setAaeDesc(descDir, ccAeDescs, aaeAeCcDescs, "CAS consumer", desc -> ccDesc = desc);
+                List<AnalysisEngineDescription> ccAaeDescs = aaeCcDescs.stream().map(AnalysisEngineDescription.class::cast).collect(toList());
+                setAaeDesc(descDir, ccAeDescs, ccAaeDescs, "CAS consumer", desc -> ccDesc = desc);
             }
 
             // Set the descriptors to the descriptions as they were read from file. The descriptions have their own version
@@ -697,7 +697,7 @@ public class JCoReUIMAPipeline {
             }
         } else {
             if (descriptions.size() > 1)
-                log.error("The " + type + " is not an aggregate but there are " + descriptions.size() + " descriptions.");
+                log.error("The {} is not an aggregate but there are {} descriptions with the following names: ", type, descriptions.size(), descriptions.stream().map(Description::getName).collect(joining(", ")));
             descriptions.get(0).setDescriptor(aae);
         }
     }
@@ -847,7 +847,7 @@ public class JCoReUIMAPipeline {
     public String getClassPath() throws PipelineIOException {
         Stream<File> artifactFiles = getClasspathElements();
         Stream<String> classpathElements = artifactFiles.map(File::getAbsolutePath);
-        return classpathElements.collect(Collectors.joining(File.pathSeparator));
+        return classpathElements.collect(joining(File.pathSeparator));
     }
 
     public AnalysisEngineDescription getAaeCmDesc() {
