@@ -140,11 +140,13 @@ public class PipelineParameterChecker {
                 list.addAll(findMissingResources((ResourceCreationSpecifier)pipeline.getCcDelegates().get(0).getDescriptor()));
             } else {
                 pipeline.getCcDelegates().stream().
+                        map(Description::getDescriptor).
                         map(ResourceCreationSpecifier.class::cast).
                         map(ResourceCreationSpecifier::getMetaData).
                         map(PipelineParameterChecker::findMissingParameters).
                         flatMap(Collection::stream).forEach(list::add);
                 pipeline.getCcDelegates().stream().
+                        map(Description::getDescriptor).
                         map(AnalysisEngineDescription.class::cast).
                         map(PipelineParameterChecker::findMissingResources).
                         flatMap(Collection::stream).forEach(list::add);
