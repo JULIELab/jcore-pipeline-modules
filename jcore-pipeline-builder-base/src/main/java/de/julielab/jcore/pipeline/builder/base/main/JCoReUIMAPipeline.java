@@ -695,6 +695,7 @@ public class JCoReUIMAPipeline {
                 String[] newflow = newDescList.stream().map(desc -> desc.getDescriptorAsAnalysisEngineDescription().getMetaData().getName()).toArray(String[]::new);
                 flow.setFixedFlow(newflow);
             }
+            log.debug("For the {} aggregate, the following delegate descriptors were set: {}", type, Stream.of(flow.getFixedFlow()).collect(joining(", ")));
         } else {
             if (descriptions.size() > 1)
                 log.error("The {} is not an aggregate but there are {} descriptions with the following names: {}", type, descriptions.size(), descriptions.stream().map(Description::getName).collect(joining(", ")));
