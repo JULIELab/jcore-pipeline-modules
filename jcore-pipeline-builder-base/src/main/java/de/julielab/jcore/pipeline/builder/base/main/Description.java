@@ -49,11 +49,6 @@ public class Description implements Serializable, Cloneable {
     private JcoreMeta.Category category;
     private String xmlName;
     private MetaDataObject specifier;
-
-    public void setUri(URI uri) {
-        this.uri = uri;
-    }
-
     /**
      * The descriptor category as read from the actual descriptor.
      */
@@ -67,15 +62,22 @@ public class Description implements Serializable, Cloneable {
     private Map<String, ConfigurationParameter> configurationParameter = null;
     private MetaDescription metaDescription;
 
+    /**
+     * Required for JSON deserialization and tests.
+     */
+    public Description() {
+    }
     public Description(URL sourceUrl) throws URISyntaxException, IOException, InvalidXMLException {
-        if (sourceUrl != null) {
-            this.uri = sourceUrl.toURI();
-            parseDescXml(UriUtilities.getInputStreamFromUri(sourceUrl.toURI()), xmlName);
-        }
+        this.uri = sourceUrl.toURI();
+        parseDescXml(UriUtilities.getInputStreamFromUri(sourceUrl.toURI()), xmlName);
     }
 
     public URI getUri() {
         return uri;
+    }
+
+    public void setUri(URI uri) {
+        this.uri = uri;
     }
 
     public String getLocation() {
