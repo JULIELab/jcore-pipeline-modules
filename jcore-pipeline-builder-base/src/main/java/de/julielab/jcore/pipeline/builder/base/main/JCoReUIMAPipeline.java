@@ -517,6 +517,8 @@ public class JCoReUIMAPipeline {
                     cmDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_CM_DESCS_FILE);
                     aeDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_AE_DESCS_FILE);
                     ccDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_CC_DESCS_FILE);
+                    System.out.println("Loaded AE delegates: " + aeDelegates.stream().map(Description::getName).collect(joining(", ")));
+                    System.out.println("Loaded CC delegates: " + ccDelegates.stream().map(Description::getName).collect(joining(", ")));
                     // legacy support: early versions of the JCoReUIMAPipeline did not always have the lists
                     // instantiated so when loading old pipelines they could be null. Then, nothing can be added
                     // to these lists.
@@ -708,6 +710,18 @@ public class JCoReUIMAPipeline {
         }
     }
 
+    /**
+     * Expects that the given AEs and AAEs form a delegation-tree, throws a PipelineIOException otherwise. Sets
+     * the top AAE descriptor - that is the one that is not the delegate of any other AAE - via the
+     * <tt>descSetter</tt> consumer.
+     * @param descDir
+     * @param aeDescs
+     * @param aaeDescs
+     * @param componentType
+     * @param descSetter
+     * @throws InvalidXMLException
+     * @throws PipelineIOException
+     */
     private void setAaeDesc(File descDir, List<AnalysisEngineDescription> aeDescs, List<AnalysisEngineDescription> aaeDescs, String componentType, Consumer<AnalysisEngineDescription> descSetter) throws InvalidXMLException, PipelineIOException {
         Set<String> aeUris = aeDescs.stream().map(AnalysisEngineDescription::getSourceUrl).map(URL::toString).collect(toSet());
         Set<String> aaeUris = aaeDescs.stream().map(AnalysisEngineDescription::getSourceUrl).map(URL::toString).collect(toSet());
