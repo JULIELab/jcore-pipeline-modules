@@ -260,24 +260,9 @@ public class JCoReUIMAPipeline {
 
             File ccFile = null;
             if (ccDelegates != null && !ccDelegates.isEmpty()) {
-                if (ccDelegates.size() == 1) {
-                    Description ccDesc = ccDelegates.get(0);
-                    try {
-                        this.ccDesc = (ResourceCreationSpecifier) ccDesc.getDescriptor();
-                    } catch (ClassCastException e) {
-                        throw new IllegalArgumentException("Currently, all CAS consumer descriptors must be a subclass of " + ResourceCreationSpecifier.class.getCanonicalName() + ". I.e. PEARs are not allowed for CAS Consumer at the moment.");
-                    }
-                    if (!ccDesc.getName().toLowerCase().contains("writer") && !ccDesc.getName().toLowerCase().contains("consumer"))
-                        throw new IllegalStateException("The CAS consumer descriptor " +
-                                ccDesc.getName() + " at " +
-                                ccDesc.getDescriptor().getSourceUrlString() + " does not specify 'writer' or 'consumer' " +
-                                "in its name. By convention, consumers must do this to be recognized as consumer.");
-                    ccFile = new File(descDir.getAbsolutePath() +
-                            File.separator +
-                            ccDesc.getName() + ".xml");
-                    ccDesc.getDescriptor().toXML(FileUtilities.getWriterToFile(ccFile
-                    ));
-                } else {
+                for (Description ccDesc : ccDelegates)
+                    storeCCDescriptor(ccDesc, descDir);
+                if (ccDelegates.size() > 1) {
                     // Create an empty aggregate
                     ccDesc = AnalysisEngineFactory.createEngineDescription();
                     AnalysisEngineDescription ccAAE = (AnalysisEngineDescription) ccDesc;
@@ -405,6 +390,20 @@ public class JCoReUIMAPipeline {
         } catch (MavenException e) {
             throw new PipelineIOException(e);
         }
+    }
+
+    private void storeCCDescriptor(Description ccDesc, File descDir) throws SAXException, IOException {
+        File ccFile;
+        if (!ccDesc.getName().toLowerCase().contains("writer") && !ccDesc.getName().toLowerCase().contains("consumer"))
+            throw new IllegalStateException("The CAS consumer descriptor " +
+                    ccDesc.getName() + " at " +
+                    ccDesc.getDescriptor().getSourceUrlString() + " does not specify 'writer' or 'consumer' " +
+                    "in its name. By convention, consumers must do this to be recognized as consumer.");
+        ccFile = new File(descDir.getAbsolutePath() +
+                File.separator +
+                ccDesc.getName() + ".xml");
+        ccDesc.getDescriptor().toXML(FileUtilities.getWriterToFile(ccFile));
+        ccDesc.setUri(ccFile.toURI());
     }
 
     /**
