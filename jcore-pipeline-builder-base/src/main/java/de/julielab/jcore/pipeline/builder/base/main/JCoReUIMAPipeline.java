@@ -570,16 +570,21 @@ public class JCoReUIMAPipeline {
                                 && (xmlFile.getName().toLowerCase().contains("consumer") ||
                                 xmlFile.getName().toLowerCase().contains("writer"))) {
                             log.debug("Adding the descriptor {} to CAS consumers because of its file name", xmlFile);
-                            if (aeDesc.isPrimitive())
+                            if (aeDesc.isPrimitive()) {
+                                log.debug("Reading descriptor {} as CAS consumer", xmlFile);
                                 ccDescs.add(spec);
-                            else
+                            }
+                            else {
                                 aaeCcDescs.add(spec);
+                            }
                         } else if (aeDesc.getAnalysisEngineMetaData().getOperationalProperties().getOutputsNewCASes()) {
+                            log.debug("Reading descriptor {} as CAS multiplier", xmlFile);
                             if (aeDesc.isPrimitive())
                                 cmDescs.add(aeDesc);
                             else
                                 aaeCmDescs.add(aeDesc);
                         } else {
+                            log.debug("Reading descriptor {} as analysis engine", xmlFile);
                             if (aeDesc.isPrimitive())
                                 aeDescs.add(aeDesc);
                             else
