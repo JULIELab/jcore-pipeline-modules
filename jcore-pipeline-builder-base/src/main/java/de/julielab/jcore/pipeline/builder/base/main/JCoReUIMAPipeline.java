@@ -697,7 +697,7 @@ public class JCoReUIMAPipeline {
             }
         } else {
             if (descriptions.size() > 1)
-                log.error("The {} is not an aggregate but there are {} descriptions with the following names: ", type, descriptions.size(), descriptions.stream().map(Description::getName).collect(joining(", ")));
+                log.error("The {} is not an aggregate but there are {} descriptions with the following names: {}", type, descriptions.size(), descriptions.stream().map(Description::getName).collect(joining(", ")));
             descriptions.get(0).setDescriptor(aae);
         }
     }
