@@ -566,9 +566,8 @@ public class JCoReUIMAPipeline {
                         crDescs.add((CollectionReaderDescription) spec);
                     } else if (spec instanceof AnalysisEngineDescription) {
                         AnalysisEngineDescription aeDesc = (AnalysisEngineDescription) spec;
-                        if (aeDesc.isPrimitive()
-                                && (xmlFile.getName().toLowerCase().contains("consumer") ||
-                                xmlFile.getName().toLowerCase().contains("writer"))) {
+                        if (xmlFile.getName().toLowerCase().contains("consumer") ||
+                                xmlFile.getName().toLowerCase().contains("writer")) {
                             log.debug("Adding the descriptor {} to CAS consumers because of its file name", xmlFile);
                             if (aeDesc.isPrimitive()) {
                                 log.debug("Reading descriptor {} as CAS consumer", xmlFile);
