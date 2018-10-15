@@ -281,6 +281,10 @@ public class JCoReUIMAPipeline {
                     ccFile = new File(descDir.getAbsolutePath() +
                             File.separator +
                             "AggregateConsumer.xml");
+                    ccDesc.setSourceUrl(ccFile.toURI().toURL());
+                    ccDesc.getMetaData().setName("JCoRe Consumer AAE");
+                    ccDesc.getMetaData().setDescription("This consumer AAE descriptor directly contains the CAS consumers added " +
+                            "through the JCoRe pipeline builder. The AAE serves to bundle all the components together.");
                     ccDesc.toXML(FileUtilities.getWriterToFile(
                             ccFile));
                 }
