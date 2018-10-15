@@ -677,7 +677,7 @@ public class JCoReUIMAPipeline {
             }
         } else {
             if (descriptions.size() > 1)
-                throw new IllegalStateException("The " + type + " is not an aggregate but there are " + descriptions.size() + " descriptions.");
+                log.error("The " + type + " is not an aggregate but there are " + descriptions.size() + " descriptions.");
             descriptions.get(0).setDescriptor(aae);
         }
     }
