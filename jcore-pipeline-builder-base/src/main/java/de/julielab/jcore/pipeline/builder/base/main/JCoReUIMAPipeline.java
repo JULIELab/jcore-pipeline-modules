@@ -13,6 +13,7 @@ import org.apache.uima.UIMAFramework;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.metadata.FixedFlow;
 import org.apache.uima.analysis_engine.metadata.FlowConstraints;
+import org.apache.uima.analysis_engine.metadata.impl.FixedFlow_impl;
 import org.apache.uima.collection.CasConsumer;
 import org.apache.uima.collection.CasConsumerDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
@@ -277,7 +278,23 @@ public class JCoReUIMAPipeline {
                     ccDesc.getDescriptor().toXML(FileUtilities.getWriterToFile(ccFile
                     ));
                 } else {
-                    ccDesc = AnalysisEngineFactory.createEngineDescription(ccDelegates.stream().map(Description::getDescriptor).toArray(AnalysisEngineDescription[]::new));
+                    // Create an empty aggregate
+                    ccDesc = AnalysisEngineFactory.createEngineDescription();
+                    AnalysisEngineDescription ccAAE = (AnalysisEngineDescription) ccDesc;
+                    Map<String, MetaDataObject> delegateAnalysisEngineSpecifiersWithImports = ccAAE.getDelegateAnalysisEngineSpecifiersWithImports();
+                    // Add the delegates to the aggregate via imports
+                    for (Description desc : ccDelegates) {
+                        AnalysisEngineDescription ae = desc.getDescriptorAsAnalysisEngineDescription();
+                        Import_impl aeImport = new Import_impl();
+                        aeImport.setLocation(desc.getUri().toString());
+                        aeImport.setSourceUrl(desc.getUri().toURL());
+                        delegateAnalysisEngineSpecifiersWithImports.put(ae.getMetaData().getName(), aeImport);
+                    }
+                    // Create the AAE flow
+                    FixedFlow_impl flow = new FixedFlow_impl();
+                    String[] delegateNames = ccDelegates.stream().map(Description::getDescriptorAsAnalysisEngineDescription).map(AnalysisEngineDescription::getMetaData).map(ResourceMetaData::getName).toArray(String[]::new);
+                    flow.setFixedFlow(delegateNames);
+                    ccAAE.getAnalysisEngineMetaData().setFlowConstraints(flow);
                     ccFile = new File(descDir.getAbsolutePath() +
                             File.separator +
                             "AggregateConsumer.xml");
