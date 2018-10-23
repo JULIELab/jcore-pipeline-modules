@@ -450,22 +450,33 @@ public class JCoReUIMAPipeline {
         File libDir = new File(directory.getAbsolutePath() + File.separator + DIR_LIB);
         if (!libDir.exists())
             libDir.mkdirs();
+        Stream<Description> descriptions = Stream.empty();
         if (crDescription != null && crDescription.getMetaDescription() != null) {
-            storeArtifactOfDescription(crDescription, libDir);
+            //storeArtifactOfDescription(crDescription, libDir);
+            descriptions = Stream.concat(descriptions, Stream.of(crDescription));
         }
         if (cmDelegates != null)
-            for (Description d : cmDelegates)
-                if (d.getMetaDescription() != null)
-                    storeArtifactOfDescription(d, libDir);
+//            for (Description d : cmDelegates)
+//                if (d.getMetaDescription() != null)
+//                    storeArtifactOfDescription(d, libDir);
+            descriptions = Stream.concat(descriptions, cmDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())));
         if (aeDelegates != null)
-            for (Description d : aeDelegates)
-                if (!d.getMetaDescription().isPear() && d.getMetaDescription() != null)
-                    storeArtifactOfDescription(d, libDir);
+//            for (Description d : aeDelegates)
+//                if (!d.getMetaDescription().isPear() && d.getMetaDescription() != null)
+//                    storeArtifactOfDescription(d, libDir);
+            descriptions = Stream.concat(descriptions, aeDelegates.stream().filter(d -> !d.getMetaDescription().isPear() && Objects.nonNull(d.getMetaDescription())));
         if (ccDelegates != null)
-            for (Description d : ccDelegates) {
-                if (d.getMetaDescription() != null)
-                    storeArtifactOfDescription(d, libDir);
-            }
+//            for (Description d : ccDelegates) {
+//                if (d.getMetaDescription() != null)
+//                    storeArtifactOfDescription(d, libDir);
+//            }
+            descriptions = Stream.concat(descriptions, ccDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())));
+        storeArtifactsOfDescriptions(descriptions, libDir);
+
+    }
+
+    private void storeArtifactsOfDescriptions(Stream<Description> description, File libDir) throws MavenException {
+        MavenConnector.storeArtifactsWithDependencies(description.map(d -> d.getMetaDescription().getMavenArtifact()), libDir);
     }
 
     /**

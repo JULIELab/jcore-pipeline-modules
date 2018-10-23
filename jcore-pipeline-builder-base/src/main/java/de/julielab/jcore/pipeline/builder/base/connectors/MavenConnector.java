@@ -16,6 +16,7 @@ import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.DefaultServiceLocator;
@@ -182,6 +183,23 @@ public class MavenConnector {
         dependencies.forEach(writer);
     }
 
+    public static void storeArtifactsWithDependencies(Stream<MavenArtifact> requestedArtifacts, File libDir) throws MavenException {
+        log.trace("Storing artifacts {} with all its dependencies to {}", requestedArtifacts, libDir);
+        Stream<Artifact> dependencies = getDependencies(requestedArtifacts);
+        if (!libDir.exists())
+            libDir.mkdirs();
+        Consumer<Artifact> writer = a -> {
+            File destination = new File(libDir.getAbsolutePath() + File.separator + a.getFile().getName());
+            try {
+                log.trace("Now writing: {} to {}", a, destination);
+                Files.copy(a.getFile().toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new IORuntimeException(e);
+            }
+        };
+        dependencies.forEach(writer);
+    }
+
     /**
      * Retrieves the dependency tree that has <code>requestedArtifact</code> as its root. Thus, the
      * <code>requestedArtifact</code> is resolved itself and included in the returned artifacts.
@@ -197,6 +215,7 @@ public class MavenConnector {
 
     /**
      * Returns all available versions of the given artifact.
+     *
      * @param requestedArtifact
      * @return
      * @throws MavenException
@@ -208,6 +227,7 @@ public class MavenConnector {
     /**
      * Retrieves all versions of the given artifact - whose given version is ignored in this method - that are available
      * within the described version range.
+     *
      * @param requestedArtifact
      * @param lowerBound
      * @param upperBound
@@ -248,6 +268,7 @@ public class MavenConnector {
 
     /**
      * Retrieves all available versions of the given artifact and returns the newest one or null, if no version is available.
+     *
      * @param requestedArtifact
      * @return
      * @throws MavenException
@@ -255,8 +276,46 @@ public class MavenConnector {
     public static String getNewestVersion(MavenArtifact requestedArtifact) throws MavenException {
         List<String> versions = getVersions(requestedArtifact).collect(Collectors.toList());
         if (!versions.isEmpty())
-            return versions.get(versions.size()-1);
+            return versions.get(versions.size() - 1);
         return null;
+    }
+
+    private static Stream<Artifact> getDependencies(Stream<MavenArtifact> requestedArtifacts) throws MavenException {
+        RepositorySystem repositorySystem = newRepositorySystem();
+        RepositorySystemSession session;
+        try {
+            session = newSession(repositorySystem,
+                    new File(Paths.get(System.getProperty("user.home"), Maven.LOCAL_REPO).toString()));
+        } catch (SettingsBuildingException e) {
+            throw new MavenException(e);
+        }
+
+
+        final List<Dependency> components = requestedArtifacts
+                .map(a -> new DefaultArtifact(a.getGroupId(), a.getArtifactId(), a.getClassifier(), a.getPackaging(), a.getVersion()))
+                .map(a -> new Dependency(a, "compile"))
+                .collect(Collectors.toList());
+
+        try {
+            CollectRequest collectRequest = new CollectRequest();
+            collectRequest.setDependencies(components);
+            collectRequest.setRepositories(getEffectiveRepositories(session));
+            CollectResult collectResult = repositorySystem.collectDependencies(session, collectRequest);
+            DependencyNode node = collectResult.getRoot();
+
+            DependencyRequest dependencyRequest = new DependencyRequest();
+            dependencyRequest.setRoot(node);
+            DependencyResult dependencyResult = repositorySystem.resolveDependencies(session, dependencyRequest);
+            return dependencyResult.getArtifactResults().stream().map(ArtifactResult::getArtifact);
+        } catch (SettingsBuildingException e) {
+            e.printStackTrace();
+        } catch (DependencyCollectionException e) {
+            e.printStackTrace();
+        } catch (DependencyResolutionException e) {
+            e.printStackTrace();
+        }
+
+        return Stream.empty();
     }
 
     /**
