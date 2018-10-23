@@ -452,31 +452,16 @@ public class JCoReUIMAPipeline {
             libDir.mkdirs();
         Stream<Description> descriptions = Stream.empty();
         if (crDescription != null && crDescription.getMetaDescription() != null) {
-            //storeArtifactOfDescription(crDescription, libDir);
             descriptions = Stream.concat(descriptions, Stream.of(crDescription));
         }
         if (cmDelegates != null)
-//            for (Description d : cmDelegates)
-//                if (d.getMetaDescription() != null)
-//                    storeArtifactOfDescription(d, libDir);
             descriptions = Stream.concat(descriptions, cmDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())));
         if (aeDelegates != null)
-//            for (Description d : aeDelegates)
-//                if (!d.getMetaDescription().isPear() && d.getMetaDescription() != null)
-//                    storeArtifactOfDescription(d, libDir);
             descriptions = Stream.concat(descriptions, aeDelegates.stream().filter(d -> !d.getMetaDescription().isPear() && Objects.nonNull(d.getMetaDescription())));
         if (ccDelegates != null)
-//            for (Description d : ccDelegates) {
-//                if (d.getMetaDescription() != null)
-//                    storeArtifactOfDescription(d, libDir);
-//            }
             descriptions = Stream.concat(descriptions, ccDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())));
         storeArtifactsOfDescriptions(descriptions, libDir);
 
-    }
-
-    private void storeArtifactsOfDescriptions(Stream<Description> description, File libDir) throws MavenException {
-        MavenConnector.storeArtifactsWithDependencies(description.map(d -> d.getMetaDescription().getMavenArtifact()), libDir);
     }
 
     /**
@@ -485,19 +470,12 @@ public class JCoReUIMAPipeline {
      * version of the artifact in question and tries again. This can solve issues where a SNAPSHOT version was used
      * originally that is not available any more.
      *
-     * @param description
-     * @param libDir
+     * @param descriptions The pipeline's component descriptions. Should be complete for conflict resolution.
+     * @param libDir The directory in which the dependencies should be stored.
      * @throws MavenException
      */
-    private void storeArtifactOfDescription(Description description, File libDir) throws MavenException {
-        try {
-            MavenConnector.storeArtifactWithDependencies(description.getMetaDescription().getMavenArtifact(), libDir);
-        } catch (MavenException e) {
-            log.error("Could not receive artifact {}. Trying to find any available version of the artifact and setting it to the newest version.", description.getMetaDescription().getMavenArtifact());
-            String newestVersion = MavenConnector.getNewestVersion(description.getMetaDescription().getMavenArtifact());
-            description.getMetaDescription().getMavenArtifact().setVersion(newestVersion);
-            MavenConnector.storeArtifactWithDependencies(description.getMetaDescription().getMavenArtifact(), libDir);
-        }
+    private void storeArtifactsOfDescriptions(Stream<Description> descriptions, File libDir) throws MavenException {
+        MavenConnector.storeArtifactsWithDependencies(descriptions.map(d -> d.getMetaDescription().getMavenArtifact()), libDir);
     }
 
     private void storeDelegateDescriptors(File directory, List<Description> descriptors, String delegatesDir) throws SAXException, IOException {
