@@ -634,6 +634,8 @@ public class JCoReUIMAPipeline {
             // When accessing aggregate engine delegates, their types are resolved. Thus, we first need to load
             // the libraries of the pipeline
             getClasspathElements().forEach(JarLoader::addJarToClassPath);
+            if (crDescription == null && crDescs != null && !crDescs.isEmpty())
+                crDescription = new Description(crDescs.get(0).getSourceUrl());
             if (!cmDescs.isEmpty())
                 aaeCmDesc = cmDescs.get(0);
             if (aaeCmDescs.size() == 1)
@@ -681,7 +683,7 @@ public class JCoReUIMAPipeline {
             }
 
 
-        } catch (IOException | InvalidXMLException e) {
+        } catch (IOException | InvalidXMLException | URISyntaxException e) {
             throw new PipelineIOException(e);
         }
         return this;
