@@ -41,7 +41,14 @@ public class Description implements Serializable, Cloneable {
      */
     private static final long serialVersionUID = 2018_06_19_001L;
     private static Logger logger = LoggerFactory.getLogger(Description.class);
+    /**
+     * The URI of the original UIMA descriptor within a JAR.
+     */
     private URI uri;
+    /**
+     * The value of the 'location' property in the component.meta file of the component. This is the classpath
+     * resource address of the component UIMA descriptor.
+     */
     private String location;
     /**
      * The category as found in the component meta description.
@@ -49,6 +56,11 @@ public class Description implements Serializable, Cloneable {
     private JcoreMeta.Category category;
     private String xmlName;
     private MetaDataObject specifier;
+    /**
+     * This field is set when the owning {@link JCoReUIMAPipeline} is stored. The value of this field is the path
+     * to the UIMA descriptor associated with this Description relative to the pipeline desc/ directory.
+     */
+    private String uimaDescPath;
     /**
      * The descriptor category as read from the actual descriptor.
      */
@@ -61,7 +73,6 @@ public class Description implements Serializable, Cloneable {
     private Boolean initCapabilities = false;
     private Map<String, ConfigurationParameter> configurationParameter = null;
     private MetaDescription metaDescription;
-
     /**
      * Required for JSON deserialization and tests.
      */
@@ -72,6 +83,24 @@ public class Description implements Serializable, Cloneable {
         parseDescXml(UriUtilities.getInputStreamFromUri(sourceUrl.toURI()), xmlName);
     }
 
+    /**
+     * This field is set when the owning {@link JCoReUIMAPipeline} is stored. The value of this field is the path
+     * to the UIMA descriptor associated with this Description relative to the pipeline desc/ directory. It may be
+     * null if the descriptor is not stored by itself but rather in an AAE.
+     *
+     * @return The path to the UIMA descriptor, relative to desc/.
+     */
+    public String getUimaDescPath() {
+        return uimaDescPath;
+    }
+
+    public void setUimaDescPath(String uimaDescPath) {
+        this.uimaDescPath = uimaDescPath;
+    }
+
+    /**
+     * @return The URI of the original UIMA descriptor within a JAR.
+     */
     public URI getUri() {
         return uri;
     }
@@ -80,6 +109,10 @@ public class Description implements Serializable, Cloneable {
         this.uri = uri;
     }
 
+    /**
+     * @return The value of the 'location' property in the component.meta file of the component. This is the classpath
+     * resource address of the component UIMA descriptor.
+     */
     public String getLocation() {
         return location;
     }
