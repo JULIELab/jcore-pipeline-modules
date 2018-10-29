@@ -30,7 +30,7 @@ public class SingleDescriptionSelectionDialog implements IMenuDialog {
 
         // this may happen after filtering
         if (menuItems.size() == 1) {
-            metaDescription.setChosenDescriptor(menuItems.get(0).getDescription().getXmlName());
+            metaDescription.setChosenDescriptor(menuItems.get(0).getDescription().getLocation());
         } else {
             path.add(getName());
             printPosition(textIO, path);
