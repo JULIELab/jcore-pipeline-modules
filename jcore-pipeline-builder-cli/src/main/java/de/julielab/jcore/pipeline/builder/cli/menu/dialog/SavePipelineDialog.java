@@ -36,12 +36,11 @@ public class SavePipelineDialog implements IMenuDialog {
                         withDefaultValue(false).
                         withFalseInput("N").
                         withTrueInput("Y").
-                        read("Do you want to completely clear the directory \"" + destinationFile.getAbsolutePath() +
-                                "\" before storage? Then, all files and " +
-                                "subdirectories within it are deleted.");
+                        read("Do you want to clear the library directory \"" + destinationFile.getAbsolutePath() + File.separator + JCoReUIMAPipeline.DIR_LIB +
+                                "\" before storage? This is useful when the version of components has changed.");
                 if (clear) {
                     try {
-                        FileUtils.deleteDirectory(destinationFile);
+                        FileUtils.deleteDirectory(new File(destinationFile.getAbsolutePath() + File.separator + JCoReUIMAPipeline.DIR_LIB));
                     } catch (IOException e) {
                         throw new PipelineIOException(e);
                     }
