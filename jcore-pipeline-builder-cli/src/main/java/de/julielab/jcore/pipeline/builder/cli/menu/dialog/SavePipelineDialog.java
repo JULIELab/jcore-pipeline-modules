@@ -10,6 +10,7 @@ import org.beryx.textio.TextIO;
 import java.io.File;
 import java.io.IOException;
 import java.util.Deque;
+import java.util.stream.Stream;
 
 public class SavePipelineDialog implements IMenuDialog {
     @Override
@@ -24,6 +25,7 @@ public class SavePipelineDialog implements IMenuDialog {
         PipelineBuilderCLI.pipelinePath = destination;
         File destinationFile = new File(destination);
         boolean store = true;
+        boolean clearLibDir = false;
         if (destinationFile.exists()) {
             Boolean overwrite = textIO.newBooleanInputReader()
                     .withDefaultValue(false)
@@ -39,11 +41,7 @@ public class SavePipelineDialog implements IMenuDialog {
                         read("Do you want to clear the library directory \"" + destinationFile.getAbsolutePath() + File.separator + JCoReUIMAPipeline.DIR_LIB +
                                 "\" before storage? This is useful when the version of components has changed.");
                 if (clear) {
-                    try {
-                        FileUtils.deleteDirectory(new File(destinationFile.getAbsolutePath() + File.separator + JCoReUIMAPipeline.DIR_LIB));
-                    } catch (IOException e) {
-                        throw new PipelineIOException(e);
-                    }
+                    clearLibDir = true;
                 }
             }
             if (!overwrite) {
@@ -54,7 +52,7 @@ public class SavePipelineDialog implements IMenuDialog {
         if (store) {
             textIO.getTextTerminal().println("Storing pipeline. It may take a while to gather all transitive " +
                     "dependencies, please wait...");
-            pipeline.store(destinationFile);
+            pipeline.store(destinationFile, clearLibDir);
             textIO.getTextTerminal().println("Saved pipeline to " + destinationFile.getAbsolutePath());
         }
         path.removeLast();

@@ -152,6 +152,10 @@ public class JCoReUIMAPipeline {
     }
 
     public void store(File directory) throws PipelineIOException {
+        store(directory, false);
+    }
+
+    public void store(File directory, boolean clearLibDir) throws PipelineIOException {
 
         String message = "";
         if ((aaeDesc == null && (aeDelegates == null || aeDelegates.isEmpty()) && ccDesc == null && (ccDelegates == null || ccDelegates.isEmpty())) || crDescription == null) {
@@ -392,7 +396,13 @@ public class JCoReUIMAPipeline {
             }
         }
 
+        // Store the required Maven artifacts in the lib directory
         try {
+            if (clearLibDir) {
+                final File libDir = new File(directory.getAbsolutePath() + File.separator + DIR_LIB);
+                log.debug("Removing all files from the library directory at {}", libDir);
+                Stream.of(libDir.listFiles()).forEach(File::delete);
+            }
             storeArtifacts(directory);
         } catch (MavenException e) {
             throw new PipelineIOException(e);
