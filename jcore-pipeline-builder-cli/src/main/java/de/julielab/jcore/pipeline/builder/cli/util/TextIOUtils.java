@@ -1,16 +1,44 @@
 package de.julielab.jcore.pipeline.builder.cli.util;
 
+import org.beryx.textio.InputReader;
 import org.beryx.textio.TextIO;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes.DEFAULT;
 
 public class TextIOUtils {
+    /**
+     * A textIO parser to use with {@link TextIO#newGenericInputReader(Function)}. It will return <tt>null</tt> if
+     * an empty value is input (i.e. the user did immediately hit return) or the value delivered by a converter
+     * otherwise.
+     * @param <T>
+     */
+    public static class EmptyStringParser<T> implements Function<String, InputReader.ParseResult<T>> {
+        private Function<String, T> converter;
+        private String typeName;
 
+        public EmptyStringParser(Function<String, T> converter, String typeName) {
+            this.converter = converter;
+            this.typeName = typeName;
+        }
+
+        @Override
+        public InputReader.ParseResult<T> apply(String s) {
+            if (s.isEmpty())
+                return new InputReader.ParseResult<>(null);
+            try {
+                T convertedValue = converter.apply(s);
+                return new InputReader.ParseResult<>(convertedValue);
+            } catch (NumberFormatException e) {
+                return new InputReader.ParseResult<>(null, "Enter a " + typeName + " value.");
+            }
+        }
+    }
 
     public static void printLines(Stream<PrintLine> records, TextIO textIO) {
         String LS = System.getProperty("line.separator");
