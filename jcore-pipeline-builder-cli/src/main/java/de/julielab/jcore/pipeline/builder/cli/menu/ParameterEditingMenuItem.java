@@ -67,7 +67,7 @@ public class ParameterEditingMenuItem implements IMenuDialog {
                 throw new IllegalStateException("Unsupported parameter type: " + type);
         }
 
-        if (selection != null) {
+        if (selection != TextIOUtils.EmptyStringParser.EMPTY_VALUE) {
             ConfigurationParameterFactory.setParameter(descriptor, parameter.getName(), selection);
         } else {
             ResourceMetaData md;

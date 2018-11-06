@@ -18,7 +18,8 @@ public class TextIOUtils {
      * otherwise.
      * @param <T>
      */
-    public static class EmptyStringParser<T> implements Function<String, InputReader.ParseResult<T>> {
+    public static class EmptyStringParser<T> implements Function<String, InputReader.ParseResult<Object>> {
+        public static final Object EMPTY_VALUE = new Object();
         private Function<String, T> converter;
         private String typeName;
 
@@ -28,14 +29,14 @@ public class TextIOUtils {
         }
 
         @Override
-        public InputReader.ParseResult<T> apply(String s) {
+        public InputReader.ParseResult<Object> apply(String s) {
             if (s.isEmpty())
-                return new InputReader.ParseResult<>(null);
+                return new InputReader.ParseResult<>(EMPTY_VALUE);
             try {
                 T convertedValue = converter.apply(s);
                 return new InputReader.ParseResult<>(convertedValue);
             } catch (NumberFormatException e) {
-                return new InputReader.ParseResult<>(null, "Enter a " + typeName + " value.");
+                return new InputReader.ParseResult<>(EMPTY_VALUE, "Enter a " + typeName + " value.");
             }
         }
     }
