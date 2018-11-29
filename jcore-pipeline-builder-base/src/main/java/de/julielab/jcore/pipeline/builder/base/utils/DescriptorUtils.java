@@ -73,6 +73,8 @@ public class DescriptorUtils {
         try (ZipFile zipFile = new ZipFile(artifactPath)) {
             String path = descLocation.replaceAll("\\.", "/") + ".xml";
             ZipEntry entry = zipFile.getEntry(path);
+            if (entry == null)
+                throw new IllegalStateException("The meta descriptor provides the descriptor location " + descLocation + " which could not be found in " + artifactPath.getAbsolutePath());
             InputStream inputStream = zipFile.getInputStream(entry);
             spec = parser.parseResourceSpecifier(new XMLInputSource(inputStream, null));
         } catch (InvalidXMLException e) {
