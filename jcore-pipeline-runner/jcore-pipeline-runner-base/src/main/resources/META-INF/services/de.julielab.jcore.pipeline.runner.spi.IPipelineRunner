@@ -1,2 +1,2 @@
-de.julielab.jcore.pipeline.runner.CPERunner
+de.julielab.jcore.pipeline.runner.CPEBootstrapRunner
 de.julielab.jcore.pipeline.runner.DuccPipelineRunner

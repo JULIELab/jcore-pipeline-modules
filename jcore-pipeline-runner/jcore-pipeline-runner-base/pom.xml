@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>jcore-pipeline-runner</artifactId>
+        <groupId>de.julielab</groupId>
+        <version>0.2.5-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>jcore-pipeline-runner-base</artifactId>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.uima</groupId>
+            <artifactId>uimafit-cpe</artifactId>
+            <version>${uimafit-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.julielab</groupId>
+            <artifactId>julielab-java-utilities</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.julielab</groupId>
+            <artifactId>jcore-pipeline-builder-base</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>de.julielab</groupId>
+                    <artifactId>julie-xml-tools</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>de.julielab</groupId>
+                    <artifactId>julielab-java-utilities</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.glassfish</groupId>
+                    <artifactId>javax.json</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.json</groupId>
+                    <artifactId>javax.json-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.maven</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.aether</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>de.julielab</groupId>
+            <artifactId>jssf-commons</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-jxpath</groupId>
+            <artifactId>commons-jxpath</artifactId>
+            <version>1.3</version>
+        </dependency>
+        <!-- Its important to have this dependency at the end of the dependency list. Otherwise, its logger - log4j -
+         will kick in instead of logback -->
+        <dependency>
+            <groupId>org.apache.uima</groupId>
+            <artifactId>uima-ducc-cli</artifactId>
+            <version>2.2.1</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <descriptors>
+                        <descriptor>jcore-pipeline-runner/jcore-pipeline-runner-base/cli-assembly.xml</descriptor>
+                    </descriptors>
+                    <archive>
+                        <manifest>
+                            <mainClass>de.julielab.jcore.pipeline.runner.application.PipelineRunnerCLI</mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <mode>development</mode>
+                            <url>https://github.com/JULIELab/</url>
+                            <Agent-Class>de.julielab.java.utilities.classpath.Agent</Agent-Class>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase> <!-- append to the packaging phase. -->
+                        <goals>
+                            <goal>single</goal> <!-- goals == mojos -->
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
