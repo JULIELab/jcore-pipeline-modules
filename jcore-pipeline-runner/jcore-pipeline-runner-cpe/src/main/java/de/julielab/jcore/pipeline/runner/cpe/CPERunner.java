@@ -1,5 +1,5 @@
 /** 
- * DBStatusCallbackListener.java
+ * StatusCallbackListener.java
  * 
  * Copyright (c) 2008, JULIE Lab. 
  * All rights reserved. This program and the accompanying materials 
@@ -18,7 +18,6 @@
 package de.julielab.jcore.pipeline.runner.cpe;
 
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
-import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import org.apache.commons.cli.*;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.collection.CollectionProcessingEngine;
@@ -30,26 +29,18 @@ import org.apache.uima.util.XMLInputSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 public class CPERunner {
 
 	/**
 	 * the descriptor file for the CPE;
 	 */
-	protected String pipelinePath;
+	protected String descriptorPath;
 	protected CpeDescription cpeDescription;
 	protected Options options;
 	protected CollectionProcessingEngine cpe;
-	protected DBStatusCallbackListener statusCallbackListener;
-	/**
-	 * the configuration taken from the Medline Reader and used to instantiate
-	 * the Database Connector
-	 */
-	protected String configuration;
+	protected StatusCallbackListener statusCallbackListener;
 	protected Integer processingUnitThreadCount;
 	protected Integer casPoolSize;
 	protected Integer numbersOfDocuments;
@@ -65,7 +56,7 @@ public class CPERunner {
 
 	public CPERunner() {
 		options = new Options();
-		options.addOption("p", true, "JCoRe Pipeline Path");
+		options.addOption("d", true, "JCoRe Pipeline Path");
 		options.addOption("n", true,
 				"numbers of documents to process (optional)");
 		options.addOption("t", true, "processing unit thread count (optional)");
@@ -84,9 +75,9 @@ public class CPERunner {
 			return;
 		}
 
-		pipelinePath = cmd.getOptionValue("p");
-		if (pipelinePath == null) {
-			System.err.println("-p option is missed");
+		descriptorPath = cmd.getOptionValue("d");
+		if (descriptorPath == null) {
+			System.err.println("-d option is missed");
 			error = true;
 		}
 
@@ -119,10 +110,10 @@ public class CPERunner {
 	 */
 	public void createCPEDescription() throws InvalidXMLException, IOException,
 			CpeDescriptorException, PipelineIOException {
-		LOGGER.info("Creating CPE description from " + pipelinePath + File.separator + "CPE.xml");
+		LOGGER.info("Creating CPE description from " + descriptorPath);
 
 		cpeDescription = UIMAFramework.getXMLParser().parseCpeDescription(
-				new XMLInputSource(pipelinePath));
+				new XMLInputSource(descriptorPath));
 
 		if (processingUnitThreadCount != null) {
 			LOGGER.info("Setting processing unit thread count to "
@@ -169,14 +160,7 @@ public class CPERunner {
 		LOGGER.info("Creating CPE... ");
 		cpe = UIMAFramework.produceCollectionProcessingEngine(cpeDescription);
 
-		InputStream is = null;
-		File dbcConfigFile = new File(configuration);
-		if (dbcConfigFile.exists())
-			is = new FileInputStream(dbcConfigFile);
-		else
-			is = getClass().getResourceAsStream("/" + configuration);
-
-		statusCallbackListener = new DBStatusCallbackListener(cpe,
+		statusCallbackListener = new StatusCallbackListener(cpe,
 				batchSize);
 		cpe.addStatusCallbackListener(statusCallbackListener);
 	}
@@ -240,8 +224,8 @@ public class CPERunner {
 		}
 	}
 
-	public String getPipelinePath() {
-		return pipelinePath;
+	public String getDescriptorPath() {
+		return descriptorPath;
 	}
 
 	public CpeDescription getCpeDescription() {
@@ -256,12 +240,8 @@ public class CPERunner {
 		return cpe;
 	}
 
-	public DBStatusCallbackListener getStatusCallbackListener() {
+	public StatusCallbackListener getStatusCallbackListener() {
 		return statusCallbackListener;
-	}
-
-	public String getConfiguration() {
-		return configuration;
 	}
 
 	public Integer getProcessingUnitThreadCount() {

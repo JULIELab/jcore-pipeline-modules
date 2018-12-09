@@ -22,8 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,17 +46,24 @@ public class CPEBootstrapRunner implements IPipelineRunner {
     public void runPipeline(JCoReUIMAPipeline pipeline, HierarchicalConfiguration<ImmutableNode> runnerConfig) throws PipelineInstantiationException, PipelineRunningException, PipelineIOException {
         try {
 
-            Stream<File> classpathElements = pipeline.getClasspathElements();
             //classpathElements.forEach(JarLoader::addJarToClassPath);
-            String classpath = classpathElements.map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
             pipeline.load(false);
+            final String plp = pipeline.getLoadDirectory().getAbsolutePath();
             int numThreads = runnerConfig.containsKey(NUMTHREADS) ? runnerConfig.getInt(NUMTHREADS) : 2;
             final File cpeRunnerJar = findCpeRunnerJar();
+            Stream<File> classpathElements = pipeline.getClasspathElements();
+            classpathElements = Stream.concat(classpathElements, Stream.of(cpeRunnerJar, new File(plp + File.separator + JCoReUIMAPipeline.DIR_CONF), new File(plp + File.separator + "resources")));
+            String classpath = classpathElements.map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
 
-            final String[] cmdarray = {"java", "-cp", classpath, "-jar", cpeRunnerJar.getAbsolutePath()};
+            final String[] cmdarray = {"java", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads)};
             log.info("Running the pipeline at {} with the following command line: {}", pipeline.getLoadDirectory(), Arrays.toString(cmdarray));
             final Process exec = Runtime.getRuntime().exec(cmdarray);
-            exec.waitFor();
+            new InputStreamGobbler(exec.getInputStream(), "StdInGobbler", "std").start();
+            new InputStreamGobbler(exec.getErrorStream(), "ErrInGobbler", "err").start();
+
+            final int i = exec.waitFor();
+            if (i != 0)
+                throw new RuntimeException("Pipeline runner process exited with status " + i);
 
 //            // The CpePipeline.runPipeline() code was checked for the number of threads.
 //            log.info("Running pipeline with {} threads.", numThreads);
@@ -84,6 +91,33 @@ public class CPEBootstrapRunner implements IPipelineRunner {
         }
     }
 
+    private class InputStreamGobbler extends Thread {
+        private InputStream is;
+        private String type;
+
+        public InputStreamGobbler(InputStream is, String threadName, String type) {
+            this.is = is;
+            this.type = type;
+            setName(threadName);
+        }
+
+        @Override
+        public void run() {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    if (type.equals("std")) {
+                        System.out.println(line);
+                    } else {
+                        System.err.println(line);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private File findCpeRunnerJar() {
         String classpath = System.getProperty("java.class.path");
         Stream<File> classpathDirs = Stream.of(classpath.split(File.pathSeparator)).map(File::new).map(f -> f.isDirectory() ? f : f.getParentFile()).distinct();
@@ -101,7 +135,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
 
     @Override
     public String getName() {
-        return "CPEBootstrapRunner";
+        return "CPERunner";
     }
 
     @Override

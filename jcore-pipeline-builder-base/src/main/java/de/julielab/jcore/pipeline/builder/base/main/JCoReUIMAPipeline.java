@@ -21,6 +21,7 @@ import org.apache.uima.collection.impl.metadata.cpe.CpeCasProcessorsImpl;
 import org.apache.uima.collection.impl.metadata.cpe.CpeComponentDescriptorImpl;
 import org.apache.uima.collection.impl.metadata.cpe.CpeIncludeImpl;
 import org.apache.uima.collection.impl.metadata.cpe.CpeIntegratedCasProcessorImpl;
+import org.apache.uima.collection.metadata.CpeComponentDescriptor;
 import org.apache.uima.collection.metadata.CpeDescription;
 import org.apache.uima.collection.metadata.CpeDescriptorException;
 import org.apache.uima.fit.cpe.CpeBuilder;
@@ -28,6 +29,7 @@ import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.resource.ResourceCreationSpecifier;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.ResourceSpecifier;
+import org.apache.uima.resource.metadata.Import;
 import org.apache.uima.resource.metadata.MetaDataObject;
 import org.apache.uima.resource.metadata.ResourceMetaData;
 import org.apache.uima.resource.metadata.impl.Import_impl;
@@ -333,20 +335,29 @@ public class JCoReUIMAPipeline {
                                     cpeAAEFile));
                     builder.setAnalysisEngine(cpeAAE);
                     CpeDescription cpeDescription = builder.getCpeDescription();
-                    if (crDescription != null)
-                        cpeDescription.getAllCollectionCollectionReaders()[0].getCollectionIterator().
-                                getDescriptor().getInclude().set(crFile.getName());
+                    if (crDescription != null) {
+                        Import_impl crImport = new Import_impl();
+                        crImport.setLocation(crFile.getName());
+                        final CpeComponentDescriptor crDescriptor = cpeDescription.getAllCollectionCollectionReaders()[0].getCollectionIterator().
+                                getDescriptor();
+                        // delete the automatically generated include; we don't want an include (Absolute URLs are used)
+                        // but an import by location (a path relative to the CPE.xml descriptor is used)
+                        crDescriptor.setInclude(null);
+                        crDescriptor.setImport(crImport);
+                    }
 
-                    CpeIncludeImpl cpeInclude = new CpeIncludeImpl();
-                    cpeInclude.set(cpeAAEFile.getName());
+                    Import_impl cpeAaeImport = new Import_impl();
+                    cpeAaeImport.setLocation(cpeAAEFile.getName());
                     CpeComponentDescriptorImpl cpeComponentDescriptor = new CpeComponentDescriptorImpl();
-                    cpeComponentDescriptor.setInclude(cpeInclude);
+                    cpeComponentDescriptor.setImport(cpeAaeImport);
                     CpeIntegratedCasProcessorImpl cpeIntegratedCasProcessor = new CpeIntegratedCasProcessorImpl();
                     cpeIntegratedCasProcessor.setCpeComponentDescriptor(cpeComponentDescriptor);
                     cpeIntegratedCasProcessor.setName("CPE AAE");
+                    cpeIntegratedCasProcessor.setBatchSize(500);
                     CpeCasProcessorsImpl cpeCasProcessors = new CpeCasProcessorsImpl();
                     cpeCasProcessors.addCpeCasProcessor(cpeIntegratedCasProcessor);
                     cpeDescription.setCpeCasProcessors(cpeCasProcessors);
+                    cpeDescription.getCpeCasProcessors().setPoolSize(24);
                     cpeDescription.toXML(FileUtilities.getWriterToFile(
                             cpeFile
                     ));

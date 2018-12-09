@@ -1,5 +1,5 @@
 /**
- * DBStatusCallbackListener.java
+ * StatusCallbackListener.java
  * <p>
  * Copyright (c) 2008, JULIE Lab.
  * All rights reserved. This program and the accompanying materials
@@ -22,7 +22,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.collection.CollectionProcessingEngine;
 import org.apache.uima.collection.EntityProcessStatus;
-import org.apache.uima.collection.StatusCallbackListener;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
@@ -35,9 +34,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-public class DBStatusCallbackListener implements StatusCallbackListener {
+public class StatusCallbackListener implements org.apache.uima.collection.StatusCallbackListener {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(DBStatusCallbackListener.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(StatusCallbackListener.class);
     int entityCount = 0;
     private CollectionProcessingEngine cpe;
     /**
@@ -62,7 +61,7 @@ public class DBStatusCallbackListener implements StatusCallbackListener {
     private long mBatchTime;
     private Integer batchSize;
 
-    public DBStatusCallbackListener(CollectionProcessingEngine cpe, Integer batchSize) {
+    public StatusCallbackListener(CollectionProcessingEngine cpe, Integer batchSize) {
         this.cpe = cpe;
         this.batchSize = batchSize;
     }
@@ -145,12 +144,18 @@ public class DBStatusCallbackListener implements StatusCallbackListener {
     public synchronized void entityProcessComplete(CAS aCas, EntityProcessStatus aStatus) {
         try {
             JCas jCas = aCas.getJCas();
-            final Header header = JCasUtil.selectSingle(jCas, Header.class);
+            String docId = "<unknown>";
+            try {
+                final Header header = JCasUtil.selectSingle(jCas, Header.class);
+                docId = header.getDocId();
+            } catch (IllegalArgumentException e) {
+                LOGGER.debug("Document occurred that did not have Header annotation.");
+            }
             if (!aStatus.isException()) {
-                LOGGER.debug("Document with ID {} finished processing.", header.getId());
+                LOGGER.debug("Document with ID {} finished processing.", docId);
             } else {
-                String filename = "pipeline-error-" + header.getId();
-                LOGGER.debug("Exception occurred while processing document with ID {}. Writing error message to {}", header.getId(), aStatus.getExceptions(), filename);
+                String filename = "pipeline-error-" + docId;
+                LOGGER.debug("Exception occurred while processing document with ID {}. Writing error message to {}", docId, aStatus.getExceptions(), filename);
                 final String log = createLog(aStatus);
                 try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(log), StandardCharsets.UTF_8))) {
                     bw.write(log);
