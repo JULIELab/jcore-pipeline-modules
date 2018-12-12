@@ -4,7 +4,7 @@
 
     <artifactId>jcore-pipeline-modules</artifactId>
     <packaging>pom</packaging>
-    <version>0.2.6</version>
+    <version>0.2.7-SNAPSHOT</version>
     <dependencies>
         <dependency>
             <groupId>de.julielab</groupId>
@@ -27,7 +27,7 @@
     </modules>
     <scm>
         <developerConnection>scm:git:https://github.com/JULIELab/jcore-pipeline-modules.git</developerConnection>
-    <tag>v0.2.6</tag>
+    <tag>HEAD</tag>
   </scm>
 
 </project>
