@@ -7,6 +7,7 @@ import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
 import de.julielab.jcore.pipeline.builder.cli.menu.*;
 import de.julielab.jcore.pipeline.builder.cli.util.StatusPrinter;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.beryx.textio.TextIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ public class AddComponentDialog implements ILoopablePipelineManipulationDialog {
                 EditMenuItem addItem = (EditMenuItem) choice;
                 MetaDescription description = addItem.getDescription();
                 textIO.getTextTerminal().print("Loading component..." + System.getProperty("line.separator"));
-                Collection<Description> jCoReDescriptions = null;
+                Collection<Description> jCoReDescriptions;
                 try {
                     jCoReDescriptions = description.getJCoReDescriptions();
                 } catch (DescriptorLoadingException e) {

@@ -58,12 +58,17 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             final String[] cmdarray = {"java", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads)};
             log.info("Running the pipeline at {} with the following command line: {}", pipeline.getLoadDirectory(), Arrays.toString(cmdarray));
             final Process exec = Runtime.getRuntime().exec(cmdarray);
-            new InputStreamGobbler(exec.getInputStream(), "StdInGobbler", "std").start();
-            new InputStreamGobbler(exec.getErrorStream(), "ErrInGobbler", "err").start();
+            final InputStreamGobbler isg = new InputStreamGobbler(exec.getInputStream(), "StdInGobbler", "std");
+            isg.start();
+            final InputStreamGobbler errg = new InputStreamGobbler(exec.getErrorStream(), "ErrInGobbler", "err");
+            errg.start();
 
             final int i = exec.waitFor();
-            if (i != 0)
+            if (i != 0) {
+                isg.join();
+                errg.join();
                 throw new RuntimeException("Pipeline runner process exited with status " + i);
+            }
 
 //            // The CpePipeline.runPipeline() code was checked for the number of threads.
 //            log.info("Running pipeline with {} threads.", numThreads);

@@ -11,6 +11,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
+import org.apache.uima.analysis_engine.metadata.AnalysisEngineMetaData;
 import org.apache.uima.analysis_engine.metadata.FixedFlow;
 import org.apache.uima.analysis_engine.metadata.FlowConstraints;
 import org.apache.uima.analysis_engine.metadata.impl.FixedFlow_impl;
@@ -19,7 +20,6 @@ import org.apache.uima.collection.CasConsumerDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.collection.impl.metadata.cpe.CpeCasProcessorsImpl;
 import org.apache.uima.collection.impl.metadata.cpe.CpeComponentDescriptorImpl;
-import org.apache.uima.collection.impl.metadata.cpe.CpeIncludeImpl;
 import org.apache.uima.collection.impl.metadata.cpe.CpeIntegratedCasProcessorImpl;
 import org.apache.uima.collection.metadata.CpeComponentDescriptor;
 import org.apache.uima.collection.metadata.CpeDescription;
@@ -32,7 +32,9 @@ import org.apache.uima.resource.ResourceSpecifier;
 import org.apache.uima.resource.metadata.Import;
 import org.apache.uima.resource.metadata.MetaDataObject;
 import org.apache.uima.resource.metadata.ResourceMetaData;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.Import_impl;
+import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.InvalidXMLException;
 import org.apache.uima.util.XMLInputSource;
 import org.apache.uima.util.XMLParser;
@@ -48,7 +50,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.*;
@@ -64,6 +65,17 @@ public class JCoReUIMAPipeline {
     private static final String SERIALIZED_AE_DESCS_FILE = "aeDescriptions.bin";
     private static final String SERIALIZED_CC_DESCS_FILE = "ccDescriptions.bin";
     private final static Logger log = LoggerFactory.getLogger(JCoReUIMAPipeline.class);
+
+    private static Function<List<Description>, Stream<Import>> tsImportsExtractor = descs -> descs.stream().flatMap(desc -> {
+        final AnalysisEngineMetaData analysisEngineMetaData = desc.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData();
+        if (analysisEngineMetaData == null)
+            return null;
+        final TypeSystemDescription typeSystem = analysisEngineMetaData.getTypeSystem();
+        if (typeSystem == null)
+            return null;
+        return Stream.of(typeSystem.getImports());
+    }).filter(Objects::nonNull);
+
     private Description crDescription;
     private List<Description> aeDelegates;
     private List<Description> cmDelegates;
@@ -171,33 +183,36 @@ public class JCoReUIMAPipeline {
 
         // Store descriptors
         try {
-            if (aeDelegates != null) {
+            File descDir = new File(directory.getAbsolutePath() + File.separator + DIR_DESC);
+            if (!descDir.exists())
+                descDir.mkdirs();
+            if (!aeDelegates.isEmpty()) {
                 Stream<AnalysisEngineDescription> descStream = aeDelegates.stream().
                         filter(desc -> !desc.getMetaDescription().isPear()).
                         map(Description::getDescriptorAsAnalysisEngineDescription);
                 aaeDesc = AnalysisEngineFactory.createEngineDescription(descStream.toArray(AnalysisEngineDescription[]::new));
                 Map<String, MetaDataObject> delegatesWithImports = aaeDesc.getDelegateAnalysisEngineSpecifiersWithImports();
-                LinkedHashMap<String, MetaDataObject> delegatesWithImportsCopy = new LinkedHashMap<>(delegatesWithImports);
-                Iterator<Map.Entry<String, MetaDataObject>> delegateIt = delegatesWithImportsCopy.entrySet().iterator();
                 delegatesWithImports.clear();
                 List<String> flowNames = new ArrayList<>();
                 for (int i = 0; i < aeDelegates.size(); ++i) {
                     Description description = aeDelegates.get(i);
                     if (!description.getMetaDescription().isPear()) {
-                        Map.Entry<String, MetaDataObject> delegate = delegateIt.next();
-                        delegatesWithImports.put(delegate.getKey(), delegate.getValue());
-                        flowNames.add(delegate.getKey());
+                        Import imp = new Import_impl();
+                        imp.setLocation(description.getName() + ".xml");
+                        delegatesWithImports.put(description.getName(), imp);
+                        final File destination = new File(descDir.getAbsolutePath() + File.separator + description.getName() + ".xml");
+                        description.getDescriptorAsAnalysisEngineDescription().toXML(FileUtilities.getWriterToFile(destination), true);
+                        flowNames.add(description.getName());
                     } else {
                         Import_impl imp = new Import_impl();
                         File pearDescriptorFile = new File(description.getLocation());
-                        imp.setName(description.getName());
                         imp.setLocation(pearDescriptorFile.toURI().toString());
-                        imp.setSourceUrl(pearDescriptorFile.toURI().toURL());
                         delegatesWithImports.put(description.getName(), imp);
                         flowNames.add(description.getName());
                     }
                 }
-                assert !delegateIt.hasNext();
+                // necessary for relative resolution of imports
+                aaeDesc.setSourceUrl(descDir.toURI().toURL());
                 // This is required when using PEARs. This call causes the internal call to resolveDelegateAnalysisEngineImports()
                 // which completes PEAR imports.
                 aaeDesc.getDelegateAnalysisEngineSpecifiers();
@@ -208,9 +223,6 @@ public class JCoReUIMAPipeline {
                         map(Description::getDescriptorAsAnalysisEngineDescription);
                 aaeCmDesc = AnalysisEngineFactory.createEngineDescription(descStream.toArray(AnalysisEngineDescription[]::new));
             }
-            File descDir = new File(directory.getAbsolutePath() + File.separator + DIR_DESC);
-            if (!descDir.exists())
-                descDir.mkdirs();
             File crFile = null;
             if (crDescription != null) {
                 final String descriptorFilename = crDescription.getName() + ".xml";
@@ -233,8 +245,8 @@ public class JCoReUIMAPipeline {
                         File.separator + descriptorFilename;
                 cmFile = new File(pathname);
                 cm.getDescriptor().setSourceUrl(cmFile.toURI().toURL());
-                cm.getDescriptor().toXML(FileUtilities.getWriterToFile(
-                        cmFile));
+                cm.getDescriptorAsAnalysisEngineDescription().toXML(FileUtilities.getWriterToFile(
+                        cmFile), true);
                 cm.setUimaDescPath(descriptorFilename);
                 filesToDeleteOnSave.remove(descriptorFilename);
             } else if (cmDelegates != null && cmDelegates.size() > 1) {
@@ -243,7 +255,7 @@ public class JCoReUIMAPipeline {
                 aaeCmDesc.getMetaData().setDescription("This AAE descriptor directly contains the CAS multipliers added " +
                         "through the JCoRe pipeline builder. The AAE serves to bundle all the components together.");
                 aaeCmDesc.toXML(FileUtilities.getWriterToFile(
-                        cmFile));
+                        cmFile), true);
             } else if (cmFile.exists()) {
                 cmFile.delete();
             }
@@ -256,7 +268,7 @@ public class JCoReUIMAPipeline {
                 aaeDesc.getMetaData().setDescription("This AAE descriptor directly contains the analysis engines added " +
                         "through the JCoRe pipeline builder. The AAE serves to bundle all the components together.");
                 aaeDesc.toXML(FileUtilities.getWriterToFile(
-                        aaeFile));
+                        aaeFile), true);
             } else if (aaeFile.exists()) {
                 aaeFile.delete();
             }
@@ -309,6 +321,7 @@ public class JCoReUIMAPipeline {
                     if (crDescription != null)
                         builder.setReader(crDescription.getDescriptorAsCollectionReaderDescription());
                     AnalysisEngineDescription cpeAAE = AnalysisEngineFactory.createEngineDescription();
+
                     cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().clear();
                     if (!cmDelegates.isEmpty()) {
                         Import_impl cmImport = new Import_impl();
@@ -321,6 +334,7 @@ public class JCoReUIMAPipeline {
                         aaeImport.setLocation(aaeFile.getName());
                         aaeImport.setSourceUrl(aaeFile.toURI().toURL());
                         cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(aaeDesc.getMetaData().getName(), aaeImport);
+
                     }
                     if (ccDelegates != null && !ccDelegates.isEmpty()) {
                         Import_impl ccImport = new Import_impl();
@@ -454,7 +468,10 @@ public class JCoReUIMAPipeline {
         ccFile = new File(descDir.getAbsolutePath() +
                 File.separator +
                 descriptorFilename);
-        ccDesc.getDescriptor().toXML(FileUtilities.getWriterToFile(ccFile));
+        if (ccDesc.getDescriptor() instanceof AnalysisEngineDescription)
+            ccDesc.getDescriptorAsAnalysisEngineDescription().toXML(FileUtilities.getWriterToFile(ccFile), true);
+        else
+            ccDesc.getDescriptor().toXML(FileUtilities.getWriterToFile(ccFile));
         ccDesc.setUri(ccFile.toURI());
         ccDesc.setUimaDescPath(descriptorFilename);
         filesToDeleteOnSave.remove(descriptorFilename);
@@ -492,25 +509,11 @@ public class JCoReUIMAPipeline {
      * originally that is not available any more.
      *
      * @param descriptions The pipeline's component descriptions. Should be complete for conflict resolution.
-     * @param libDir The directory in which the dependencies should be stored.
+     * @param libDir       The directory in which the dependencies should be stored.
      * @throws MavenException
      */
     private void storeArtifactsOfDescriptions(Stream<Description> descriptions, File libDir) throws MavenException {
         MavenConnector.storeArtifactsWithDependencies(descriptions.map(d -> d.getMetaDescription().getMavenArtifact()), libDir);
-    }
-
-    private void storeDelegateDescriptors(File directory, List<Description> descriptors, String delegatesDir) throws SAXException, IOException {
-        if (descriptors != null) {
-            File aeDelegateDir = new File(directory.getAbsolutePath() + File.separatorChar +
-                    delegatesDir);
-            if (!aeDelegateDir.exists())
-                aeDelegateDir.mkdirs();
-            for (Description aeDesc : descriptors) {
-                File aeDelegateStorageFile = new File(aeDelegateDir.getAbsolutePath() + File.separatorChar
-                        + aeDesc.getName() + ".xml");
-                aeDesc.getDescriptor().toXML(FileUtilities.getWriterToFile(aeDelegateStorageFile));
-            }
-        }
     }
 
     private void serializeDescriptions(File pipelineStorageDir, String targetFileName, Object descriptions) throws IOException {
