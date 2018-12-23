@@ -3,7 +3,7 @@ package de.julielab.jcore.pipeline.builder.base.interfaces;
 import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants;
 import de.julielab.jcore.pipeline.builder.base.exceptions.DescriptorLoadingException;
 import de.julielab.jcore.pipeline.builder.base.main.Description;
-import de.julielab.jcore.pipeline.builder.base.main.MavenArtifact;
+import de.julielab.utilities.aether.MavenArtifact;
 
 import java.util.Collection;
 import java.util.List;

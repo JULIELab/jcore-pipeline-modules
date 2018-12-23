@@ -7,25 +7,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.util.StdConverter;
 import de.julielab.jcore.pipeline.builder.base.exceptions.DescriptorLoadingException;
-import de.julielab.jcore.pipeline.builder.base.exceptions.MavenException;
 import de.julielab.jcore.pipeline.builder.base.exceptions.MetaDescriptionInteractionException;
 import de.julielab.jcore.pipeline.builder.base.interfaces.IMetaDescription;
 import de.julielab.jcore.pipeline.builder.base.utils.DescriptorUtils;
+import de.julielab.utilities.aether.MavenArtifact;
+import de.julielab.utilities.aether.MavenException;
 import org.apache.uima.resource.ResourceSpecifier;
-import org.apache.uima.util.InvalidXMLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
-import java.net.URI;
 import java.util.*;
 import java.util.function.Supplier;
 
 import static de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants.JcoreMeta;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 
 @JsonDeserialize(converter = MetaDescription.FromJsonSetup.class)
 public class MetaDescription implements IMetaDescription, Serializable {

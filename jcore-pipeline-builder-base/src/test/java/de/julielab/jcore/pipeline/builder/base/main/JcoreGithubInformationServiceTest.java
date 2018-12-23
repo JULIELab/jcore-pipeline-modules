@@ -2,8 +2,7 @@ package de.julielab.jcore.pipeline.builder.base.main;
 
 import de.julielab.jcore.pipeline.builder.base.exceptions.DescriptorLoadingException;
 import de.julielab.jcore.pipeline.builder.base.exceptions.GithubInformationException;
-import de.julielab.jcore.pipeline.builder.base.exceptions.MavenException;
-import org.junit.Before;
+import de.julielab.utilities.aether.MavenException;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -15,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  *  This test requires contact to GitHub via the GitHub API. However, only anonymous connection is
  * currently possible. For anonymous connections, only 60 requests per hour are allowed. Thus not usable for testing.
- * @see https://developer.github.com/v3/#rate-limiting
+ * @see <url>https://developer.github.com/v3/#rate-limiting</url>
  */
 @Ignore
 public class JcoreGithubInformationServiceTest {

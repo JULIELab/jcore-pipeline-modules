@@ -1,15 +1,12 @@
 package de.julielab.jcore.pipeline.builder.cli.menu;
 
 import de.julielab.java.utilities.prerequisites.PrerequisiteChecker;
-import de.julielab.jcore.pipeline.builder.base.connectors.MavenConnector;
-import de.julielab.jcore.pipeline.builder.base.exceptions.MavenException;
 import de.julielab.jcore.pipeline.builder.base.main.Description;
-import de.julielab.jcore.pipeline.builder.base.main.MavenArtifact;
-import de.julielab.jcore.pipeline.builder.cli.menu.dialog.IMenuDialog;
+import de.julielab.utilities.aether.AetherUtilities;
+import de.julielab.utilities.aether.MavenArtifact;
+import de.julielab.utilities.aether.MavenException;
 import org.beryx.textio.TextIO;
-import org.beryx.textio.TextIoFactory;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,7 +27,7 @@ public class ArtifactVersionMenuItem implements IMenuItem {
 
         MavenArtifact artifact = description.getMetaDescription().getMavenArtifact();
         try {
-            List<String> versionList = MavenConnector.getVersions(artifact).collect(Collectors.toList());
+            List<String> versionList = AetherUtilities.getVersions(artifact).collect(Collectors.toList());
             if (versionList.isEmpty()) {
                 textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.ERROR, t -> t.print("No versions available for component " + description.getName() + ", Maven artifact " + artifact));
                 return;

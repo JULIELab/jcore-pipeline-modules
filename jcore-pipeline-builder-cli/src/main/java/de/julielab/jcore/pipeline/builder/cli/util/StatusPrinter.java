@@ -1,6 +1,7 @@
 package de.julielab.jcore.pipeline.builder.cli.util;
 
 import de.julielab.jcore.pipeline.builder.base.main.*;
+import de.julielab.utilities.aether.MavenArtifact;
 import org.apache.commons.lang.StringUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.resource.*;

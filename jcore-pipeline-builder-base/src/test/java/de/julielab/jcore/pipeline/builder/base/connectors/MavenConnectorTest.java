@@ -1,13 +1,7 @@
 package de.julielab.jcore.pipeline.builder.base.connectors;
 
-import de.julielab.jcore.pipeline.builder.base.exceptions.MavenException;
-import de.julielab.jcore.pipeline.builder.base.main.MavenArtifact;
-import org.eclipse.aether.artifact.Artifact;
+import de.julielab.utilities.aether.MavenException;
 import org.junit.Test;
-
-import java.util.stream.Stream;
-
-import static org.junit.Assert.*;
 
 public class MavenConnectorTest {
 

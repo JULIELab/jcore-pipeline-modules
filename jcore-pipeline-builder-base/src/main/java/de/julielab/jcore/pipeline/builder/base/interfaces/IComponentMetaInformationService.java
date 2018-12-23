@@ -2,10 +2,10 @@ package de.julielab.jcore.pipeline.builder.base.interfaces;
 
 import de.julielab.jcore.pipeline.builder.base.exceptions.DescriptorLoadingException;
 import de.julielab.jcore.pipeline.builder.base.exceptions.GithubInformationException;
-import de.julielab.jcore.pipeline.builder.base.exceptions.MavenException;
 import de.julielab.jcore.pipeline.builder.base.main.ComponentRepository;
-import de.julielab.jcore.pipeline.builder.base.main.MavenArtifact;
 import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
+import de.julielab.utilities.aether.MavenArtifact;
+import de.julielab.utilities.aether.MavenException;
 
 import java.io.IOException;
 import java.util.Collection;

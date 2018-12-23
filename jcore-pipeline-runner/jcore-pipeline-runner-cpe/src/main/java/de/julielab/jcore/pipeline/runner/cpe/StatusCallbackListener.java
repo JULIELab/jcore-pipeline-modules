@@ -129,7 +129,7 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
      * @see org.apache.uima.collection.processing.StatusCallbackListener#aborted()
      */
     public void aborted() {
-        LOGGER.info("The CPE has been aborted by the framework. The JVM ist forcibly quit to avoid the application getting stuck on some threads that could not be stopped.");
+        LOGGER.info("The CPE has been aborted by the framework. The JVM is forcibly quit to avoid the application getting stuck on some threads that could not be stopped.");
         System.exit(1);
     }
 
@@ -154,10 +154,10 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
             if (!aStatus.isException()) {
                 LOGGER.debug("Document with ID {} finished processing.", docId);
             } else {
-                String filename = "pipeline-error-" + docId;
+                String filename = "pipeline-error-" + docId + ".err";
                 LOGGER.debug("Exception occurred while processing document with ID {}. Writing error message to {}", docId, aStatus.getExceptions(), filename);
                 final String log = createLog(aStatus);
-                try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(log), StandardCharsets.UTF_8))) {
+                try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), StandardCharsets.UTF_8))) {
                     bw.write(log);
                     bw.newLine();
                 }

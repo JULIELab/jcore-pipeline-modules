@@ -9,11 +9,12 @@ import de.julielab.java.utilities.FileUtilities;
 import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants.JcoreMeta;
 import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants.Maven;
 import de.julielab.jcore.pipeline.builder.base.connectors.GitHubConnector;
-import de.julielab.jcore.pipeline.builder.base.connectors.MavenConnector;
 import de.julielab.jcore.pipeline.builder.base.exceptions.DescriptorLoadingException;
 import de.julielab.jcore.pipeline.builder.base.exceptions.GithubInformationException;
-import de.julielab.jcore.pipeline.builder.base.exceptions.MavenException;
 import de.julielab.jcore.pipeline.builder.base.interfaces.IComponentMetaInformationService;
+import de.julielab.utilities.aether.AetherUtilities;
+import de.julielab.utilities.aether.MavenArtifact;
+import de.julielab.utilities.aether.MavenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,7 +152,7 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
                 continue;
             }
             try {
-                MavenArtifact resolvedArtifact = MavenConnector.getArtifactByAether(artifactId, new File(this.mvnLocal));
+                MavenArtifact resolvedArtifact = AetherUtilities.getArtifactByAether(artifactId, new File(this.mvnLocal));
                 resolvedArtifacts.add(resolvedArtifact);
             } catch (MavenException e) {
                 resolvedArtifacts.add(null);

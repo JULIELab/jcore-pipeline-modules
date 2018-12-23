@@ -4,9 +4,10 @@ import com.google.common.collect.Sets;
 import de.julielab.java.utilities.FileUtilities;
 import de.julielab.java.utilities.classpath.JarLoader;
 import de.julielab.jcore.pipeline.builder.base.PipelineParameterChecker;
-import de.julielab.jcore.pipeline.builder.base.connectors.MavenConnector;
-import de.julielab.jcore.pipeline.builder.base.exceptions.MavenException;
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
+import de.julielab.utilities.aether.AetherUtilities;
+import de.julielab.utilities.aether.MavenArtifact;
+import de.julielab.utilities.aether.MavenException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.UIMAFramework;
@@ -34,7 +35,6 @@ import org.apache.uima.resource.metadata.MetaDataObject;
 import org.apache.uima.resource.metadata.ResourceMetaData;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.Import_impl;
-import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.InvalidXMLException;
 import org.apache.uima.util.XMLInputSource;
 import org.apache.uima.util.XMLParser;
@@ -423,8 +423,8 @@ public class JCoReUIMAPipeline {
 
         // Store the required Maven artifacts in the lib directory
         try {
-            if (clearLibDir) {
-                final File libDir = new File(directory.getAbsolutePath() + File.separator + DIR_LIB);
+            final File libDir = new File(directory.getAbsolutePath() + File.separator + DIR_LIB);
+            if (clearLibDir && libDir.exists()) {
                 log.debug("Removing all files from the library directory at {}", libDir);
                 Stream.of(libDir.listFiles()).forEach(File::delete);
             }
@@ -513,7 +513,7 @@ public class JCoReUIMAPipeline {
      * @throws MavenException
      */
     private void storeArtifactsOfDescriptions(Stream<Description> descriptions, File libDir) throws MavenException {
-        MavenConnector.storeArtifactsWithDependencies(descriptions.map(d -> d.getMetaDescription().getMavenArtifact()), libDir);
+        AetherUtilities.storeArtifactsWithDependencies(descriptions.map(d -> d.getMetaDescription().getMavenArtifact()), libDir);
     }
 
     private void serializeDescriptions(File pipelineStorageDir, String targetFileName, Object descriptions) throws IOException {
@@ -872,7 +872,7 @@ public class JCoReUIMAPipeline {
             // We filter for null objects because PEAR components don't have a Maven artifact
             return artifactList.stream().flatMap(Function.identity()).filter(Objects::nonNull).flatMap(artifact -> {
                 try {
-                    return MavenConnector.getDependencies(artifact);
+                    return AetherUtilities.getDependencies(artifact);
                 } catch (MavenException e) {
                     log.error("Maven exception while trying to get transitive dependencies of artifact {}:{}:{}",
                             artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), e);

@@ -1,10 +1,11 @@
 package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 
-import de.julielab.jcore.pipeline.builder.base.connectors.MavenConnector;
-import de.julielab.jcore.pipeline.builder.base.exceptions.MavenException;
 import de.julielab.jcore.pipeline.builder.base.main.Description;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
-import de.julielab.jcore.pipeline.builder.cli.menu.*;
+import de.julielab.jcore.pipeline.builder.cli.menu.ArtifactVersionMenuItem;
+import de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes;
+import de.julielab.utilities.aether.AetherUtilities;
+import de.julielab.utilities.aether.MavenException;
 import org.beryx.textio.TextIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,7 @@ private final static Logger log = LoggerFactory.getLogger(UpdateAllArtifactsDial
                     continue;
                 }
                 try {
-                    String newestVersion = MavenConnector.getNewestVersion(description.getMetaDescription().getMavenArtifact());
+                    String newestVersion = AetherUtilities.getNewestVersion(description.getMetaDescription().getMavenArtifact());
                     description.getMetaDescription().getMavenArtifact().setVersion(newestVersion);
                     textIO.getTextTerminal().print("Set artifact version of component " + description.getName() + " to " + newestVersion + System.getProperty("line.separator"));
                 } catch (MavenException e) {
