@@ -746,6 +746,7 @@ public class JCoReUIMAPipeline {
                 ResourceSpecifier descriptor = aae.getDelegateAnalysisEngineSpecifiers().get(component);
                 if (i < descriptions.size())
                     descByName.get(component).setDescriptor(descriptor);
+
             }
             log.debug("For the {} aggregate, the following delegate descriptors were set: {}", type, Stream.of(flow.getFixedFlow()).collect(joining(", ")));
         } else {
