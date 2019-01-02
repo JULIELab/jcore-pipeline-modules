@@ -43,10 +43,8 @@ public class CPEBootstrapRunner implements IPipelineRunner {
     private final static Logger log = LoggerFactory.getLogger(CPEBootstrapRunner.class);
 
     @Override
-    public void runPipeline(JCoReUIMAPipeline pipeline, HierarchicalConfiguration<ImmutableNode> runnerConfig) throws PipelineInstantiationException, PipelineRunningException, PipelineIOException {
+    public void runPipeline(JCoReUIMAPipeline pipeline, HierarchicalConfiguration<ImmutableNode> runnerConfig) throws PipelineRunningException, PipelineIOException {
         try {
-
-            //classpathElements.forEach(JarLoader::addJarToClassPath);
             pipeline.load(false);
             final String plp = pipeline.getLoadDirectory().getAbsolutePath();
             int numThreads = runnerConfig.containsKey(NUMTHREADS) ? runnerConfig.getInt(NUMTHREADS) : 2;
@@ -70,23 +68,6 @@ public class CPEBootstrapRunner implements IPipelineRunner {
                 throw new RuntimeException("Pipeline runner process exited with status " + i);
             }
 
-//            // The CpePipeline.runPipeline() code was checked for the number of threads.
-//            log.info("Running pipeline with {} threads.", numThreads);
-//            if (pipeline.getCcDelegates() != null) {
-//                if (!(pipeline.getCcDesc() instanceof AnalysisEngineDescription))
-//                    throw new PipelineInstantiationException("Could not create CPE because the CasConsumer descriptor does not " +
-//                            "implement the AnalysisEngineDescription interface. The CasConsumerDescription interface is " +
-//                            "deprecated and not used by UIMAfit which is employed by this class to build the CPE.");
-//                runPipeline(numThreads,
-//                        pipeline.getCrDescription().getDescriptorAsCollectionReaderDescription(),
-//                        pipeline.getCompleteAggregateDescription());
-//            } else {
-//                runPipeline(numThreads, pipeline.getCrDescription().getDescriptorAsCollectionReaderDescription(), pipeline.getCompleteAggregateDescription());
-//            }
-//        } catch (UIMAException | SAXException e) {
-//            throw new PipelineRunningException(e);
-//        } catch (CpeDescriptorException e) {
-//            throw new PipelineInstantiationException(e);
         } catch (IOException e) {
             throw new PipelineRunningException(e);
         } catch (InterruptedException e) {

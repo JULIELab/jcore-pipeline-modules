@@ -1,6 +1,7 @@
 package de.julielab.jcore.pipeline.builder.cli.util;
 
 import de.julielab.jcore.pipeline.builder.base.main.*;
+import de.julielab.jcore.pipeline.builder.cli.menu.DescriptorSelectionMenuItem;
 import de.julielab.utilities.aether.MavenArtifact;
 import org.apache.commons.lang.StringUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
@@ -51,7 +52,7 @@ public class StatusPrinter {
             ExternalResourcesAdder externalResourcesAdderAdder = new ExternalResourcesAdder(records);
             parameterAdder.accept(description);
             if (description.getDescriptor() instanceof AnalysisEngineDescription)
-                externalResourcesAdderAdder.accept(description.getDescriptorAsAnalysisEngineDescription());
+                externalResourcesAdderAdder.accept(description);
         } else {
             records.add(createPrintLine("  - " + description.getName(), COMPONENT_NAME));
             records.add(createPrintLine("    This is a PEAR and thus not configurable.", PARAM));
@@ -69,22 +70,6 @@ public class StatusPrinter {
         List<PrintLine> records = getPipelineStatusRecords(pipeline, brief);
 
         TextIOUtils.printLines(records.stream(), textIO);
-
-        // Useful code for multi-column layout; works only in linux shells
-//        int lineLength = 80;
-//        try {
-//            Process p = Runtime.getRuntime().exec(new String[]{
-//                    "bash", "-c", "tput cols 2> /dev/tty"});
-//            String response = IOUtils.toString(p.getInputStream()).trim();
-//            lineLength = Integer.parseInt(response);
-//        } catch (IOException  | NumberFormatException e) {
-//            // nothing; may happen, then use the default value
-//        }
-//        int columnLength = lineLength / 4;
-//
-//        textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.PIPELINESTATUS_HEADER,
-//                t -> t.print("Current pipeline status:" + LS));
-//        String colFormat = "%-" + columnLength + "s%-" + columnLength + "s%-" + columnLength + "s%-" + columnLength + "s";
     }
 
     private static List<PrintLine> getPipelineStatusRecords(JCoReUIMAPipeline pipeline, boolean brief) {
@@ -136,25 +121,29 @@ public class StatusPrinter {
         @Override
         public void accept(Description description) {
             ResourceMetaData metaData = ((ResourceCreationSpecifier) description.getDescriptor()).getMetaData();
-            records.add(createPrintLine("  - " + metaData.getName(), COMPONENT_NAME));
-            records.add(createPrintLine("    Maven artifact: " + getArtifactString(description), DEFAULT));
+            Function<String, String> color = str -> description.isActive() ? str : DEACTIVATED_COMPONENT;
+            if (description.isActive())
+                records.add(createPrintLine("  - " + metaData.getName(), COMPONENT_NAME));
+            else
+                records.add(createPrintLine("  - " + metaData.getName() + " (DEACTIVATED)", DEACTIVATED_COMPONENT));
+            records.add(createPrintLine("    Maven artifact: " + getArtifactString(description), color.apply(DEFAULT)));
             NameValuePair[] parameterSettings = metaData.getConfigurationParameterSettings().getParameterSettings();
             Set<String> mandatorySet = Stream.of(metaData.getConfigurationParameterDeclarations().getConfigurationParameters()).
                     filter(ConfigurationParameter::isMandatory).map(ConfigurationParameter::getName).collect(Collectors.toSet());
             if ((parameterSettings != null && parameterSettings.length > 0) || !mandatorySet.isEmpty())
-                records.add(createPrintLine("    Mandatory Parameters:", HEADER));
+                records.add(createPrintLine("    Mandatory Parameters:", color.apply(PARAMETERS)));
             if (parameterSettings != null) {
                 for (NameValuePair parameter : parameterSettings) {
                     if (!StringUtils.isBlank(parameter.getValue().toString()) && (mandatorySet.remove(parameter.getName()) || !brief)) {
                         String valueString = parameter.getValue().getClass().isArray() ?
                                 Arrays.toString((Object[]) parameter.getValue()) :
                                 String.valueOf(parameter.getValue());
-                        records.add(createPrintLine("    " + parameter.getName() + ": ", PARAM, valueString, DEFAULT));
+                        records.add(createPrintLine("    " + parameter.getName() + ": ", color.apply(PARAM), valueString, color.apply(DEFAULT)));
                     }
                 }
             }
             for (String notSetMandatoryParameter : mandatorySet) {
-                records.add(createPrintLine("    " + notSetMandatoryParameter + ": <not set>", ERROR));
+                records.add(createPrintLine("    " + notSetMandatoryParameter + ": <not set>", color.apply(ERROR)));
             }
         }
 
@@ -167,7 +156,7 @@ public class StatusPrinter {
         }
     }
 
-    private static class ExternalResourcesAdder implements Consumer<AnalysisEngineDescription> {
+    private static class ExternalResourcesAdder implements Consumer<Description> {
 
         private List<PrintLine> records;
 
@@ -176,10 +165,12 @@ public class StatusPrinter {
         }
 
         @Override
-        public void accept(AnalysisEngineDescription desc) {
+        public void accept(Description description) {
+            Function<String, String> color = str -> description.isActive() ? str : DEACTIVATED_COMPONENT;
+            final AnalysisEngineDescription desc = description.getDescriptorAsAnalysisEngineDescription();
             ExternalResourceDependency[] externalResourceDependencies = desc.getExternalResourceDependencies();
             if (externalResourceDependencies != null && externalResourceDependencies.length > 0) {
-                records.add(createPrintLine("    External Resources:", HEADER));
+                records.add(createPrintLine("    External Resources:", color.apply(HEADER)));
                 // Show all external resource dependencies by displaying their key and the resource name
                 // the key is bound to.
                 Set<String> dependenciesToSatisfy = Stream.of(externalResourceDependencies).
@@ -198,23 +189,23 @@ public class StatusPrinter {
                 Stream.of(externalResourceDependencies).forEach(dependency -> {
                     if (bindingMap.keySet().contains(dependency.getKey())) {
                         String resourceName = bindingMap.get(dependency.getKey());
-                        records.add(createPrintLine("    " + dependency.getKey() + ": " + resourceName, DEFAULT));
+                        records.add(createPrintLine("    " + dependency.getKey() + ": " + resourceName, color.apply(DEFAULT)));
                         Optional<ExternalResourceDescription> resDescOpt =
                                 Stream.of(desc.getResourceManagerConfiguration().getExternalResources()).
                                         filter(res -> res.getName().equals(resourceName)).
                                         findFirst();
                         if (resDescOpt.isPresent()) {
                             ExternalResourceDescription resourceDesc = resDescOpt.get();
-                            records.add(createPrintLine("       Name: ", FIXED, resourceDesc.getName(), DEFAULT));
-                            records.add(createPrintLine("       Description: ", FIXED, resourceDesc.getDescription(), DEFAULT));
-                            records.add(createPrintLine("       Implementation: ", FIXED, resourceDesc.getImplementationName(), DEFAULT));
+                            records.add(createPrintLine("       Name: ", color.apply(FIXED), resourceDesc.getName(), color.apply(DEFAULT)));
+                            records.add(createPrintLine("       Description: ", color.apply(FIXED), resourceDesc.getDescription(), color.apply(DEFAULT)));
+                            records.add(createPrintLine("       Implementation: ", color.apply(FIXED), resourceDesc.getImplementationName(), color.apply(DEFAULT)));
                             String url = null;
                             ResourceSpecifier resourceSpecifier = resourceDesc.getResourceSpecifier();
                             if (resourceSpecifier instanceof FileResourceSpecifier)
                                 url = ((FileResourceSpecifier) resourceSpecifier).getFileUrl();
                             else if (resourceSpecifier instanceof ConfigurableDataResourceSpecifier)
                                 url = ((ConfigurableDataResourceSpecifier) resourceSpecifier).getUrl();
-                            records.add(createPrintLine("       Resource URL: ", StringUtils.isBlank(url) ? ERROR : FIXED, url, DEFAULT));
+                            records.add(createPrintLine("       Resource URL: ", StringUtils.isBlank(url) ? color.apply(ERROR) : color.apply(FIXED), url, color.apply(DEFAULT)));
                             if (resourceSpecifier instanceof ConfigurableDataResourceSpecifier) {
                                 ConfigurableDataResourceSpecifier configurableDataResourceSpecifier = (ConfigurableDataResourceSpecifier) resourceSpecifier;
                                 ConfigurationParameter[] declarations = configurableDataResourceSpecifier.
@@ -225,16 +216,16 @@ public class StatusPrinter {
                                     ConfigurationParameter declaration = declarations[i];
                                     String name = declaration.getName();
                                     Object value = Optional.of(settings.get(name)).orElseGet(NameValuePair_impl::new).getValue();
-                                    String reportLevel = DEFAULT;
+                                    String reportLevel = color.apply(DEFAULT);
                                     if (declaration.isMandatory() && (value == null || StringUtils.isBlank(value.toString())))
-                                        reportLevel = ERROR;
+                                        reportLevel = color.apply(ERROR);
                                     records.add(createPrintLine("       " + name + ": ", PARAM, value.toString(), reportLevel));
 
                                 }
                             }
                         }
                     } else {
-                        records.add(createPrintLine("    " + dependency.getKey() + ": <not bound>", ERROR));
+                        records.add(createPrintLine("    " + dependency.getKey() + ": <not bound>", color.apply(ERROR)));
                     }
                 });
             }

@@ -13,6 +13,8 @@ public class TerminalPrefixes {
     public static final String WELCOME = "welcome";
     public static final String EMPHASIS = "emphasis";
     public static final String COMPONENT_NAME = "componentname";
+    public static final String DEACTIVATED_COMPONENT = "deactivatedcomponent";
+    public static final String PARAMETERS = "parameters";
 
     private TerminalPrefixes() {
     }

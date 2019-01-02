@@ -36,6 +36,7 @@ public class ConfigurePipelineDialog implements ILoopablePipelineManipulationDia
         itemList.add(new ComponentConfigurationSelectionDialog());
         itemList.add(new ReorderComponentsDialog());
         itemList.add(new RemoveComponentDialog());
+        itemList.add(new ActivationDialog());
         itemList.add(new ArtifactVersionDialog());
         itemList.add(new BackMenuItem());
 

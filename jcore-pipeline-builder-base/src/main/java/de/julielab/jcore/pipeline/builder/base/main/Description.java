@@ -73,14 +73,37 @@ public class Description implements Serializable, Cloneable {
     private Boolean initCapabilities = false;
     private Map<String, ConfigurationParameter> configurationParameter = null;
     private MetaDescription metaDescription;
+    private boolean isActive = true;
+
     /**
      * Required for JSON deserialization and tests.
      */
     public Description() {
     }
+
     public Description(URL sourceUrl) throws URISyntaxException, IOException, InvalidXMLException {
         this.uri = sourceUrl.toURI();
         parseDescXml(UriUtilities.getInputStreamFromUri(sourceUrl.toURI()), xmlName);
+    }
+
+    /**
+     * Returns whether this component is active. Non-active components are not stored in the pipeline desc/
+     * directory and also not included in the CPE.xml.
+     * @return true, if this component is active, false otherwise.
+     */
+    public boolean isActive() {
+        return isActive;
+    }
+
+    /**
+     *
+     * @param active
+     * @see #isActive
+     */
+    public void setActive(boolean active) {
+        if (category == JcoreMeta.Category.reader && !active)
+            throw new IllegalArgumentException("CollectionReaders may not be deactivated.");
+        isActive = active;
     }
 
     /**
