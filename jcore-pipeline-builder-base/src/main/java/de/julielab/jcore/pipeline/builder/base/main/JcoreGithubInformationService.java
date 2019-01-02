@@ -104,6 +104,7 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
                 e1.printStackTrace();
             }
             logger.info("JsonException while trying to read a stored meta information file. Reloading from GitHub.");
+            logger.debug("The exception was", e);
             loadComponentMetaInformation(true, repository);
         } catch (IOException e) {
             throw new GithubInformationException(e);
