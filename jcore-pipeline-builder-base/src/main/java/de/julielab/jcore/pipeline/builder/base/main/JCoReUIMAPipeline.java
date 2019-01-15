@@ -668,7 +668,7 @@ public class JCoReUIMAPipeline {
             // When accessing aggregate engine delegates, their types are resolved. Thus, we first need to load
             // the libraries of the pipeline
             long time = System.currentTimeMillis();
-            getClasspathElements().parallel().forEach(JarLoader::addJarToClassPath);
+            getClasspathElements().filter(file -> file.getName().contains("type")).forEach(JarLoader::addJarToClassPath);
             time = System.currentTimeMillis() - time;
             log.debug("Loading of dependencies took {}ms ({}s)", time, time/1000);
             if (crDescription == null && crDescs != null && !crDescs.isEmpty())
