@@ -669,7 +669,7 @@ public class JCoReUIMAPipeline {
             // the libraries of the pipeline
             long time = System.currentTimeMillis();
             getClasspathElements().parallel().forEach(JarLoader::addJarToClassPath);
-            time = time - System.currentTimeMillis();
+            time = System.currentTimeMillis() - time;
             log.debug("Loading of dependencies took {}ms ({}s)", time, time/1000);
             if (crDescription == null && crDescs != null && !crDescs.isEmpty())
                 crDescription = new Description(crDescs.get(0).getSourceUrl());
@@ -700,14 +700,18 @@ public class JCoReUIMAPipeline {
             // Set the descriptors to the descriptions as they were read from file. The descriptions have their own version
             // which in principle is fine. But since we store the descriptions in a binary format, they cannot easily be
             // modified outside of the pipeline builder. But we want to make traditional editing possible.
-            if (crDescription != null && !crDescs.isEmpty())
-                crDescription.setDescriptor(crDescs.get(0));
-            if (aaeCmDesc != null && !cmDelegates.isEmpty())
-                setAaeDescriptors(aaeCmDesc, cmDelegates, "CAS Multiplier");
-            if (aaeDesc != null && !aeDelegates.isEmpty())
-                setAaeDescriptors(aaeDesc, aeDelegates, "Analysis Engine");
-            if (ccDesc != null && !ccDelegates.isEmpty() && ccDesc instanceof AnalysisEngineDescription)
-                setAaeDescriptors((AnalysisEngineDescription) ccDesc, ccDelegates, "CAS Consumer");
+            try {
+                if (crDescription != null && !crDescs.isEmpty())
+                    crDescription.setDescriptor(crDescs.get(0));
+                if (aaeCmDesc != null && !cmDelegates.isEmpty())
+                    setAaeDescriptors(aaeCmDesc, cmDelegates, "CAS Multiplier");
+                if (aaeDesc != null && !aeDelegates.isEmpty())
+                    setAaeDescriptors(aaeDesc, aeDelegates, "Analysis Engine");
+                if (ccDesc != null && !ccDelegates.isEmpty() && ccDesc instanceof AnalysisEngineDescription)
+                    setAaeDescriptors((AnalysisEngineDescription) ccDesc, ccDelegates, "CAS Consumer");
+            } catch (Exception e) {
+                log.warn("Could not set descriptor files from the {}/ directory to the serialized meta descriptions. Changes in the descriptors that have not been stored in the meta descriptions won't be available.", DIR_DESC, e);
+            }
 
 
             File confDir = new File(loadDirectory.getAbsolutePath() + File.separator + DIR_CONF);
