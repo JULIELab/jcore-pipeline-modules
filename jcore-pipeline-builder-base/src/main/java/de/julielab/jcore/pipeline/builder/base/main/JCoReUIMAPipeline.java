@@ -667,7 +667,10 @@ public class JCoReUIMAPipeline {
             // the descriptions are loaded at the beginning of the method, if existent
             // When accessing aggregate engine delegates, their types are resolved. Thus, we first need to load
             // the libraries of the pipeline
-            getClasspathElements().forEach(JarLoader::addJarToClassPath);
+            long time = System.currentTimeMillis();
+            getClasspathElements().parallel().forEach(JarLoader::addJarToClassPath);
+            time = time - System.currentTimeMillis();
+            log.debug("Loading of dependencies took {}ms ({}s)", time, time/1000);
             if (crDescription == null && crDescs != null && !crDescs.isEmpty())
                 crDescription = new Description(crDescs.get(0).getSourceUrl());
             if (!cmDescs.isEmpty())

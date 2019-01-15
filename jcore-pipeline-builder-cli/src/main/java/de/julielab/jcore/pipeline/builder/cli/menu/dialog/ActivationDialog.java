@@ -54,7 +54,7 @@ public class ActivationDialog extends AbstractComponentSelectionDialog {
 
     @Override
     public String getName() {
-        return "Manage component activation status";
+        return "Manage Component Activation Status";
     }
 
     private class ActivateAllMenuItem implements IMenuItem {
