@@ -70,6 +70,7 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
             mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_ABSENT);
             mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
             mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_EMPTY);
+            mapper.addMixIn(Description.class, DescriptionRepositoryStorageMixin.class);
             // enable pretty printing
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
             mapper.writeValue(FileUtilities.getWriterToFile(metaFile), getMetaInformation());

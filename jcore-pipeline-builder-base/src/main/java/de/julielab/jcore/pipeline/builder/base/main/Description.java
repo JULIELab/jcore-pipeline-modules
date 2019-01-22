@@ -39,7 +39,7 @@ public class Description implements Serializable, Cloneable {
      * This version UID is manually maintained. Thus it is important to change it when the class actually becomes
      * incompatible with older version.
      */
-    private static final long serialVersionUID = 2018_06_19_001L;
+    private static final long serialVersionUID = 2019_01_21_001L;
     private static Logger logger = LoggerFactory.getLogger(Description.class);
     /**
      * The URI of the original UIMA descriptor within a JAR.
@@ -64,7 +64,6 @@ public class Description implements Serializable, Cloneable {
     /**
      * The descriptor category as read from the actual descriptor.
      */
-
     private String descriptorType;
     private Map<String, ArrayList<String>> capabilities = new HashMap<String, ArrayList<String>>() {{
         put(Descriptor.CAPABILITIES_IN, new ArrayList<>());
@@ -74,6 +73,7 @@ public class Description implements Serializable, Cloneable {
     private Map<String, ConfigurationParameter> configurationParameter = null;
     private MetaDescription metaDescription;
     private boolean isActive = true;
+    private String name;
 
     /**
      * Required for JSON deserialization and tests.
@@ -89,6 +89,7 @@ public class Description implements Serializable, Cloneable {
     /**
      * Returns whether this component is active. Non-active components are not stored in the pipeline desc/
      * directory and also not included in the CPE.xml.
+     *
      * @return true, if this component is active, false otherwise.
      */
     public boolean isActive() {
@@ -96,7 +97,6 @@ public class Description implements Serializable, Cloneable {
     }
 
     /**
-     *
      * @param active
      * @see #isActive
      */
@@ -218,14 +218,18 @@ public class Description implements Serializable, Cloneable {
         return this.capabilities.getOrDefault(type, null);
     }
 
-    @JsonIgnore
     public String getName() {
-        return getMetaData() != null ? getMetaData().getName() : getMetaDescription().getName();
+        if (name == null) {
+            if (getMetaData() != null)
+                name = getMetaData().getName();
+            else if (getMetaDescription() != null)
+                name = getMetaDescription().getName();
+        }
+        return name;
     }
 
     public void setName(String name) {
-        if (getMetaData() != null) getMetaData().setName(name);
-        else getMetaDescription().setName(name);
+        this.name = name;
     }
 
     @JsonIgnore
@@ -306,7 +310,6 @@ public class Description implements Serializable, Cloneable {
         return Objects.hash(uri, location, category, specifier, descriptorType, capabilities, configurationParameter, metaDescription, getName());
     }
 
-    @JsonIgnore
     public MetaDescription getMetaDescription() {
         return metaDescription;
     }

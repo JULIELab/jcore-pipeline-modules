@@ -78,7 +78,7 @@ public class MetaDescription implements IMetaDescription, Serializable {
         this.baseProject = baseProject;
     }
 
-    public String getDescription() throws DescriptorLoadingException {
+    public String getDescription() {
         return description;
     }
 
@@ -250,7 +250,6 @@ public class MetaDescription implements IMetaDescription, Serializable {
         artifactInitialized = true;
     }
 
-    @JsonIgnore
     public ComponentRepository getModule() {
         return module;
     }

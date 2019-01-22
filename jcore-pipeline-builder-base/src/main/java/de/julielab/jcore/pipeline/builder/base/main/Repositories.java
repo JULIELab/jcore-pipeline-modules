@@ -22,7 +22,7 @@ import static de.julielab.jcore.pipeline.builder.base.configurations.PipelineBui
 public class Repositories {
 
     public static final ComponentRepository[] JCORE_REPOSITORIES = new ComponentRepository[]{new GitHubRepository("jcore-base", "v2.4", "JULIELab"),
-            new GitHubRepository("jcore-projects", "2.3.0-SNAPSHOT", "JULIELab")
+            new GitHubRepository("jcore-projects", "v2.4", "JULIELab")
     };
     private final static Logger log = LoggerFactory.getLogger(Repositories.class);
 

@@ -35,6 +35,7 @@ public class JCoReUIMAPipelineTest {
         Description cmDesc = new Description();
         AnalysisEngineDescription_impl cm = new AnalysisEngineDescription_impl();
         cm.getMetaData().setName("The CM");
+        cm.setPrimitive(true);
         cm.getAnalysisEngineMetaData().getOperationalProperties().setOutputsNewCASes(true);
         cmDesc.setDescriptor(cm);
         pipeline.addCasMultiplier(cmDesc);
@@ -42,5 +43,9 @@ public class JCoReUIMAPipelineTest {
         File directory = new File("src/test/resources/pipelinestorage");
         FileUtils.deleteQuietly(directory);
         assertThatCode(() -> pipeline.store(directory)).doesNotThrowAnyException();
+
+        final JCoReUIMAPipeline loadingPipeline = new JCoReUIMAPipeline(directory);
+        assertThatCode(() -> loadingPipeline.load(true)).doesNotThrowAnyException();
+
     }
 }

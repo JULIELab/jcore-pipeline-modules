@@ -94,6 +94,8 @@ public class DescriptorConfigurationDialog implements ILoopablePipelineManipulat
         } else if (choice.getName().equals("<Component Name>")) {
             String name = textIO.newStringInputReader().read("Enter the new component name:");
             description.setName(name);
+            if (description.getDescriptor() instanceof AnalysisEngineDescription)
+                description.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData().setName(name);
         } else if (choice instanceof ExternalResourceEditingMenuItem) {
             ExternalResourceEditingMenuItem item = (ExternalResourceEditingMenuItem) choice;
             Optional<ExternalResourceBinding> resourceBinding = Optional.empty();

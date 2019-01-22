@@ -9,6 +9,8 @@ import org.apache.uima.resource.*;
 import org.apache.uima.resource.metadata.*;
 import org.apache.uima.resource.metadata.impl.NameValuePair_impl;
 import org.beryx.textio.TextIO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -20,6 +22,7 @@ import static de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes.*;
 import static de.julielab.jcore.pipeline.builder.cli.util.TextIOUtils.createPrintLine;
 
 public class StatusPrinter {
+    private final static Logger log = LoggerFactory.getLogger(StatusPrinter.class);
 
     public static void printComponentStatus(Description description, boolean brief, TextIO textIO) {
         List<PrintLine> records = getComponentStatusRecords(description, brief);
@@ -36,7 +39,7 @@ public class StatusPrinter {
         //String version = metaDescription.getVersion();
         TextIOUtils.printLines(Stream.of(
                 createPrintLine("Component Name: ", FIXED, name, DEFAULT),
-                createPrintLine("Component Module: ", FIXED, module.getName(), DEFAULT)//,
+                createPrintLine("Component Module: ", FIXED, module != null ? module.getName() : "<unknown>", DEFAULT)//,
                 //createPrintLine("Component Version: ", FIXED, version, DEFAULT)
         ), textIO);
     }
@@ -120,30 +123,35 @@ public class StatusPrinter {
 
         @Override
         public void accept(Description description) {
-            ResourceMetaData metaData = ((ResourceCreationSpecifier) description.getDescriptor()).getMetaData();
-            Function<String, String> color = str -> description.isActive() ? str : DEACTIVATED_COMPONENT;
-            if (description.isActive())
-                records.add(createPrintLine("  - " + metaData.getName(), COMPONENT_NAME));
-            else
-                records.add(createPrintLine("  - " + metaData.getName() + " (DEACTIVATED)", DEACTIVATED_COMPONENT));
-            records.add(createPrintLine("    Maven artifact: " + getArtifactString(description), color.apply(DEFAULT)));
-            NameValuePair[] parameterSettings = metaData.getConfigurationParameterSettings().getParameterSettings();
-            Set<String> mandatorySet = Stream.of(metaData.getConfigurationParameterDeclarations().getConfigurationParameters()).
-                    filter(ConfigurationParameter::isMandatory).map(ConfigurationParameter::getName).collect(Collectors.toSet());
-            if ((parameterSettings != null && parameterSettings.length > 0) || !mandatorySet.isEmpty())
-                records.add(createPrintLine("    Mandatory Parameters:", color.apply(PARAMETERS)));
-            if (parameterSettings != null) {
-                for (NameValuePair parameter : parameterSettings) {
-                    if (!StringUtils.isBlank(parameter.getValue().toString()) && (mandatorySet.remove(parameter.getName()) || !brief)) {
-                        String valueString = parameter.getValue().getClass().isArray() ?
-                                Arrays.toString((Object[]) parameter.getValue()) :
-                                String.valueOf(parameter.getValue());
-                        records.add(createPrintLine("    " + parameter.getName() + ": ", color.apply(PARAM), valueString, color.apply(DEFAULT)));
+            try {
+                ResourceMetaData metaData = ((ResourceCreationSpecifier) description.getDescriptor()).getMetaData();
+                Function<String, String> color = str -> description.isActive() ? str : DEACTIVATED_COMPONENT;
+                if (description.isActive())
+                    records.add(createPrintLine("  - " + metaData.getName(), COMPONENT_NAME));
+                else
+                    records.add(createPrintLine("  - " + metaData.getName() + " (DEACTIVATED)", DEACTIVATED_COMPONENT));
+                records.add(createPrintLine("    Maven artifact: " + getArtifactString(description), color.apply(DEFAULT)));
+                NameValuePair[] parameterSettings = metaData.getConfigurationParameterSettings().getParameterSettings();
+                Set<String> mandatorySet = Stream.of(metaData.getConfigurationParameterDeclarations().getConfigurationParameters()).
+                        filter(ConfigurationParameter::isMandatory).map(ConfigurationParameter::getName).collect(Collectors.toSet());
+                if ((parameterSettings != null && parameterSettings.length > 0) || !mandatorySet.isEmpty())
+                    records.add(createPrintLine("    Mandatory Parameters:", color.apply(PARAMETERS)));
+                if (parameterSettings != null) {
+                    for (NameValuePair parameter : parameterSettings) {
+                        if (!StringUtils.isBlank(parameter.getValue().toString()) && (mandatorySet.remove(parameter.getName()) || !brief)) {
+                            String valueString = parameter.getValue().getClass().isArray() ?
+                                    Arrays.toString((Object[]) parameter.getValue()) :
+                                    String.valueOf(parameter.getValue());
+                            records.add(createPrintLine("    " + parameter.getName() + ": ", color.apply(PARAM), valueString, color.apply(DEFAULT)));
+                        }
                     }
                 }
-            }
-            for (String notSetMandatoryParameter : mandatorySet) {
-                records.add(createPrintLine("    " + notSetMandatoryParameter + ": <not set>", color.apply(ERROR)));
+                for (String notSetMandatoryParameter : mandatorySet) {
+                    records.add(createPrintLine("    " + notSetMandatoryParameter + ": <not set>", color.apply(ERROR)));
+                }
+            } catch (Throwable t) {
+                log.error("Error occurred when trying to write the information for component " + description);
+                throw t;
             }
         }
 
