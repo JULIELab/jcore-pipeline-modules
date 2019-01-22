@@ -726,8 +726,8 @@ public class JCoReUIMAPipeline {
             log.debug("Loading of dependencies took {}ms ({}s)", time, time / 1000);
             if (crDescription == null && crDescs != null && !crDescs.isEmpty())
                 crDescription = new Description(crDescs.get(0).getSourceUrl());
-            if (!cmDescs.isEmpty())
-                aaeCmDesc = cmDescs.get(0);
+            //if (!cmDescs.isEmpty())
+              //  aaeCmDesc = cmDescs.get(0);
             if (aaeCmDescs.size() == 1)
                 aaeCmDesc = aaeCmDescs.get(0);
             if (aaeCmDescs.size() > 1)
