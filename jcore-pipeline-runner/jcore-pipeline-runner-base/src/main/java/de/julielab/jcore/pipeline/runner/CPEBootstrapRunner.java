@@ -3,7 +3,6 @@ package de.julielab.jcore.pipeline.runner;
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.runner.spi.IPipelineRunner;
-import de.julielab.jcore.pipeline.runner.util.PipelineInstantiationException;
 import de.julielab.jcore.pipeline.runner.util.PipelineRunningException;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -32,9 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static de.julielab.java.utilities.ConfigurationUtilities.slash;
-import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.NAME;
-import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.NUMTHREADS;
-import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.PIPELINEPATH;
+import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.*;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 
 
@@ -48,12 +45,13 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             pipeline.load(false);
             final String plp = pipeline.getLoadDirectory().getAbsolutePath();
             int numThreads = runnerConfig.containsKey(NUMTHREADS) ? runnerConfig.getInt(NUMTHREADS) : 2;
+            String memory = runnerConfig.containsKey(HEAP_SIZE) ? runnerConfig.getString(HEAP_SIZE) : "2G";
             final File cpeRunnerJar = findCpeRunnerJar();
             Stream<File> classpathElements = pipeline.getClasspathElements();
             classpathElements = Stream.concat(classpathElements, Stream.of(cpeRunnerJar, new File(plp + File.separator + JCoReUIMAPipeline.DIR_CONF), new File(plp + File.separator + "resources")));
             String classpath = classpathElements.map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
 
-            final String[] cmdarray = {"java", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads)};
+            final String[] cmdarray = {"java", "-Xmx" + memory, "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads)};
             log.info("Running the pipeline at {} with the following command line: {}", pipeline.getLoadDirectory(), Arrays.toString(cmdarray));
             final Process exec = Runtime.getRuntime().exec(cmdarray);
             final InputStreamGobbler isg = new InputStreamGobbler(exec.getInputStream(), "StdInGobbler", "std");
