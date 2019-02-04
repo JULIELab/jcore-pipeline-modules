@@ -2,6 +2,8 @@ package de.julielab.jcore.pipeline.builder.base.main;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import de.julielab.java.utilities.FileUtilities;
 import de.julielab.java.utilities.classpath.JarLoader;
@@ -148,6 +150,7 @@ public class JCoReUIMAPipeline {
     public void setCrDescription(Description crDescription) {
         this.crDescription = crDescription;
         this.crDesc = crDescription.getDescriptorAsCollectionReaderDescription();
+        avoidNamingCollisions(crDescription);
     }
 
     /**
@@ -168,6 +171,8 @@ public class JCoReUIMAPipeline {
             throw new IllegalArgumentException("There is already a consumer represented by a " +
                     " " + CasConsumerDescription.class.getCanonicalName() + ". " +
                     "Those are deprecated and only one can be used in each pipeline.");
+        avoidArtifactVersionConflicts(ccDesc);
+        avoidNamingCollisions(ccDesc);
         this.ccDelegates.add(ccDesc);
     }
 
@@ -458,7 +463,7 @@ public class JCoReUIMAPipeline {
                 final File destination = getDescriptorStoragePath(description, descDir).toFile();
                 description.getDescriptorAsAnalysisEngineDescription().toXML(FileUtilities.getWriterToFile(destination), true);
                 flowNames.add(description.getName());
-            } else if (description.isActive() || ! filterDeactivated) {
+            } else if (description.isActive() || !filterDeactivated) {
                 Import_impl imp = new Import_impl();
                 File pearDescriptorFile = new File(description.getLocation());
                 imp.setLocation(pearDescriptorFile.toURI().toString());
@@ -499,11 +504,11 @@ public class JCoReUIMAPipeline {
         }
         if (!aeDelegates.isEmpty() && aeDelegates.size() > 1) {
             final AnalysisEngineDescription aae = createAAE(descDirAll, "AggregateAnalysisEngine", aeDelegates, aeDelegates.stream().map(Description::getDescriptorAsAnalysisEngineDescription), false);
-            storeDescriptor(aae, Paths.get(descDirAll.getAbsolutePath(), aae.getMetaData().getName()+ ".xml").toFile());
+            storeDescriptor(aae, Paths.get(descDirAll.getAbsolutePath(), aae.getMetaData().getName() + ".xml").toFile());
         }
         if (!ccDelegates.isEmpty() && ccDelegates.size() > 1) {
             final AnalysisEngineDescription aae = createAAE(descDirAll, "AggregateConsumer", ccDelegates, ccDelegates.stream().map(Description::getDescriptorAsAnalysisEngineDescription), false);
-            storeDescriptor(aae, Paths.get(descDirAll.getAbsolutePath(), aae.getMetaData().getName()+ ".xml").toFile());
+            storeDescriptor(aae, Paths.get(descDirAll.getAbsolutePath(), aae.getMetaData().getName() + ".xml").toFile());
         }
 
     }
@@ -716,7 +721,6 @@ public class JCoReUIMAPipeline {
                         descDir.getAbsolutePath() + ": " + crDescs.stream().map(ResourceSpecifier::getSourceUrlString).collect(joining("\n")));
 
 
-
             // the descriptions are loaded at the beginning of the method, if existent
             // When accessing aggregate engine delegates, their types are resolved. Thus, we first need to load
             // the libraries of the pipeline
@@ -781,7 +785,7 @@ public class JCoReUIMAPipeline {
             }
 
 
-        } catch (IOException | InvalidXMLException | URISyntaxException| ResourceInitializationException e) {
+        } catch (IOException | InvalidXMLException | URISyntaxException | ResourceInitializationException e) {
             throw new PipelineIOException(e);
         }
         return this;
@@ -888,8 +892,32 @@ public class JCoReUIMAPipeline {
             if (aeDesc.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData().getOperationalProperties().getOutputsNewCASes())
                 throw new IllegalArgumentException("The passed description " + aeDesc + " is set to output new CASes, i.e. " +
                         "it is a CAS multiplier. Add it via the appropriate method to the pipeline.");
+            avoidArtifactVersionConflicts(aeDesc);
+            avoidNamingCollisions(aeDesc);
         }
         aeDelegates.add(aeDesc);
+    }
+
+    private void avoidNamingCollisions(Description desc) {
+        final Multiset<String> existingDescriptorNames = getExistingDescriptorNames();
+        int i = 1;
+        while (existingDescriptorNames.contains(desc.getName())) {
+            desc.setName(desc.getName() + " " + i++);
+        }
+    }
+
+    /**
+     * Returns the name of all component descriptions (not descriptors) added to this pipeline in a multiset. Thus,
+     * duplicates will also be returned here for validity checks.
+     * @return A multiset of component description names.
+     */
+    public Multiset<String> getExistingDescriptorNames() {
+        Multiset<String> names = HashMultiset.create();
+        if (crDescription != null) names.add(crDescription.getName());
+        cmDelegates.stream().map(Description::getName).forEach(names::add);
+        aeDelegates.stream().map(Description::getName).forEach(names::add);
+        ccDelegates.stream().map(Description::getName).forEach(names::add);
+        return names;
     }
 
     /**
@@ -906,7 +934,28 @@ public class JCoReUIMAPipeline {
         if (!multiplier.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData().getOperationalProperties().getOutputsNewCASes())
             throw new IllegalArgumentException("The passed description " + multiplier + " is set not to output new CASes, i.e. " +
                     "it is a simple analysis engine and not a CAS multiplier. Add it via the appropriate method to the pipeline.");
+        avoidArtifactVersionConflicts(multiplier);
+        avoidNamingCollisions(multiplier);
         cmDelegates.add(multiplier);
+    }
+
+    /**
+     * Retrieves a Maven artifact of already added components that equals the Maven artifact of the passed
+     * description except its version. If such an artifact is found, its version is set to the added description version.
+     * The goal is to synchonize the versions to avoid version conflicts.
+     * @param description A description to be added to the pipeline that should by synched to existing Maven artifact versions, if any.
+     */
+    private void avoidArtifactVersionConflicts(Description description) {
+        if (description.getMetaDescription() != null && description.getMetaDescription().getMavenArtifact() != null) {
+            final MavenArtifact artifact = description.getMetaDescription().getMavenArtifact();
+            final Optional<MavenArtifact> anyExistingArtifactForComponent = getMavenComponentArtifacts().filter(a -> a.getArtifactId().equalsIgnoreCase(artifact.getArtifactId())
+                    && a.getGroupId().equalsIgnoreCase(artifact.getGroupId())
+                    && ((a.getClassifier() == null && artifact.getClassifier() == null) || a.getClassifier().equalsIgnoreCase(artifact.getClassifier()))
+                    && a.getPackaging().equalsIgnoreCase(artifact.getPackaging())).findAny();
+            if (anyExistingArtifactForComponent.isPresent()) {
+                description.getMetaDescription().getMavenArtifact().setVersion(anyExistingArtifactForComponent.get().getVersion());
+            }
+        }
     }
 
     public Stream<File> getClasspathElements() throws PipelineIOException {
@@ -930,19 +979,8 @@ public class JCoReUIMAPipeline {
                 libFilesStream = Stream.concat(libFilesStream, Stream.of(configJar));
             return libFilesStream;
         } else {
-            List<Stream<MavenArtifact>> artifactList = new ArrayList<>();
-            Function<Description, MavenArtifact> artifactExtractor = d ->
-                    d.getMetaDescription() != null ? d.getMetaDescription().getMavenArtifact() : null;
-            if (crDescription != null)
-                artifactList.add(Stream.of(artifactExtractor.apply(crDescription)));
-            if (cmDelegates != null)
-                artifactList.add(cmDelegates.stream().map(artifactExtractor));
-            if (aeDelegates != null)
-                artifactList.add(aeDelegates.stream().map(artifactExtractor));
-            if (ccDelegates != null)
-                artifactList.add(ccDelegates.stream().map(artifactExtractor));
-            // We filter for null objects because PEAR components don't have a Maven artifact
-            return artifactList.stream().flatMap(Function.identity()).filter(Objects::nonNull).flatMap(artifact -> {
+            final Stream<MavenArtifact> mavenArtifactStream = getMavenComponentArtifacts();
+            return mavenArtifactStream.flatMap(artifact -> {
                 try {
                     return AetherUtilities.getDependencies(artifact);
                 } catch (MavenException e) {
@@ -952,6 +990,22 @@ public class JCoReUIMAPipeline {
                 return null;
             }).map(Artifact::getFile);
         }
+    }
+
+    public Stream<MavenArtifact> getMavenComponentArtifacts() {
+        List<Stream<MavenArtifact>> artifactList = new ArrayList<>();
+        Function<Description, MavenArtifact> artifactExtractor = d ->
+                d.getMetaDescription() != null ? d.getMetaDescription().getMavenArtifact() : null;
+        if (crDescription != null)
+            artifactList.add(Stream.of(artifactExtractor.apply(crDescription)));
+        if (cmDelegates != null)
+            artifactList.add(cmDelegates.stream().map(artifactExtractor));
+        if (aeDelegates != null)
+            artifactList.add(aeDelegates.stream().map(artifactExtractor));
+        if (ccDelegates != null)
+            artifactList.add(ccDelegates.stream().map(artifactExtractor));
+        // We filter for null objects because PEAR components don't have a Maven artifact
+        return artifactList.stream().flatMap(Function.identity()).filter(Objects::nonNull);
     }
 
     /**

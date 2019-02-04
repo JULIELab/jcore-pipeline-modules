@@ -21,7 +21,7 @@ public class ArtifactVersionDialog extends AbstractComponentSelectionDialog {
         IMenuItem item = super.executeMenuItem(pipeline, textIO, path);
         if (item instanceof ComponentSelectionMenuItem) {
             ComponentSelectionMenuItem componentItem = (ComponentSelectionMenuItem) item;
-            new ArtifactVersionMenuItem(componentItem.getDescription()).selectVersion(textIO);
+            new ArtifactVersionMenuItem(componentItem.getDescription()).selectVersion(textIO, pipeline);
         } else if (item instanceof UpdateAllArtifactsDialog) {
             UpdateAllArtifactsDialog dialog = (UpdateAllArtifactsDialog) item;
             dialog.execute(pipeline, textIO);

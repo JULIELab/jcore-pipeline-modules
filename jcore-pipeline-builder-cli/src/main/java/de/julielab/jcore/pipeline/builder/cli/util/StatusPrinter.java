@@ -1,5 +1,6 @@
 package de.julielab.jcore.pipeline.builder.cli.util;
 
+import com.google.common.collect.Multiset;
 import de.julielab.jcore.pipeline.builder.base.main.*;
 import de.julielab.jcore.pipeline.builder.cli.menu.DescriptorSelectionMenuItem;
 import de.julielab.utilities.aether.MavenArtifact;
@@ -107,6 +108,15 @@ public class StatusPrinter {
         Map<String, List<ExternalResourceDescription>> resourcesByName = aes.map(Description::getDescriptorAsAnalysisEngineDescription).filter(ae -> ae.getResourceManagerConfiguration() != null).filter(ae -> ae.getResourceManagerConfiguration() != null).flatMap(ae -> Stream.of(ae.getResourceManagerConfiguration().getExternalResources())).collect(Collectors.groupingBy(er -> er.getName()));
         resourcesByName.entrySet().stream().filter(e -> e.getValue().size() > 1).forEach(e -> records.add(createPrintLine("Configuration error: There are multiple external resources with the name " + e.getKey() + ".\n    Go to the configuration dialog and adapt the names.", ERROR)));
 
+        // Check if there is a component name repeated
+        final Multiset<String> existingDescriptorNames = pipeline.getExistingDescriptorNames();
+        for (String name : existingDescriptorNames.elementSet()) {
+            final int count = existingDescriptorNames.count(name);
+            if (count > 1) {
+                records.add(createPrintLine("Configuration error: There are " + count + " components with the name '" + name + "'. Component names must be unique.", ERROR));
+            }
+        }
+
         return records;
     }
 
@@ -130,7 +140,11 @@ public class StatusPrinter {
                     metaData = descriptor.getMetaData();
                 else
                     log.warn("The description with name {} does not have a UIMA descriptor set", description.getName());
-                String componentName = metaData != null ? metaData.getName() : description.getName();
+                String componentName = "<no name set in description or meta data>";
+                if (description.getName() != null)
+                    componentName = description.getName();
+                else if (metaData != null)
+                    componentName = metaData.getName();
                 Function<String, String> color = str -> description.isActive() ? str : DEACTIVATED_COMPONENT;
                 if (description.isActive())
                     records.add(createPrintLine("  - " + componentName, COMPONENT_NAME));

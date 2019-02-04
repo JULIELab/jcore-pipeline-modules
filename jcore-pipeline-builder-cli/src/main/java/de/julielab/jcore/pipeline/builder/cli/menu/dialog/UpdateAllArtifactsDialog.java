@@ -53,7 +53,7 @@ private final static Logger log = LoggerFactory.getLogger(UpdateAllArtifactsDial
             }
         } else {
             for (Description description : itemList) {
-                new ArtifactVersionMenuItem(description).selectVersion(textIO);
+                new ArtifactVersionMenuItem(description).selectVersion(textIO, pipeline);
             }
         }
     }

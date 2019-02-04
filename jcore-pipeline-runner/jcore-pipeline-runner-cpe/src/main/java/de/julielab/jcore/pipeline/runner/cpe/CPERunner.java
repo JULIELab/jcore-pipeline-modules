@@ -143,8 +143,8 @@ public class CPERunner {
 						+ descBatchSize);
 				batchSize = descBatchSize;
 			} else {
-				LOGGER.info("CPE Checkpoint batch size not set in CPE descriptor. Setting batch size to 2000");
-				batchSize = 2000;
+				LOGGER.info("CPE Checkpoint batch size not set in CPE descriptor. Setting batch size to 500");
+				batchSize = 500;
 			}
 		}
 	}

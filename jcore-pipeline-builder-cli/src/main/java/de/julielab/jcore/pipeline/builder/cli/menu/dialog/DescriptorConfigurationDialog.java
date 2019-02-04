@@ -20,6 +20,8 @@ import java.util.Deque;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes.ERROR;
+
 public class DescriptorConfigurationDialog implements ILoopablePipelineManipulationDialog {
     private final static Logger log = LoggerFactory.getLogger(DescriptorConfigurationDialog.class);
     private MenuItemList<IMenuItem> itemList;
@@ -93,9 +95,13 @@ public class DescriptorConfigurationDialog implements ILoopablePipelineManipulat
             clearTerminal(textIO);
         } else if (choice.getName().equals("<Component Name>")) {
             String name = textIO.newStringInputReader().read("Enter the new component name:");
-            description.setName(name);
-            if (description.getDescriptor() instanceof AnalysisEngineDescription)
-                description.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData().setName(name);
+            if (!pipeline.getExistingDescriptorNames().contains(name)) {
+                description.setName(name);
+                if (description.getDescriptor() instanceof AnalysisEngineDescription)
+                    description.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData().setName(name);
+            } else {
+                textIO.getTextTerminal().executeWithPropertiesPrefix(ERROR, t -> t.println("Could not set the new descriptor name because another descriptor already has this name. Duplicate names are not allowed."));
+            }
         } else if (choice instanceof ExternalResourceEditingMenuItem) {
             ExternalResourceEditingMenuItem item = (ExternalResourceEditingMenuItem) choice;
             Optional<ExternalResourceBinding> resourceBinding = Optional.empty();
