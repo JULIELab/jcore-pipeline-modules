@@ -125,8 +125,8 @@ public class CPEBootstrapRunner implements IPipelineRunner {
     @Override
     public void exposeParameters(String basePath, HierarchicalConfiguration<ImmutableNode> template) {
         template.addProperty(slash(basePath, NAME), getName());
-        template.addProperty(slash(basePath, PIPELINEPATH), "");
-        template.addProperty(slash(basePath, NUMTHREADS), "2");
+        template.addProperty(slash(basePath, PIPELINEPATH), ".");
+        template.addProperty(slash(basePath, NUMTHREADS), "1");
     }
 
 

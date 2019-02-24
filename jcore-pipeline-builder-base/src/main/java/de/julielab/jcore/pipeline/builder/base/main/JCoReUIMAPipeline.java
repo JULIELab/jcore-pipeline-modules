@@ -273,23 +273,6 @@ public class JCoReUIMAPipeline {
                     ccFile = new File(descDir.getAbsolutePath() + File.separator + activeCCs.get(0).getUimaDescPath());
                 } else if (activeCCs.size() > 1) {
                     ccDesc = createAAE(descDir, "AggregateConsumer", ccDelegates, activeCCs.stream().map(Description::getDescriptorAsAnalysisEngineDescription), true);
-//                    // Create an empty aggregate
-//                    ccDesc = AnalysisEngineFactory.createEngineDescription();
-//                    AnalysisEngineDescription ccAAE = (AnalysisEngineDescription) ccDesc;
-//                    Map<String, MetaDataObject> delegateAnalysisEngineSpecifiersWithImports = ccAAE.getDelegateAnalysisEngineSpecifiersWithImports();
-//                    // Add the delegates to the aggregate via imports
-//                    for (Description desc : activeCCs) {
-//                        AnalysisEngineDescription ae = desc.getDescriptorAsAnalysisEngineDescription();
-//                        Import_impl aeImport = new Import_impl();
-//                        aeImport.setLocation(new File(desc.getUri()).getName());
-//                        aeImport.setSourceUrl(desc.getUri().toURL());
-//                        delegateAnalysisEngineSpecifiersWithImports.put(ae.getMetaData().getName(), aeImport);
-//                    }
-//                    // Create the AAE flow
-//                    FixedFlow_impl flow = new FixedFlow_impl();
-//                    String[] delegateNames = activeCCs.stream().map(Description::getDescriptorAsAnalysisEngineDescription).map(AnalysisEngineDescription::getMetaData).map(ResourceMetaData::getName).toArray(String[]::new);
-//                    flow.setFixedFlow(delegateNames);
-//                    ccAAE.getAnalysisEngineMetaData().setFlowConstraints(flow);
                     ccDesc.getMetaData().setName("JCoRe Consumer AAE");
                     ccDesc.getMetaData().setDescription("This consumer AAE descriptor directly contains the CAS consumers added " +
                             "through the JCoRe pipeline builder. The AAE serves to bundle all the components together.");
@@ -305,23 +288,33 @@ public class JCoReUIMAPipeline {
                 final File cpeFile = new File(descDir.getAbsolutePath() + File.separator +
                         "CPE.xml");
                 if (ccDelegates == null || ccDelegates.stream().map(Description::getDescriptor).filter(CasConsumer.class::isInstance).count() == 0) {
+
                     CpeBuilder builder = new CpeBuilder();
                     if (crDescription != null)
                         builder.setReader(crDescription.getDescriptorAsCollectionReaderDescription());
                     AnalysisEngineDescription cpeAAE = AnalysisEngineFactory.createEngineDescription();
 
+                    boolean multipleDeploymentAllowed = true;
                     cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().clear();
                     if (cmDelegates.stream().filter(Description::isActive).count() > 0) {
                         Import_impl cmImport = new Import_impl();
                         cmImport.setLocation(cmFile.getName());
                         cmImport.setSourceUrl(cmFile.toURI().toURL());
                         cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(aaeCmDesc.getMetaData().getName(), cmImport);
+                        final boolean cmMultipleDeploymentAllowed = aaeCmDesc.getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
+                        if (!cmMultipleDeploymentAllowed)
+                            log.warn("The CAS multiplier used for the CPE Aggregate Analysis engine does not support multiple deployments. Thus, the whole CPE will basically run singlethreaded.");
+                        multipleDeploymentAllowed &= cmMultipleDeploymentAllowed;
                     }
                     if (aaeDesc != null) {
                         Import_impl aaeImport = new Import_impl();
                         aaeImport.setLocation(aaeFile.getName());
                         aaeImport.setSourceUrl(aaeFile.toURI().toURL());
                         cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(aaeDesc.getMetaData().getName(), aaeImport);
+                        final boolean aaeMultipleDeploymentAllowed = aaeDesc.getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
+                        if (!aaeMultipleDeploymentAllowed)
+                            log.warn("The aggregate collecting the actual analysis engines used for the CPE Aggregate Analysis engine does not support multiple deployments. Thus, the whole CPE will basically run singlethreaded.");
+                        multipleDeploymentAllowed &= aaeMultipleDeploymentAllowed;
 
                     }
                     if (ccDelegates != null && ccDelegates.stream().filter(Description::isActive).count() > 0) {
@@ -329,7 +322,18 @@ public class JCoReUIMAPipeline {
                         ccImport.setLocation(ccFile.getName());
                         ccImport.setSourceUrl(ccFile.toURI().toURL());
                         cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(ccDesc.getMetaData().getName(), ccImport);
+                        boolean ccMultipleDeploymentAllowed = true;
+                        if (ccDesc instanceof AnalysisEngineDescription)
+                            ccMultipleDeploymentAllowed = ((AnalysisEngineDescription) ccDesc).getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
+                        else
+                            ccMultipleDeploymentAllowed = ((CasConsumerDescription) ccDesc).getCasConsumerMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
+                        if (!ccMultipleDeploymentAllowed)
+                            log.warn("The consumer (potentially an aggregate) used for the CPE Aggregate Analysis engine does not support multiple deployments. Thus, the whole CPE will basically run singlethreaded.");
+                        multipleDeploymentAllowed &= ccMultipleDeploymentAllowed;
                     }
+                    if (!multipleDeploymentAllowed)
+                        log.warn("The sole AggregateAnalysisEngine created for the CPE cannot allow multiple deployment because one of its delegate does not. This will render multithreading ineffective.");
+                    cpeAAE.getAnalysisEngineMetaData().getOperationalProperties().setMultipleDeploymentAllowed(multipleDeploymentAllowed);
                     Stream<ResourceCreationSpecifier> descriptorsForFlow = Stream.of(this.aaeCmDesc, aaeDesc);
                     if (ccDelegates != null && ccDelegates.stream().filter(Description::isActive).count() > 0)
                         descriptorsForFlow = Stream.concat(descriptorsForFlow, Stream.of(ccDesc));
@@ -340,6 +344,8 @@ public class JCoReUIMAPipeline {
                                     cpeAAEFile));
                     builder.setAnalysisEngine(cpeAAE);
                     CpeDescription cpeDescription = builder.getCpeDescription();
+                    // Modify the CollectionReader part of the CPE to just refer to the Collection Reader descriptor file
+                    // by relative location instead of absolute URLs.
                     if (crDescription != null) {
                         Import_impl crImport = new Import_impl();
                         crImport.setLocation(crFile.getName());
@@ -351,6 +357,11 @@ public class JCoReUIMAPipeline {
                         crDescriptor.setImport(crImport);
                     }
 
+                    // Now create a single import referencing the CPE AAE XML file. UIMAfit would just write
+                    // the complete markup of all the components of the CPE AAE into the CPE descriptor.
+                    // This has two issues:
+                    // 1. CAS multipliers seem only to work within an aggregate
+                    // 2. If we modify one of the descriptor files, the CPE won't reflect the change.
                     Import_impl cpeAaeImport = new Import_impl();
                     cpeAaeImport.setLocation(cpeAAEFile.getName());
                     CpeComponentDescriptorImpl cpeComponentDescriptor = new CpeComponentDescriptorImpl();
@@ -454,8 +465,14 @@ public class JCoReUIMAPipeline {
         Map<String, MetaDataObject> delegatesWithImports = aaeDesc.getDelegateAnalysisEngineSpecifiersWithImports();
         delegatesWithImports.clear();
         List<String> flowNames = new ArrayList<>();
+        boolean multipleDeploymentAllowed = true;
         for (int i = 0; i < allDelegates.size(); ++i) {
             Description description = allDelegates.get(i);
+            final boolean currentComponentAllowsMultipleDeployment = description.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
+            if (!currentComponentAllowsMultipleDeployment) {
+                log.warn("The component {} does not allow multiple deployment. Thus, multiple deployment won't be allowed for the whole AAE with name {}.", description.getName(), name);
+            }
+            multipleDeploymentAllowed &= currentComponentAllowsMultipleDeployment;
             if ((description.getMetaDescription() == null || !description.getMetaDescription().isPear()) && (description.isActive() || !filterDeactivated)) {
                 Import imp = new Import_impl();
                 imp.setLocation(description.getName() + ".xml");
@@ -478,6 +495,10 @@ public class JCoReUIMAPipeline {
         aaeDesc.getDelegateAnalysisEngineSpecifiers();
         ((FixedFlow) aaeDesc.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flowNames.toArray(new String[flowNames.size()]));
         aaeDesc.getAnalysisEngineMetaData().setName(name);
+        if (!multipleDeploymentAllowed) {
+            log.warn("Deactivating multiple deployments for the AAE {} because at least one delegate does not support multiple deployments.", name);
+            aaeDesc.getAnalysisEngineMetaData().getOperationalProperties().setMultipleDeploymentAllowed(false);
+        }
         return aaeDesc;
     }
 
@@ -909,6 +930,7 @@ public class JCoReUIMAPipeline {
     /**
      * Returns the name of all component descriptions (not descriptors) added to this pipeline in a multiset. Thus,
      * duplicates will also be returned here for validity checks.
+     *
      * @return A multiset of component description names.
      */
     public Multiset<String> getExistingDescriptorNames() {
@@ -943,6 +965,7 @@ public class JCoReUIMAPipeline {
      * Retrieves a Maven artifact of already added components that equals the Maven artifact of the passed
      * description except its version. If such an artifact is found, its version is set to the added description version.
      * The goal is to synchonize the versions to avoid version conflicts.
+     *
      * @param description A description to be added to the pipeline that should by synched to existing Maven artifact versions, if any.
      */
     private void avoidArtifactVersionConflicts(Description description) {
