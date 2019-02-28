@@ -21,6 +21,8 @@ import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import org.apache.commons.cli.*;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.collection.CollectionProcessingEngine;
+import org.apache.uima.collection.impl.metadata.cpe.CpeCheckpointImpl;
+import org.apache.uima.collection.impl.metadata.cpe.CpeConfigurationImpl;
 import org.apache.uima.collection.metadata.CpeDescription;
 import org.apache.uima.collection.metadata.CpeDescriptorException;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -115,6 +117,13 @@ public class CPERunner {
 		cpeDescription = UIMAFramework.getXMLParser().parseCpeDescription(
 				new XMLInputSource(descriptorPath));
 
+        if (cpeDescription.getCpeConfiguration() == null) {
+            cpeDescription.setCpeConfiguration(new CpeConfigurationImpl());
+            cpeDescription.getCpeConfiguration().setCheckpoint(new CpeCheckpointImpl());
+            cpeDescription.getCpeConfiguration().setDeployment("immediate");
+            cpeDescription.setNumToProcess(-1);
+        }
+
 		if (processingUnitThreadCount != null) {
 			LOGGER.info("Setting processing unit thread count to "
 					+ processingUnitThreadCount);
@@ -136,6 +145,7 @@ public class CPERunner {
 		if (batchSize != null) {
 			LOGGER.info("Setting CPE checkpoint batch size to " + batchSize);
 		} else {
+
 			int descBatchSize = cpeDescription.getCpeConfiguration()
 					.getCheckpoint().getBatchSize();
 			if (descBatchSize != 0) {

@@ -320,13 +320,7 @@ public class Description implements Serializable, Cloneable {
 
     @Override
     public String toString() {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            logger.debug("Error occurred when serializing description for toString(), only returning the name: ", e);
-            return getName();
-        }
+        return getName();
     }
 
     @Override

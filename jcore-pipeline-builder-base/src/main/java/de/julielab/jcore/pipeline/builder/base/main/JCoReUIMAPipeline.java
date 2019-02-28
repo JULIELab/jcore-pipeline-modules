@@ -151,8 +151,8 @@ public class JCoReUIMAPipeline {
 
     public void setCrDescription(Description crDescription) {
         this.crDescription = crDescription;
-        this.crDesc = crDescription.getDescriptorAsCollectionReaderDescription();
         avoidNamingCollisions(crDescription);
+        this.crDesc = crDescription.getDescriptorAsCollectionReaderDescription();
     }
 
     /**
@@ -174,6 +174,7 @@ public class JCoReUIMAPipeline {
                     " " + CasConsumerDescription.class.getCanonicalName() + ". " +
                     "Those are deprecated and only one can be used in each pipeline.");
         avoidArtifactVersionConflicts(ccDesc);
+
         avoidNamingCollisions(ccDesc);
         this.ccDelegates.add(ccDesc);
     }
@@ -428,9 +429,11 @@ public class JCoReUIMAPipeline {
         // Store the required Maven artifacts in the lib directory
         try {
             final File libDir = new File(directory.getAbsolutePath() + File.separator + DIR_LIB);
-            if (populateLibDir && libDir.exists()) {
-                log.debug("Removing all files from the library directory at {}", libDir);
-                Stream.of(libDir.listFiles()).forEach(File::delete);
+            if (populateLibDir) {
+                if (libDir.exists()) {
+                    log.debug("Removing all files from the library directory at {}", libDir);
+                    Stream.of(libDir.listFiles()).forEach(File::delete);
+                }
                 log.debug("Storing all artifact files to {}", libDir);
                 storeArtifacts(directory);
             }
@@ -941,16 +944,18 @@ public class JCoReUIMAPipeline {
                 throw new IllegalArgumentException("The passed description " + aeDesc + " is set to output new CASes, i.e. " +
                         "it is a CAS multiplier. Add it via the appropriate method to the pipeline.");
             avoidArtifactVersionConflicts(aeDesc);
-            avoidNamingCollisions(aeDesc);
         }
+
+        avoidNamingCollisions(aeDesc);
         aeDelegates.add(aeDesc);
     }
 
     private void avoidNamingCollisions(Description desc) {
         final Multiset<String> existingDescriptorNames = getExistingDescriptorNames();
         int i = 1;
+        String basename = desc.getName();
         while (existingDescriptorNames.contains(desc.getName())) {
-            desc.setName(desc.getName() + " " + i++);
+            desc.setName(basename + " " + i++);
         }
     }
 
