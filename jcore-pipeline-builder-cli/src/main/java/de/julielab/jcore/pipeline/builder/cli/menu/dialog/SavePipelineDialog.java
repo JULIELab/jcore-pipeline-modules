@@ -37,7 +37,7 @@ public class SavePipelineDialog implements IMenuDialog {
             PipelineBuilderCLI.pipelinePath = destination;
             File destinationFile = new File(destination);
             boolean store = true;
-            boolean clearLibDir = false;
+            boolean storeLibraries = false;
             if (destinationFile.exists()) {
                 Boolean overwrite = textIO.newBooleanInputReader()
                         .withDefaultValue(false)
@@ -50,10 +50,9 @@ public class SavePipelineDialog implements IMenuDialog {
                             withDefaultValue(false).
                             withFalseInput("N").
                             withTrueInput("Y").
-                            read("Do you want to clear the library directory \"" + destinationFile.getAbsolutePath() + File.separator + JCoReUIMAPipeline.DIR_LIB +
-                                    "\" before storage? This is useful when the version of components has changed.");
+                            read("Do you want to force to clear and (re-) populate the " + JCoReUIMAPipeline.DIR_LIB + " directory? This can be necessary in case the pipeline builder fails to recognize that dependencies have changed.");
                     if (clear) {
-                        clearLibDir = true;
+                        storeLibraries = true;
                     }
                 }
                 if (!overwrite) {
@@ -64,7 +63,9 @@ public class SavePipelineDialog implements IMenuDialog {
             if (store) {
                 textIO.getTextTerminal().println("Storing pipeline. It may take a while to gather all transitive " +
                         "dependencies, please wait...");
-                pipeline.store(destinationFile, clearLibDir);
+                pipeline.store(destinationFile, storeLibraries);
+                if (storeLibraries)
+                    PipelineBuilderCLI.dependenciesHaveChanged = false;
                 textIO.getTextTerminal().println("Saved pipeline to " + destinationFile.getAbsolutePath());
             }
         }

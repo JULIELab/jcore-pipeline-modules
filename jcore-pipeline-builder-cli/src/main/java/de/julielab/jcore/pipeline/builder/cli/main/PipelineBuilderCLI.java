@@ -25,6 +25,13 @@ public class PipelineBuilderCLI {
      * value is always set to this path.
      */
     public static String pipelinePath = "pipeline";
+    /**
+     * This value keeps track for the case that the dependencies of the pipeline have changed. If so, they
+     * need to be resolved and stored into the library directory upon pipeline storage.
+     * <p>
+     * This field is set to <tt>true</tt> if components are added or removed from the pipeline or if component versions have been set.
+     */
+    public static boolean dependenciesHaveChanged = false;
 
     public static void main(String args[]) {
         System.setProperty(PrerequisiteChecker.PREREQUISITE_CHECKS_ENABLED, "true");

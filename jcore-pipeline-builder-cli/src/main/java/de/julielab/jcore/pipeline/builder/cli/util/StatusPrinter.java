@@ -180,7 +180,7 @@ public class StatusPrinter {
         }
 
         private String getArtifactString(Description description) {
-            MavenArtifact artifact = description.getMetaDescription().getMavenArtifact();
+            MavenArtifact artifact = description.getMetaDescription().getMavenArtifactCoordinates();
             String artifactString = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion();
             if (artifact.getClassifier() != null)
                 artifactString += ":" + artifact.getClassifier();

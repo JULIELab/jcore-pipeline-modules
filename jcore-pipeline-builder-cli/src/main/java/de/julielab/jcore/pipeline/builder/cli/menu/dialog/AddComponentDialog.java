@@ -5,6 +5,7 @@ import de.julielab.jcore.pipeline.builder.base.exceptions.DescriptorLoadingExcep
 import de.julielab.jcore.pipeline.builder.base.main.Description;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
+import de.julielab.jcore.pipeline.builder.cli.main.PipelineBuilderCLI;
 import de.julielab.jcore.pipeline.builder.cli.menu.*;
 import de.julielab.jcore.pipeline.builder.cli.util.StatusPrinter;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -83,6 +84,7 @@ public class AddComponentDialog implements ILoopablePipelineManipulationDialog {
                                                 "component category \"" + category.name() + "\"."));
                                 errorPrinted = true;
                         }
+                        PipelineBuilderCLI.dependenciesHaveChanged = true;
                         clearTerminal(textIO);
                     } catch (Exception e) {
                         textIO.getTextTerminal().executeWithPropertiesPrefix(

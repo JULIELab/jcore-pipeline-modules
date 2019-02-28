@@ -180,7 +180,7 @@ public class JCoReUIMAPipeline {
         store(directory, false);
     }
 
-    public void store(File directory, boolean clearLibDir) throws PipelineIOException {
+    public void store(File directory, boolean populateLibDir) throws PipelineIOException {
 
         String message = "";
         if ((aaeDesc == null && (aeDelegates == null || aeDelegates.isEmpty()) && ccDesc == null && (ccDelegates == null || ccDelegates.isEmpty())) || crDescription == null) {
@@ -190,7 +190,7 @@ public class JCoReUIMAPipeline {
         }
 
         // Load the libraries for this pipeline. They are required for aggregate engine creation.
-        getClasspathElements().forEach(JarLoader::addJarToClassPath);
+        //getClasspathElements().forEach(JarLoader::addJarToClassPath);
 
         // Store descriptors
         try {
@@ -426,11 +426,12 @@ public class JCoReUIMAPipeline {
         // Store the required Maven artifacts in the lib directory
         try {
             final File libDir = new File(directory.getAbsolutePath() + File.separator + DIR_LIB);
-            if (clearLibDir && libDir.exists()) {
+            if (populateLibDir && libDir.exists()) {
                 log.debug("Removing all files from the library directory at {}", libDir);
                 Stream.of(libDir.listFiles()).forEach(File::delete);
+                log.debug("Storing all artifact files to {}", libDir);
+                storeArtifacts(directory);
             }
-            storeArtifacts(directory);
         } catch (MavenException e) {
             throw new PipelineIOException(e);
         }
@@ -746,7 +747,7 @@ public class JCoReUIMAPipeline {
             // When accessing aggregate engine delegates, their types are resolved. Thus, we first need to load
             // the libraries of the pipeline
             long time = System.currentTimeMillis();
-            getClasspathElements().forEach(JarLoader::addJarToClassPath);
+            //getClasspathElements().forEach(JarLoader::addJarToClassPath);
             time = System.currentTimeMillis() - time;
             log.debug("Loading of dependencies took {}ms ({}s)", time, time / 1000);
             if (crDescription == null && crDescs != null && !crDescs.isEmpty())
@@ -796,14 +797,14 @@ public class JCoReUIMAPipeline {
             }
 
 
-            File confDir = new File(loadDirectory.getAbsolutePath() + File.separator + DIR_CONF);
-            if (confDir.exists()) {
-                File[] files = confDir.listFiles((dir, name) -> !name.equals(JAR_CONF_FILES));
-                File configJar = new File(confDir.getAbsolutePath() + File.separator + JAR_CONF_FILES);
-                log.debug("Packaging configuration data files {} into the JAR file {} to be able to load it for " +
-                        "the pipeline runner.", files, configJar);
-                FileUtilities.createJarFile(configJar, files);
-            }
+//            File confDir = new File(loadDirectory.getAbsolutePath() + File.separator + DIR_CONF);
+//            if (confDir.exists()) {
+//                File[] files = confDir.listFiles((dir, name) -> !name.equals(JAR_CONF_FILES));
+//                File configJar = new File(confDir.getAbsolutePath() + File.separator + JAR_CONF_FILES);
+//                log.debug("Packaging configuration data files {} into the JAR file {} to be able to load it for " +
+//                        "the pipeline runner.", files, configJar);
+//                FileUtilities.createJarFile(configJar, files);
+//            }
 
 
         } catch (IOException | InvalidXMLException | URISyntaxException | ResourceInitializationException e) {

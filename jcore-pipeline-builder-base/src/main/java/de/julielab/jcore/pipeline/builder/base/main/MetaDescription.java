@@ -225,6 +225,17 @@ public class MetaDescription implements IMetaDescription, Serializable {
         return artifact;
     }
 
+    /**
+     * This method returns the {@link MavenArtifact} of this MetaDescription as-is, i.e. the actual file location
+     * is not resolved. The returned value might still contain this information if the artifact has been
+     * initialized before through a call to {@link #getMavenArtifact()}.
+     * @return The maven artifact information of this MetaDescription, possibly without the file location information.
+     */
+    @JsonIgnore
+    public MavenArtifact getMavenArtifactCoordinates() {
+        return artifact;
+    }
+
     private void initMavenArtifact() {
         // Convenience to quickly get the meta descriptor for error reporting, if necessary
         Supplier<String> metaJsonSupplier = () -> {
