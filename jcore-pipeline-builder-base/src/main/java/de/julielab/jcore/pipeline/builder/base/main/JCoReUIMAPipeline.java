@@ -6,6 +6,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import de.julielab.java.utilities.FileUtilities;
+import de.julielab.java.utilities.classpath.Agent;
 import de.julielab.java.utilities.classpath.JarLoader;
 import de.julielab.jcore.pipeline.builder.base.PipelineParameterChecker;
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
@@ -25,6 +26,7 @@ import org.apache.uima.collection.CasConsumerDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.collection.impl.metadata.cpe.CpeCasProcessorsImpl;
 import org.apache.uima.collection.impl.metadata.cpe.CpeComponentDescriptorImpl;
+import org.apache.uima.collection.impl.metadata.cpe.CpeDescriptionImpl;
 import org.apache.uima.collection.impl.metadata.cpe.CpeIntegratedCasProcessorImpl;
 import org.apache.uima.collection.metadata.CpeComponentDescriptor;
 import org.apache.uima.collection.metadata.CpeDescription;
@@ -289,9 +291,10 @@ public class JCoReUIMAPipeline {
                         "CPE.xml");
                 if (ccDelegates == null || ccDelegates.stream().map(Description::getDescriptor).filter(CasConsumer.class::isInstance).count() == 0) {
 
-                    CpeBuilder builder = new CpeBuilder();
-                    if (crDescription != null)
-                        builder.setReader(crDescription.getDescriptorAsCollectionReaderDescription());
+                    final CPE cpe = new CPE();
+                    if (crDescription != null) {
+                        cpe.setCollectionReader(crDescription);
+                    }
                     AnalysisEngineDescription cpeAAE = AnalysisEngineFactory.createEngineDescription();
 
                     boolean multipleDeploymentAllowed = true;
@@ -342,38 +345,39 @@ public class JCoReUIMAPipeline {
                     cpeAAE.toXML(
                             FileUtilities.getWriterToFile(
                                     cpeAAEFile));
-                    builder.setAnalysisEngine(cpeAAE);
-                    CpeDescription cpeDescription = builder.getCpeDescription();
+                    cpe.setAnalysisEngine(cpeAAEFile.getName(), "CPE AAE");
                     // Modify the CollectionReader part of the CPE to just refer to the Collection Reader descriptor file
                     // by relative location instead of absolute URLs.
-                    if (crDescription != null) {
-                        Import_impl crImport = new Import_impl();
-                        crImport.setLocation(crFile.getName());
-                        final CpeComponentDescriptor crDescriptor = cpeDescription.getAllCollectionCollectionReaders()[0].getCollectionIterator().
-                                getDescriptor();
-                        // delete the automatically generated include; we don't want an include (Absolute URLs are used)
-                        // but an import by location (a path relative to the CPE.xml descriptor is used)
-                        crDescriptor.setInclude(null);
-                        crDescriptor.setImport(crImport);
-                    }
+//                    if (crDescription != null) {
+//                        Import_impl crImport = new Import_impl();
+//                        crImport.setLocation(crFile.getName());
+//                        final CpeComponentDescriptor crDescriptor = cpeDescription.getAllCollectionCollectionReaders()[0].getCollectionIterator().
+//                                getDescriptor();
+//                        // delete the automatically generated include; we don't want an include (Absolute URLs are used)
+//                        // but an import by location (a path relative to the CPE.xml descriptor is used)
+//                        crDescriptor.setInclude(null);
+//                        crDescriptor.setImport(crImport);
+//                    }
 
                     // Now create a single import referencing the CPE AAE XML file. UIMAfit would just write
                     // the complete markup of all the components of the CPE AAE into the CPE descriptor.
                     // This has two issues:
                     // 1. CAS multipliers seem only to work within an aggregate
                     // 2. If we modify one of the descriptor files, the CPE won't reflect the change.
-                    Import_impl cpeAaeImport = new Import_impl();
-                    cpeAaeImport.setLocation(cpeAAEFile.getName());
-                    CpeComponentDescriptorImpl cpeComponentDescriptor = new CpeComponentDescriptorImpl();
-                    cpeComponentDescriptor.setImport(cpeAaeImport);
-                    CpeIntegratedCasProcessorImpl cpeIntegratedCasProcessor = new CpeIntegratedCasProcessorImpl();
-                    cpeIntegratedCasProcessor.setCpeComponentDescriptor(cpeComponentDescriptor);
-                    cpeIntegratedCasProcessor.setName("CPE AAE");
-                    cpeIntegratedCasProcessor.setBatchSize(500);
-                    CpeCasProcessorsImpl cpeCasProcessors = new CpeCasProcessorsImpl();
-                    cpeCasProcessors.addCpeCasProcessor(cpeIntegratedCasProcessor);
-                    cpeDescription.setCpeCasProcessors(cpeCasProcessors);
-                    cpeDescription.getCpeCasProcessors().setPoolSize(24);
+//                    Import_impl cpeAaeImport = new Import_impl();
+//                    cpeAaeImport.setLocation(cpeAAEFile.getName());
+//                    CpeComponentDescriptorImpl cpeComponentDescriptor = new CpeComponentDescriptorImpl();
+//                    cpeComponentDescriptor.setImport(cpeAaeImport);
+//                    CpeIntegratedCasProcessorImpl cpeIntegratedCasProcessor = new CpeIntegratedCasProcessorImpl();
+//                    cpeIntegratedCasProcessor.setCpeComponentDescriptor(cpeComponentDescriptor);
+//                    cpeIntegratedCasProcessor.setName("CPE AAE");
+//                    cpeIntegratedCasProcessor.setBatchSize(500);
+//                    CpeCasProcessorsImpl cpeCasProcessors = new CpeCasProcessorsImpl();
+//                    cpeCasProcessors.addCpeCasProcessor(cpeIntegratedCasProcessor);
+
+                    final CpeDescription cpeDescription = cpe.getDescription();
+//                    cpeDescription.setCpeCasProcessors(cpeCasProcessors);
+//                    cpeDescription.getCpeCasProcessors().setPoolSize(24);
                     cpeDescription.toXML(FileUtilities.getWriterToFile(
                             cpeFile
                     ));
@@ -387,12 +391,10 @@ public class JCoReUIMAPipeline {
                     if (cpeFile.exists())
                         cpeFile.delete();
                 }
-            } catch (InvalidXMLException e) {
+            } catch (Exception e) {
                 log.error("Could not store the CPE descriptor: ", e);
             }
         } catch (SAXException | IOException | ResourceInitializationException e) {
-            throw new PipelineIOException(e);
-        } catch (CpeDescriptorException e) {
             throw new PipelineIOException(e);
         } catch (InvalidXMLException e) {
             e.printStackTrace();
@@ -461,7 +463,7 @@ public class JCoReUIMAPipeline {
     }
 
     // I'm actually not sure why we need 'allDelegates' and 'aaeElements'. Perhaps we don't. Try it when there is time.
-    private AnalysisEngineDescription createAAE(File descDir, String name, List<Description> allDelegates, Stream<AnalysisEngineDescription> aaeElements, boolean filterDeactivated) throws ResourceInitializationException, SAXException, IOException, InvalidXMLException {
+    private AnalysisEngineDescription createAAE(File descDir, String name, List<Description> allDelegates, Stream<AnalysisEngineDescription> aaeElements, boolean filterDeactivated) throws ResourceInitializationException, SAXException, IOException, InvalidXMLException, PipelineIOException {
         AnalysisEngineDescription aaeDesc = AnalysisEngineFactory.createEngineDescription(aaeElements.toArray(AnalysisEngineDescription[]::new));
         Map<String, MetaDataObject> delegatesWithImports = aaeDesc.getDelegateAnalysisEngineSpecifiersWithImports();
         delegatesWithImports.clear();
@@ -491,9 +493,18 @@ public class JCoReUIMAPipeline {
         }
         // necessary for relative resolution of imports
         aaeDesc.setSourceUrl(descDir.toURI().toURL());
-        // This is required when using PEARs. This call causes the internal call to resolveDelegateAnalysisEngineImports()
-        // which completes PEAR imports.
-        aaeDesc.getDelegateAnalysisEngineSpecifiers();
+        try {
+            // This is required when using PEARs. This call causes the internal call to resolveDelegateAnalysisEngineImports()
+            // which completes PEAR imports.
+            // TODO then only to it when there a PEARs in the AAE
+            final Optional<Description> pearOpt = allDelegates.stream().filter(d -> d.getMetaDescription().isPear()).findAny();
+            if (pearOpt.isPresent())
+                aaeDesc.getDelegateAnalysisEngineSpecifiers();
+        } catch (InvalidXMLException e) {
+            log.debug("An InvalidXMLException was thrown. This could be due to actually invalid XML but also because a type descriptor import couldn't be found. Loading dependencies.");
+            getClasspathElements().forEach(JarLoader::addJarToClassPath);
+            aaeDesc.getDelegateAnalysisEngineSpecifiers();
+        }
         ((FixedFlow) aaeDesc.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flowNames.toArray(new String[flowNames.size()]));
         aaeDesc.getAnalysisEngineMetaData().setName(name);
         if (!multipleDeploymentAllowed) {
@@ -503,7 +514,7 @@ public class JCoReUIMAPipeline {
         return aaeDesc;
     }
 
-    private void storeAllDescriptors(File descDirAll) throws IOException, SAXException, InvalidXMLException, ResourceInitializationException {
+    private void storeAllDescriptors(File descDirAll) throws IOException, SAXException, InvalidXMLException, ResourceInitializationException, PipelineIOException {
         if (!descDirAll.exists()) {
             descDirAll.mkdirs();
         }
@@ -833,7 +844,22 @@ public class JCoReUIMAPipeline {
             FixedFlow flow = (FixedFlow) flowConstraints;
             for (int i = 0; i < flow.getFixedFlow().length; ++i) {
                 String component = flow.getFixedFlow()[i];
-                ResourceSpecifier descriptor = aae.getDelegateAnalysisEngineSpecifiers().get(component);
+                ResourceSpecifier descriptor;
+                try {
+                    descriptor = aae.getDelegateAnalysisEngineSpecifiers().get(component);
+                } catch (InvalidXMLException e) {
+                    // This exception can happen because the types of the AAE are missing. Try to load all JAR with "types" in them
+                    // We also load "splitter" because this applies to the jcore-xmi-splitter which has its own types
+                    // Obviously, some better mechanism could be of use here.
+                    getClasspathElements().filter(f -> f.getName().contains("types") || f.getName().contains("splitter")).forEach(JarLoader::addJarToClassPath);
+                    try {
+                        descriptor = aae.getDelegateAnalysisEngineSpecifiers().get(component);
+                    } catch (InvalidXMLException e1) {
+                        // Still no luck, load everything.
+                        getClasspathElements().forEach(JarLoader::addJarToClassPath);
+                        descriptor = aae.getDelegateAnalysisEngineSpecifiers().get(component);
+                    }
+                }
                 if (i < descriptions.size()) {
                     if (!descByName.containsKey(component))
                         throw new IllegalStateException("The " + type + " AAE specifies the component key " + component + " but no descriptor has this name. The descriptor names and the AAE keys must match.");

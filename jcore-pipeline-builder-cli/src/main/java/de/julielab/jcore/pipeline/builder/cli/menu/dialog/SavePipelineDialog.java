@@ -37,7 +37,7 @@ public class SavePipelineDialog implements IMenuDialog {
             PipelineBuilderCLI.pipelinePath = destination;
             File destinationFile = new File(destination);
             boolean store = true;
-            boolean storeLibraries = false;
+            boolean storeLibraries = PipelineBuilderCLI.dependenciesHaveChanged;
             if (destinationFile.exists()) {
                 Boolean overwrite = textIO.newBooleanInputReader()
                         .withDefaultValue(false)
@@ -45,7 +45,7 @@ public class SavePipelineDialog implements IMenuDialog {
                         .withTrueInput("Y")
                         .read("The path " + destinationFile.getAbsolutePath() + " exists. Do you wish to store to " +
                                 "this directory anyway?");
-                if (overwrite) {
+                if (overwrite && !PipelineBuilderCLI.dependenciesHaveChanged) {
                     Boolean clear = textIO.newBooleanInputReader().
                             withDefaultValue(false).
                             withFalseInput("N").

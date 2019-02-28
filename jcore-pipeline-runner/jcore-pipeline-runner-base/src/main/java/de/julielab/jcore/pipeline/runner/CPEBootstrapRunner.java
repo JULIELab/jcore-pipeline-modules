@@ -42,7 +42,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
     @Override
     public void runPipeline(JCoReUIMAPipeline pipeline, HierarchicalConfiguration<ImmutableNode> runnerConfig) throws PipelineRunningException, PipelineIOException {
         try {
-            pipeline.load(false);
+            // pipeline.load(false);
             final String plp = pipeline.getLoadDirectory().getAbsolutePath();
             int numThreads = runnerConfig.containsKey(NUMTHREADS) ? runnerConfig.getInt(NUMTHREADS) : 2;
             String memory = runnerConfig.containsKey(HEAP_SIZE) ? runnerConfig.getString(HEAP_SIZE) : "2G";
