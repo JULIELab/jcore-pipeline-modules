@@ -1,4 +1,4 @@
-    <configuration scan="true" scanPeriod="10s">
+    <configuration>
 
         <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
             <!-- encoders are assigned the type
@@ -7,8 +7,6 @@
                 <pattern>%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %logger{36} - %msg%n</pattern>
             </encoder>
         </appender>
-
-        <logger name="de.julielab" level="DEBUG" />
 
         <root level="info">
             <appender-ref ref="STDOUT" />
