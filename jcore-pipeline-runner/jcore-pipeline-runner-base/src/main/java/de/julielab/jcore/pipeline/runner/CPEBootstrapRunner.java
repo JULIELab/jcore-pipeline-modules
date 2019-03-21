@@ -127,6 +127,8 @@ public class CPEBootstrapRunner implements IPipelineRunner {
         template.addProperty(slash(basePath, NAME), getName());
         template.addProperty(slash(basePath, PIPELINEPATH), ".");
         template.addProperty(slash(basePath, NUMTHREADS), "1");
+        template.addProperty(slash(basePath, HEAP_SIZE), "512M");
+
     }
 
 
