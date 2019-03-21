@@ -474,6 +474,8 @@ public class JCoReUIMAPipeline {
         boolean multipleDeploymentAllowed = true;
         for (int i = 0; i < allDelegates.size(); ++i) {
             Description description = allDelegates.get(i);
+            if (description.getMetaDescription().isPear())
+                continue;
             final boolean currentComponentAllowsMultipleDeployment = description.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
             if (!currentComponentAllowsMultipleDeployment) {
                 log.warn("The component {} does not allow multiple deployment. Thus, multiple deployment won't be allowed for the whole AAE with name {}.", description.getName(), name);
@@ -527,11 +529,11 @@ public class JCoReUIMAPipeline {
         if (crDescription != null)
             storeDescriptor(crDescription.getDescriptorAsCollectionReaderDescription(), getDescriptorStoragePath(crDescription, descDirAll).toFile());
         for (Description cmDelegate : cmDelegates)
-            storeDescriptor(cmDelegate.getDescriptorAsAnalysisEngineDescription(), getDescriptorStoragePath(cmDelegate, descDirAll).toFile());
+            if (!cmDelegate.getMetaDescription().isPear()) storeDescriptor(cmDelegate.getDescriptorAsAnalysisEngineDescription(), getDescriptorStoragePath(cmDelegate, descDirAll).toFile());
         for (Description aeDelegate : aeDelegates)
-            storeDescriptor(aeDelegate.getDescriptorAsAnalysisEngineDescription(), getDescriptorStoragePath(aeDelegate, descDirAll).toFile());
+            if (!aeDelegate.getMetaDescription().isPear()) storeDescriptor(aeDelegate.getDescriptorAsAnalysisEngineDescription(), getDescriptorStoragePath(aeDelegate, descDirAll).toFile());
         for (Description ccDelegate : ccDelegates)
-            storeCCDescriptor(ccDelegate, descDirAll);
+            if (!ccDelegate.getMetaDescription().isPear()) storeCCDescriptor(ccDelegate, descDirAll);
 
         // Store AAEs
         if (!cmDelegates.isEmpty() && cmDelegates.size() > 1) {
