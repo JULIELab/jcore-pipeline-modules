@@ -33,6 +33,8 @@ public class JCoReUIMAPipelineTest {
         pipeline.setCrDescription(crDesc);
 
         Description cmDesc = new Description();
+        // We set a MetaDescription to avoid an NPE in the saving code that checks for PEARs
+        cmDesc.setMetaDescription(new MetaDescription());
         AnalysisEngineDescription_impl cm = new AnalysisEngineDescription_impl();
         cm.getMetaData().setName("The CM");
         cm.setPrimitive(true);

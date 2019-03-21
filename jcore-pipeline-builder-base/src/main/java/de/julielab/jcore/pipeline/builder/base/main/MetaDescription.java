@@ -219,7 +219,7 @@ public class MetaDescription implements IMetaDescription, Serializable {
     @JsonIgnore
     @Override
     public MavenArtifact getMavenArtifact() {
-        if (!isPear && !artifactInitialized) {
+        if (!isPear && !artifactInitialized && artifact != null) {
             initMavenArtifact();
         }
         return artifact;
