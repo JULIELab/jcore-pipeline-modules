@@ -478,20 +478,12 @@ public class JCoReUIMAPipeline {
         boolean multipleDeploymentAllowed = true;
         for (int i = 0; i < allDelegates.size(); ++i) {
             Description description = allDelegates.get(i);
-//            if (description.getMetaDescription().isPear())
-//                continue;
             final boolean currentComponentAllowsMultipleDeployment = description.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
             if (!currentComponentAllowsMultipleDeployment) {
                 log.warn("The component {} does not allow multiple deployment. Thus, multiple deployment won't be allowed for the whole AAE with name {}.", description.getName(), name);
             }
             multipleDeploymentAllowed &= currentComponentAllowsMultipleDeployment;
-            if (
-//                    (description.getMetaDescription() == null
-                //|| !description.getMetaDescription().isPear()
-//                    )
-
-//                    &&
-                    (description.isActive() || !filterDeactivated)) {
+            if (description.isActive() || !filterDeactivated) {
                 Import imp = new Import_impl();
                 imp.setLocation(description.getName() + ".xml");
                 delegatesWithImports.put(description.getName(), imp);
@@ -499,13 +491,6 @@ public class JCoReUIMAPipeline {
                 description.getDescriptorAsAnalysisEngineDescription().toXML(FileUtilities.getWriterToFile(destination), true);
                 flowNames.add(description.getName());
             }
-//            else if (description.isActive() || !filterDeactivated) {
-//                Import_impl imp = new Import_impl();
-//                File pearDescriptorFile = new File(description.getLocation());
-//                imp.setLocation(pearDescriptorFile.toURI().toString());
-//                delegatesWithImports.put(description.getName(), imp);
-//                flowNames.add(description.getName());
-//            }
         }
         // necessary for relative resolution of imports
         aaeDesc.setSourceUrl(descDir.toURI().toURL());
@@ -822,18 +807,6 @@ public class JCoReUIMAPipeline {
             } catch (Exception e) {
                 log.warn("Could not set descriptor files from the {}/ directory to the serialized meta descriptions. Changes in the descriptors that have not been stored in the meta descriptions won't be available.", DIR_DESC, e);
             }
-
-
-//            File confDir = new File(loadDirectory.getAbsolutePath() + File.separator + DIR_CONF);
-//            if (confDir.exists()) {
-//                File[] files = confDir.listFiles((dir, name) -> !name.equals(JAR_CONF_FILES));
-//                File configJar = new File(confDir.getAbsolutePath() + File.separator + JAR_CONF_FILES);
-//                log.debug("Packaging configuration data files {} into the JAR file {} to be able to load it for " +
-//                        "the pipeline runner.", files, configJar);
-//                FileUtilities.createJarFile(configJar, files);
-//            }
-
-
         } catch (IOException | InvalidXMLException | URISyntaxException | ResourceInitializationException e) {
             throw new PipelineIOException(e);
         }

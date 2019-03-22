@@ -1,6 +1,7 @@
 package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 
 import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants;
+import de.julielab.jcore.pipeline.builder.base.main.Description;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.builder.cli.main.PipelineBuilderCLI;
 import de.julielab.jcore.pipeline.builder.cli.menu.*;
@@ -9,6 +10,7 @@ import org.beryx.textio.TextIO;
 
 import java.util.Deque;
 import java.util.EnumSet;
+import java.util.stream.Collectors;
 
 public class ArtifactVersionDialog extends AbstractComponentSelectionDialog {
 
@@ -35,6 +37,8 @@ public class ArtifactVersionDialog extends AbstractComponentSelectionDialog {
     @Override
     protected void init(JCoReUIMAPipeline pipeline, EnumSet<PipelineBuilderConstants.JcoreMeta.Category> categories) {
         super.init(pipeline, categories);
+        // Filter out PEARs, we cannot set their versions.
+        itemList = itemList.stream().filter(ComponentSelectionMenuItem.class::isInstance).map(ComponentSelectionMenuItem.class::cast).filter(item -> !item.getDescription().getMetaDescription().isPear()).collect(Collectors.toCollection(MenuItemList::new));
         MenuItemList<IMenuItem> extendedList = new MenuItemList<>();
         extendedList.add(new UpdateAllArtifactsDialog());
         extendedList.addAll(itemList);

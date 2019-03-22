@@ -40,8 +40,7 @@ public class StatusPrinter {
         //String version = metaDescription.getVersion();
         TextIOUtils.printLines(Stream.of(
                 createPrintLine("Component Name: ", FIXED, name, DEFAULT),
-                createPrintLine("Component Module: ", FIXED, module != null ? module.getName() : "<unknown>", DEFAULT)//,
-                //createPrintLine("Component Version: ", FIXED, version, DEFAULT)
+                createPrintLine("Component Module: ", FIXED, module != null ? module.getName() : "<unknown>", DEFAULT)
         ), textIO);
     }
 
@@ -58,9 +57,10 @@ public class StatusPrinter {
             if (description.getDescriptor() instanceof AnalysisEngineDescription)
                 externalResourcesAdderAdder.accept(description);
         } else {
-            records.add(createPrintLine("  - " + description.getName(), COMPONENT_NAME));
-            records.add(createPrintLine("    This is a PEAR and thus not configurable.", PARAM));
-            records.add(createPrintLine("    Path: " + description.getLocation(), PARAM));
+            Function<String, String> color = str -> description.isActive() ? str : DEACTIVATED_COMPONENT;
+            records.add(createPrintLine("  - " + description.getName(), color.apply(COMPONENT_NAME)));
+            records.add(createPrintLine("    This is a PEAR and thus not configurable.", color.apply(PARAM)));
+            records.add(createPrintLine("    Path: " + description.getLocation(), color.apply(PARAM)));
         }
         return records;
     }
