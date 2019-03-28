@@ -1,8 +1,6 @@
 package de.julielab.jcore.pipeline.builder.base.main;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.julielab.java.utilities.UriUtilities;
 import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants.Descriptor;
 import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants.JcoreMeta;
@@ -27,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;

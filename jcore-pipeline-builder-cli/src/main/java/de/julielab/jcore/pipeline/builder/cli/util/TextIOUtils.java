@@ -3,8 +3,6 @@ package de.julielab.jcore.pipeline.builder.cli.util;
 import org.beryx.textio.InputReader;
 import org.beryx.textio.TextIO;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;

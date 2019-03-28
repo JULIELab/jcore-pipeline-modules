@@ -1,7 +1,5 @@
 package de.julielab.jcore.pipeline.builder.cli.menu;
 
-import org.apache.uima.resource.ExternalResourceDependency;
-
 public class ExternalResourceDependencyDefinitionMenuItem implements IMenuItem {
 
     public ExternalResourceDependencyDefinitionMenuItem() {

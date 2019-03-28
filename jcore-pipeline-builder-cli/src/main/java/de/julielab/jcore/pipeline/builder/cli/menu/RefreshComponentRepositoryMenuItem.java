@@ -1,7 +1,5 @@
 package de.julielab.jcore.pipeline.builder.cli.menu;
 
-import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
-
 public class RefreshComponentRepositoryMenuItem implements IMenuItem {
     @Override
     public String getName() {

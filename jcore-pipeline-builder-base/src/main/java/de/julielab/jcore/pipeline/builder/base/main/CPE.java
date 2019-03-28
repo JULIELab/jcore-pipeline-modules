@@ -1,6 +1,5 @@
 package de.julielab.jcore.pipeline.builder.base.main;
 
-import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.collection.impl.metadata.cpe.*;
 import org.apache.uima.collection.metadata.*;
 import org.apache.uima.resource.metadata.impl.Import_impl;

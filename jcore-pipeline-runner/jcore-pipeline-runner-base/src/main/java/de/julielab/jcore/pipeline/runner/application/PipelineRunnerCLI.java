@@ -17,7 +17,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 
 import static de.julielab.java.utilities.ConfigurationUtilities.slash;
-import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.*;
+import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.RUNNER;
+import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.RUNNERS;
 
 public class PipelineRunnerCLI implements ConfigurationTemplateGenerator {
     private final static Logger log = LoggerFactory.getLogger(PipelineRunnerCLI.class);

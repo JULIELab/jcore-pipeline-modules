@@ -3,16 +3,13 @@ package de.julielab.jcore.pipeline.builder.base.main;
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.analysis_engine.impl.AnalysisEngineDescription_impl;
-import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.collection.impl.CollectionReaderDescription_impl;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.Assert.assertNotNull;
-
 import java.io.File;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 public class JCoReUIMAPipelineTest {
     @Test

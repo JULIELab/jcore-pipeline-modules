@@ -1,7 +1,6 @@
 package de.julielab.jcore.pipeline.runner.services;
 
 import de.julielab.java.utilities.ConfigurationUtilities;
-import de.julielab.java.utilities.classpath.JarLoader;
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.runner.spi.IPipelineRunner;
@@ -9,18 +8,16 @@ import de.julielab.jcore.pipeline.runner.util.PipelineInstantiationException;
 import de.julielab.jcore.pipeline.runner.util.PipelineRunningException;
 import de.julielab.jssf.commons.spi.ParameterExposing;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import java.io.File;
 import java.util.Iterator;
 import java.util.ServiceLoader;
-import java.util.stream.Stream;
 
 import static de.julielab.java.utilities.ConfigurationUtilities.last;
-import static de.julielab.java.utilities.ConfigurationUtilities.slash;
-import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.*;
+import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.NAME;
+import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.PIPELINEPATH;
 
 public class PipelineRunnerService implements ParameterExposing{
     private static PipelineRunnerService service;

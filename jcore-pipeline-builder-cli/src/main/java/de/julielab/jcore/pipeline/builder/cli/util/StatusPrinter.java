@@ -1,8 +1,10 @@
 package de.julielab.jcore.pipeline.builder.cli.util;
 
 import com.google.common.collect.Multiset;
-import de.julielab.jcore.pipeline.builder.base.main.*;
-import de.julielab.jcore.pipeline.builder.cli.menu.DescriptorSelectionMenuItem;
+import de.julielab.jcore.pipeline.builder.base.main.ComponentRepository;
+import de.julielab.jcore.pipeline.builder.base.main.Description;
+import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
+import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
 import de.julielab.utilities.aether.MavenArtifact;
 import org.apache.commons.lang.StringUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;

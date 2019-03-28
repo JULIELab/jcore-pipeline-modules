@@ -8,7 +8,6 @@ import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
 import de.julielab.jcore.pipeline.builder.cli.main.PipelineBuilderCLI;
 import de.julielab.jcore.pipeline.builder.cli.menu.*;
 import de.julielab.jcore.pipeline.builder.cli.util.StatusPrinter;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.beryx.textio.TextIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

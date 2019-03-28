@@ -1,18 +1,12 @@
 package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 
-import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
-import de.julielab.jcore.pipeline.builder.cli.menu.BackMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
-import de.julielab.jcore.pipeline.builder.cli.menu.QuitMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes;
-import de.julielab.jcore.pipeline.builder.cli.util.MenuItemExecutionException;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.TextTerminal;
 import org.beryx.textio.jline.JLineTextTerminal;
 import org.beryx.textio.swing.SwingTextTerminal;
 
-import java.awt.*;
-import java.io.IOException;
 import java.util.Deque;
 import java.util.stream.Collectors;
 

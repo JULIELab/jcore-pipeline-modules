@@ -1,16 +1,14 @@
 package de.julielab.jcore.pipeline.runner.util;
 
-import de.julielab.java.utilities.ConfigurationUtilities;
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
-import de.julielab.jcore.pipeline.runner.services.PipelineRunnerService;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import java.io.File;
 
-import static de.julielab.java.utilities.ConfigurationUtilities.*;
+import static de.julielab.java.utilities.ConfigurationUtilities.requirePresent;
 
 public class PipelineRunnerUtilities {
 

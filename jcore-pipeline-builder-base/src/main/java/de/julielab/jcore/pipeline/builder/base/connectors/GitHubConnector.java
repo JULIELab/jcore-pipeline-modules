@@ -11,7 +11,6 @@ import de.julielab.jcore.pipeline.builder.base.exceptions.GithubInformationExcep
 import de.julielab.jcore.pipeline.builder.base.main.GitHubRepository;
 import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
 import de.julielab.xml.JulieXMLTools;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

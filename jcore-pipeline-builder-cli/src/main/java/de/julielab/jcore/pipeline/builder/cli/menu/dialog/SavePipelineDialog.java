@@ -4,16 +4,12 @@ import com.google.common.collect.Multiset;
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.builder.cli.main.PipelineBuilderCLI;
-import de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes;
-import org.apache.commons.io.FileUtils;
 import org.beryx.textio.TextIO;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import static de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes.ERROR;
 

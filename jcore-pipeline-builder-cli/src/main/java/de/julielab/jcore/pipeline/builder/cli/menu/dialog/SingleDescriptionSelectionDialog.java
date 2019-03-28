@@ -4,14 +4,10 @@ import de.julielab.jcore.pipeline.builder.base.exceptions.DescriptorLoadingExcep
 import de.julielab.jcore.pipeline.builder.base.main.Description;
 import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
 import de.julielab.jcore.pipeline.builder.cli.menu.DescriptorSelectionMenuItem;
-import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.MenuItemList;
 import org.beryx.textio.TextIO;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Deque;
-import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
