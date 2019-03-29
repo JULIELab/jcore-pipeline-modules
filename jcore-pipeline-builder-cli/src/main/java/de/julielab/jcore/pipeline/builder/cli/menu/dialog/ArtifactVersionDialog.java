@@ -3,10 +3,7 @@ package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.builder.cli.main.PipelineBuilderCLI;
-import de.julielab.jcore.pipeline.builder.cli.menu.ArtifactVersionMenuItem;
-import de.julielab.jcore.pipeline.builder.cli.menu.ComponentSelectionMenuItem;
-import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
-import de.julielab.jcore.pipeline.builder.cli.menu.MenuItemList;
+import de.julielab.jcore.pipeline.builder.cli.menu.*;
 import de.julielab.jcore.pipeline.builder.cli.util.MenuItemExecutionException;
 import org.beryx.textio.TextIO;
 
@@ -44,6 +41,7 @@ public class ArtifactVersionDialog extends AbstractComponentSelectionDialog {
         MenuItemList<IMenuItem> extendedList = new MenuItemList<>();
         extendedList.add(new UpdateAllArtifactsDialog());
         extendedList.addAll(itemList);
+        extendedList.add(new BackMenuItem());
         itemList = extendedList;
     }
 }
