@@ -371,7 +371,7 @@ public class JCoReUIMAPipeline {
 
                     final CpeDescription cpeDescription = cpe.getDescription();
 //                    cpeDescription.setCpeCasProcessors(cpeCasProcessors);
-//                    cpeDescription.getCpeCasProcessors().setPoolSize(24);
+                    cpeDescription.getCpeCasProcessors().setPoolSize(24);
                     cpeDescription.toXML(FileUtilities.getWriterToFile(
                             cpeFile
                     ));

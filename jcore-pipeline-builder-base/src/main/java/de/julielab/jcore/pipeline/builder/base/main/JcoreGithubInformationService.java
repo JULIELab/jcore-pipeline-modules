@@ -29,18 +29,11 @@ import java.util.stream.Collectors;
 
 public class JcoreGithubInformationService implements IComponentMetaInformationService, Serializable {
     private static Logger logger = LoggerFactory.getLogger(JcoreGithubInformationService.class);
+    private static JcoreGithubInformationService instance;
     private ComponentRepository[] repositories;
     private String mvnLocal;
     private Map<String, MetaDescription> metaInformation = new HashMap<>();
     private Set<MavenArtifact> mavenDependencies = new HashSet<>();
-    private static JcoreGithubInformationService instance;
-
-    public static JcoreGithubInformationService getInstance() {
-        if (instance == null)
-            instance = new JcoreGithubInformationService(Repositories.findRepositories());
-        return instance;
-    }
-
 
     private JcoreGithubInformationService(ComponentRepository[] repositories) {
         logger.debug("Initializing component repository service with the following repositories: {}", Arrays.toString(repositories));
@@ -48,6 +41,11 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
         this.mvnLocal = Paths.get(System.getProperty("user.home"), Maven.LOCAL_REPO).toString();
     }
 
+    public static JcoreGithubInformationService getInstance() {
+        if (instance == null)
+            instance = new JcoreGithubInformationService(Repositories.findRepositories());
+        return instance;
+    }
 
     public void completeReload() throws GithubInformationException, MavenException {
         this.metaInformation.clear();
@@ -144,6 +142,13 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
         }
     }
 
+    public ComponentRepository[] getRepositories() {
+        return repositories;
+    }
+
+    public void setRepositories(ComponentRepository[] repositories) {
+        this.repositories = repositories;
+    }
 
     @Override
     public List<MavenArtifact> downloadArtifacts(List<MavenArtifact> artifactIds) throws MavenException {
