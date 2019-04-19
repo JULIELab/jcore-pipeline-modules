@@ -17,7 +17,7 @@ public interface IComponentMetaInformationService {
     /**
      *
      */
-    void saveMetaInformationToDisk(ComponentRepository repository) throws GithubInformationException;
+    //void saveMetaInformationToDisk(ComponentRepository repository) throws GithubInformationException;
 
     /**
      *

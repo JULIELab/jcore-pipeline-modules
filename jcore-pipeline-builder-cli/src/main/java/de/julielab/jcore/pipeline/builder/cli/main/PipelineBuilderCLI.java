@@ -4,8 +4,10 @@ import de.julielab.java.utilities.prerequisites.PrerequisiteChecker;
 import de.julielab.jcore.pipeline.builder.base.exceptions.GithubInformationException;
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
+import de.julielab.jcore.pipeline.builder.base.main.Repositories;
 import de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes;
 import de.julielab.jcore.pipeline.builder.cli.menu.dialog.IndexDialog;
+import de.julielab.jcore.pipeline.builder.cli.menu.dialog.RepositoryAddDialog;
 import de.julielab.jcore.pipeline.builder.cli.util.MenuItemExecutionException;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.TextIoFactory;
@@ -56,6 +58,9 @@ public class PipelineBuilderCLI {
                             "JCoRe and the individual JCoRe components is necessary. For help and " +
                             "pointers to the adequate documentation, please refer to the README of " +
                             "the pipeline modules at https://github.com/JULIELab/jcore-pipeline-modules"));
+            if (Repositories.loadLocalRepositories().isEmpty()) {
+                new RepositoryAddDialog().enterInputLoop(textIO, new ArrayDeque<>());
+            }
             indexDialog.enterInputLoop(pipeline, textIO, new ArrayDeque<>());
         } catch (GithubInformationException | MenuItemExecutionException e) {
             if (e instanceof GithubInformationException || e.getCause() instanceof GithubInformationException) {

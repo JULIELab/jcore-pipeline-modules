@@ -11,6 +11,7 @@ import de.julielab.jcore.pipeline.builder.base.exceptions.GithubInformationExcep
 import de.julielab.jcore.pipeline.builder.base.main.GitHubRepository;
 import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
 import de.julielab.xml.JulieXMLTools;
+import java_cup.version;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,18 +21,13 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.net.*;
+import java.util.*;
 
 public class GitHubConnector {
 
     private static Map<String, MetaDescription> componentMap = null;
-    private static Logger logger = LoggerFactory.getLogger(GitHubConnector.class);
+    private static Logger log = LoggerFactory.getLogger(GitHubConnector.class);
 
     /**
      * Builds a URL of the form "https://raw.githubusercontent.com/JULIELab/{@code module}/{@code version}/{@code name}/component.meta
@@ -54,6 +50,38 @@ public class GitHubConnector {
         return null;
     }
 
+    private static URL getGitHubBranchListApiRequestURL(String user, String repositoryName) {
+        URIBuilder builder = new URIBuilder();
+        builder.setScheme(GitHub.SCHEME);
+        builder.setHost(GitHub.API);
+        builder.setPath(new StringJoiner("/")
+                .add("")
+                .add(GitHub.API_REPO)
+                .add(user)
+                .add(repositoryName)
+                .add(GitHub.API_BRANCHES).toString());
+        try {
+            return builder.build().toURL();
+        } catch (URISyntaxException | MalformedURLException e) {
+            log.error("Could not build GitHub branch request URI with user {} and repository name {}", user, repositoryName, e);
+        }
+        return null;
+    }
+
+    public static List<RepositoryBranchInformation> getRepositoryBranches(GitHubRepository repository) {
+        return getRepositoryBranches(repository.getGitHubName(), repository.getName());
+    }
+
+    public static List<RepositoryBranchInformation> getRepositoryBranches(String user, String repositoryName) {
+        try {
+            final ObjectMapper om = new ObjectMapper();
+            return Arrays.asList(om.readValue(getGitHubBranchListApiRequestURL(user, repositoryName), RepositoryBranchInformation[].class));
+        } catch (IOException e) {
+            log.error("Exception while trying to read list of branches from {}", getGitHubBranchListApiRequestURL(user, repositoryName ), e);
+        }
+        return Collections.emptyList();
+    }
+
     /**
      * Builds a URL of the form "https://raw.githubusercontent.com/JULIELab/{@code module}/{@code version}/{@code name}/pom.xml
      *
@@ -62,17 +90,22 @@ public class GitHubConnector {
      * @param version e.g. "2.3.0-SNAPSHOT"
      * @return
      */
-    private static URL getComponentPomURL(String name, String module, String version) {
+    private static URL getComponentPomURL(String user, String name, String module, String version) {
         try {
             URIBuilder builder = new URIBuilder();
             builder.setScheme(GitHub.SCHEME);
             builder.setHost(GitHub.RAW);
-            builder.setPath(new StringJoiner("/").add("").add(GitHub.USER).add(module).add(version).add(name)
+            builder.setPath(new StringJoiner("/")
+                    .add("")
+                    .add(user)
+                    .add(module)
+                    .add(version)
+                    .add(name)
                     .add(PipelineBuilderConstants.Maven.POM).toString());
 
             return builder.build().toURL();
         } catch (URISyntaxException | MalformedURLException e) {
-            e.printStackTrace();
+            log.error("Could not build GitHub component POM request for component name {}, repository {} and branch {}", name, module, version, e);
         }
         return null;
     }
@@ -98,7 +131,7 @@ public class GitHubConnector {
             else if (username != null && passwd != null)
                 builder.setUserInfo(username, passwd);
             else
-                logger.warn("Neither a GitHub OAuth token nor username and password were given. Thus, your requests " +
+                log.warn("Neither a GitHub OAuth token nor username and password were given. Thus, your requests " +
                         "to GitHub for retrieving the JCoRe component list and their meta descriptions are limited. " +
                         "If this is an issue, provide your access token or your user name and password for GitHub via " +
                         "the github.api.accesstoken, github.api.username and github.api.password Java system " +
@@ -116,7 +149,7 @@ public class GitHubConnector {
         try {
             Integer rateLimit = Integer.parseInt(connection.getHeaderField("X-RateLimit-Limit"));
             Integer rateLimitRemaining = Integer.parseInt(connection.getHeaderField("X-RateLimit-Remaining"));
-            logger.debug("GitHub API requests rate limit: {} of {} remaining", rateLimitRemaining, rateLimit);
+            log.debug("GitHub API requests rate limit: {} of {} remaining", rateLimitRemaining, rateLimit);
             if (rateLimitRemaining == 0)
                 throw new GithubInformationException("Cannot request JCoRe component meta data from GitHub due to " +
                         "the request rate limit imposed by GitHub. Your current rate limit is " + rateLimit + " and no " +
@@ -143,14 +176,14 @@ public class GitHubConnector {
             try {
                 metaDescription = mapper.readValue(metaFile, MetaDescription.class);
             } catch (JsonProcessingException e) {
-                logger.error("JSON reading exception for the meta descriptor of component {} in repository {}, version {}",
+                log.error("JSON reading exception for the meta descriptor of component {} in repository {}, version {}",
                         component, repository.getName(), repository.getVersion());
                 throw e;
             }
             if (metaDescription.isExposable()) {
                 return metaDescription;
             } else {
-                logger.info(String.format(
+                log.info(String.format(
                         "'%s' has a meta file, but is skipped due to being not exposed to the builder.", component));
             }
         }
@@ -169,10 +202,10 @@ public class GitHubConnector {
         try {
             return meta.openStream();
         } catch (IOException e) {
-            logger.info(String.format("URL was not found: %s", meta.toString()));
+            log.info(String.format("URL was not found: %s", meta.toString()));
             return null;
         } catch (NullPointerException e) {
-            logger.error(String.format("URL could not be built for component '%s' in module '%s' for version '%s'.",
+            log.error(String.format("URL could not be built for component '%s' in module '%s' for version '%s'.",
                     name, repository.getName(), repository.getVersion()), e);
             return null;
         }
@@ -186,16 +219,16 @@ public class GitHubConnector {
      * @param version e.g. "2.3.0-SNAPSHOT"
      * @return
      */
-    public static InputStream getPomFileStream(String name, String module, String version) throws GithubInformationException {
-        URL meta = getComponentPomURL(name, module, version);
+    public static InputStream getPomFileStream(String user, String name, String module, String version) throws GithubInformationException {
+        URL meta = getComponentPomURL(user, name, module, version);
 
         try {
             return meta.openStream();
         } catch (IOException e) {
-            logger.info(String.format("URL was not found: %s", meta.toString()));
+            log.info(String.format("URL was not found: %s", meta.toString()));
             return null;
         } catch (NullPointerException e) {
-            logger.error(String.format("URL could not be built for component '%s' in module '%s' for version '%s'.",
+            log.error(String.format("URL could not be built for component '%s' in module '%s' for version '%s'.",
                     name, module, version), e);
             return null;
         }
@@ -218,26 +251,26 @@ public class GitHubConnector {
         return null;
     }
 
-    private static void listJcoreComponents(GitHubRepository repository, Boolean exposable) throws IOException, GithubInformationException {
-        logger.trace("Fetching JCoRe component list for module {}:{}. Only exposable parameters are fetched: {}", repository.getName(), repository.getVersion(), exposable);
+    private static void listComponents(GitHubRepository repository, Boolean exposable) throws IOException, GithubInformationException {
+        log.trace("Fetching JCoRe component list for module {}:{}. Only exposable parameters are fetched: {}", repository.getName(), repository.getVersion(), exposable);
         Map<String, MetaDescription> componentList = new HashMap<>();
         InputStream is = getGitHubContentStream(repository);
         JsonReader rdr = Json.createReader(is);
         for (JsonObject result : rdr.readArray().getValuesAs(JsonObject.class)) {
             if (result.getString(GitHub.API_TYPE).equals(GitHub.API_FOLDER)) {
                 String component = result.getString(GitHub.API_PATH);
-                logger.trace("Fetching meta description of component {}", component);
+                log.trace("Fetching meta description of component {}", component);
                 MetaDescription metaFile = checkForExposable(component, repository);
                 if (exposable && (metaFile == null)) {
-                    logger.trace("Component {} is skipped because only exposable components are loaded and the component does not have a meta description file.", component);
+                    log.trace("Component {} is skipped because only exposable components are loaded and the component does not have a meta description file.", component);
                     continue;
                 }
                 try {
                     // The project directory name is not always the exact maven artifact ID, even if it should be that
                     // way. Here we retrieve the actual artifact ID.
                     component = JulieXMLTools.getXpathValue("/project/artifactId",
-                            getPomFileStream(component, repository.getName(), repository.getVersion()));
-                    logger.trace("The parsed artifact ID for the component is {}", component);
+                            getPomFileStream(repository.getGitHubName(), component, repository.getName(), repository.getVersion()));
+                    log.trace("The parsed artifact ID for the component is {}", component);
                 } catch (XPathParseException | ParseException e) {
                     throw new IOException(e);
                 }
@@ -255,8 +288,8 @@ public class GitHubConnector {
      * @param exposable should it only include components that can be used as 'building blocks' for a pipeline
      * @return
      */
-    public static Map<String, MetaDescription> getJcoreComponents(GitHubRepository repository, Boolean exposable) throws IOException, GithubInformationException {
-        listJcoreComponents(repository, exposable);
+    public static Map<String, MetaDescription> getComponents(GitHubRepository repository, Boolean exposable) throws IOException, GithubInformationException {
+        listComponents(repository, exposable);
         return componentMap;
     }
 

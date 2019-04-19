@@ -9,7 +9,7 @@ import org.beryx.textio.TextIO;
 import java.util.Deque;
 
 public interface ILoopableDialog extends IMenuDialog {
-    default void enterInputLoop(TextIO textIO, Deque<String> path) throws MenuItemExecutionException {
+    default void enterInputLoop(TextIO textIO, Deque<String> path) {
         path.add(getName());
         IMenuItem menuItem = executeMenuItem(textIO, path);
         while (!(menuItem instanceof BackMenuItem) && !(menuItem instanceof QuitMenuItem))

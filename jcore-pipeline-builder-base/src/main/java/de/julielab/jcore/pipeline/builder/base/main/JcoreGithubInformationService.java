@@ -1,9 +1,7 @@
 package de.julielab.jcore.pipeline.builder.base.main;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import de.julielab.java.utilities.FileUtilities;
 import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants.JcoreMeta;
@@ -30,20 +28,17 @@ import java.util.stream.Collectors;
 public class JcoreGithubInformationService implements IComponentMetaInformationService, Serializable {
     private static Logger logger = LoggerFactory.getLogger(JcoreGithubInformationService.class);
     private static JcoreGithubInformationService instance;
-    private ComponentRepository[] repositories;
     private String mvnLocal;
     private Map<String, MetaDescription> metaInformation = new HashMap<>();
     private Set<MavenArtifact> mavenDependencies = new HashSet<>();
 
-    private JcoreGithubInformationService(ComponentRepository[] repositories) {
-        logger.debug("Initializing component repository service with the following repositories: {}", Arrays.toString(repositories));
-        this.repositories = repositories;
+    private JcoreGithubInformationService() {
         this.mvnLocal = Paths.get(System.getProperty("user.home"), Maven.LOCAL_REPO).toString();
     }
 
     public static JcoreGithubInformationService getInstance() {
         if (instance == null)
-            instance = new JcoreGithubInformationService(Repositories.findRepositories());
+            instance = new JcoreGithubInformationService();
         return instance;
     }
 
@@ -54,28 +49,7 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
         loadAllArtifacts();
     }
 
-    @Override
-    public void saveMetaInformationToDisk(ComponentRepository repository) throws GithubInformationException {
-        File metaFile;
-        try {
-            metaFile = Repositories.getJcoreMetaFile(repository);
-            metaFile.getParentFile().mkdirs();
-            if (!metaFile.createNewFile()) {
-                metaFile.delete();
-                metaFile.createNewFile();
-            }
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_ABSENT);
-            mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
-            mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_EMPTY);
-            mapper.addMixIn(Description.class, DescriptionRepositoryStorageMixin.class);
-            // enable pretty printing
-            mapper.enable(SerializationFeature.INDENT_OUTPUT);
-            mapper.writeValue(FileUtilities.getWriterToFile(metaFile), getMetaInformation());
-        } catch (IOException e) {
-            throw new GithubInformationException(e);
-        }
-    }
+
 
     @Override
     public void loadMetaInformationFromDisk(ComponentRepository repository) throws GithubInformationException {
@@ -83,7 +57,7 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
         Map<String, MetaDescription> metaInf = new HashMap<>();
         String eMessage = null;
         InputStream infile = null;
-        File metaFile = Repositories.getJcoreMetaFile(repository);
+        File metaFile = Repositories.getMetaFile(repository);
         logger.trace("Loading component meta description file {} for module {}:{}", metaFile, repository);
         try {
             infile = FileUtilities.getInputStreamFromFile(metaFile);
@@ -116,18 +90,18 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
     public void loadComponentMetaInformation(Boolean loadNew, ComponentRepository repository) throws GithubInformationException {
         logger.trace("Loading component meta data for repository {}:{}. The parameter 'loadNew' is set to {}", repository.getName(), repository.getVersion(), loadNew);
         try {
-            if ((!loadNew || !repository.isUpdateable()) && Repositories.getJcoreMetaFile(repository).exists()) {
+            if ((!loadNew || !repository.isUpdateable()) && Repositories.getMetaFile(repository).exists()) {
                 this.loadMetaInformationFromDisk(repository);
             } else {
                 logger.debug("Loading JCoRe component meta information from GitHub.");
-                Map<String, MetaDescription> jc = GitHubConnector.getJcoreComponents((GitHubRepository) repository, true);
+                Map<String, MetaDescription> jc = GitHubConnector.getComponents((GitHubRepository) repository, true);
                 for (String key : jc.keySet()) {
                     MetaDescription metaDescription = jc.get(key);
                     metaDescription.setModule(repository);
                     logger.trace("Loaded component {}", metaDescription);
                     this.metaInformation.put(key, metaDescription);
                 }
-                saveMetaInformationToDisk(repository);
+                Repositories.saveMetaInformationToDisk(repository);
             }
         } catch (IOException e) {
             throw new GithubInformationException(e);
@@ -137,17 +111,14 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
     @Override
     public void loadComponentMetaInformation(Boolean loadNew) throws GithubInformationException {
         metaInformation.clear();
-        for (Integer i = 0; i < this.repositories.length; i++) {
-            loadComponentMetaInformation(loadNew, repositories[i]);
+        final List<GitHubRepository> gitHubRepositories = getGitHubRepositories();
+        for (Integer i = 0; i < gitHubRepositories.size(); i++) {
+            loadComponentMetaInformation(loadNew, gitHubRepositories.get(i));
         }
     }
 
-    public ComponentRepository[] getRepositories() {
-        return repositories;
-    }
-
-    public void setRepositories(ComponentRepository[] repositories) {
-        this.repositories = repositories;
+    public List<GitHubRepository> getGitHubRepositories() {
+        return Repositories.getRepositories(r -> r instanceof GitHubRepository).map(GitHubRepository.class::cast).collect(Collectors.toList());
     }
 
     @Override
@@ -186,10 +157,6 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
     public Set<MavenArtifact> getArtifacts() throws GithubInformationException {
         return this.mavenDependencies;
     }
-
-    //TODO right now the 'contents' of JsonObject are not known.
-    //TODO to parse the information out later, one need to specify which var has only a string as value
-    //TODO and which has for instance an array (e.g. potentially the value of 'descriptor-location')
 
     @Override
     public Collection<MetaDescription> getMetaInformation() throws GithubInformationException {
@@ -265,5 +232,7 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
     public String getGroups(String componentName) throws GithubInformationException {
         return this.getMetaInformation(componentName).getGroup();
     }
+
+
 
 }

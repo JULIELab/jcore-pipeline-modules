@@ -17,20 +17,31 @@ public class ComponentRepository implements Serializable {
     private String name;
     private String version;
     private boolean updateable;
+    private String type;
 
-    public ComponentRepository(String name, String version, boolean updateable) {
+    public ComponentRepository(String name, String version, boolean updateable, String type) {
         this.name = name;
         this.version = version;
         this.updateable = updateable;
+        this.type = type;
     }
 
     public ComponentRepository() {
 
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     /**
      * Indicates whether the repository can be scanned for updates. This should work, for example, for {@link GitHubRepository} objects.
      * It might not work for manually assembled repositories of private components.
+     *
      * @return Whether this repository can be updated.
      */
     public boolean isUpdateable() {

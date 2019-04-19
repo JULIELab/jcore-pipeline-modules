@@ -26,6 +26,7 @@ public class PipelineBuilderConstants {
         public static final String API_FOLDER = "dir";
         public static final String API_PATH = "path";
         public static final String API_VERSION_PARAMETER = "ref";
+        public static final String API_BRANCHES = "branches";
     }
 
     /**

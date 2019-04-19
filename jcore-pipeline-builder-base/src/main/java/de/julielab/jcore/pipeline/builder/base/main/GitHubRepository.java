@@ -5,7 +5,7 @@ public class GitHubRepository extends ComponentRepository {
     private String gitHubName;
 
     public GitHubRepository(String name, String version, String gitHubName) {
-        super(name, version, true);
+        super(name, version, true, "GitHubRepository");
         this.gitHubName = gitHubName;
     }
 

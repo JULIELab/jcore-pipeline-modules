@@ -5,12 +5,14 @@ import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.builder.base.main.JcoreGithubInformationService;
 import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
+import de.julielab.jcore.pipeline.builder.base.main.Repositories;
 import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.QuitMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.RefreshComponentRepositoryMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes;
 import de.julielab.jcore.pipeline.builder.cli.util.MenuItemExecutionException;
 import de.julielab.jcore.pipeline.builder.cli.util.StatusPrinter;
+import de.julielab.jcore.pipeline.builder.cli.util.TextIOUtils;
 import org.beryx.textio.TextIO;
 
 import java.util.*;
@@ -51,6 +53,7 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
         menuItems.add(new SavePipelineDialog());
         menuItems.add(new LoadPipelineDialog());
         menuItems.add(new RefreshComponentRepositoryMenuItem());
+        menuItems.add(new RepositoryManagementDialog());
         menuItems.add(new QuitMenuItem());
     }
 
@@ -64,6 +67,8 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
     public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) throws MenuItemExecutionException {
         printPosition(textIO, path);
         StatusPrinter.printPipelineStatus(pipeline, textIO);
+        if (Repositories.getRepositories().count() == 0)
+            TextIOUtils.printLine(TextIOUtils.createPrintLine("There are currently no component repositories active. Navigate to the repository management dialog to add components to build pipelines from.", TerminalPrefixes.WARN), textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
                 .withNumberedPossibleValues(menuItems)
                 .read("\nAdd or remove components from your pipeline.");
@@ -95,6 +100,11 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
                 } catch (GithubInformationException e) {
                     throw new MenuItemExecutionException(e);
                 }
+            } else if (choice instanceof RepositoryManagementDialog) {
+                ((RepositoryManagementDialog) choice).enterInputLoop(textIO, path);
+                textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.EMPHASIS, t -> t.print("Applying repository changes. It might take a while to fetch remote component meta data." + System.getProperty("line.separator")));
+                initComponentRepository(false);
+                clearTerminal(textIO);
             }
         } catch (Exception e) {
             textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.ERROR, t -> t.print("An unexpected exception occurred: " + e.getMessage()));

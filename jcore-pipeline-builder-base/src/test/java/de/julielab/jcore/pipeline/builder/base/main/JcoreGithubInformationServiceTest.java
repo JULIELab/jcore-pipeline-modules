@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -24,8 +25,9 @@ public class JcoreGithubInformationServiceTest {
 
     @Test
     public void saveMetaInformationToDisk() throws GithubInformationException, IOException {
-        for (Integer i = 0; i < Repositories.findRepositories().length; i++) {
-            metaInf.saveMetaInformationToDisk(Repositories.findRepositories()[i]);
+        final List<ComponentRepository> repositories = Repositories.getRepositories().collect(Collectors.toList());
+        for (Integer i = 0; i < repositories.size(); i++) {
+            Repositories.saveMetaInformationToDisk(repositories.get(i));
         }
     }
 

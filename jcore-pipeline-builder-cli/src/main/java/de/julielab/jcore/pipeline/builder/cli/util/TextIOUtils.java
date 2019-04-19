@@ -39,6 +39,10 @@ public class TextIOUtils {
         }
     }
 
+    public static void printLine(PrintLine record, TextIO textIO) {
+        printLines(Stream.of(record), textIO);
+    }
+
     public static void printLines(Stream<PrintLine> records, TextIO textIO) {
         String LS = System.getProperty("line.separator");
         records.forEach(line -> {
