@@ -58,7 +58,7 @@ public class PipelineBuilderCLI {
                             "JCoRe and the individual JCoRe components is necessary. For help and " +
                             "pointers to the adequate documentation, please refer to the README of " +
                             "the pipeline modules at https://github.com/JULIELab/jcore-pipeline-modules"));
-            if (Repositories.loadLocalRepositories().isEmpty()) {
+            if (Repositories.loadActiveRepositories().isEmpty()) {
                 new RepositoryAddDialog().enterInputLoop(textIO, new ArrayDeque<>());
             }
             indexDialog.enterInputLoop(pipeline, textIO, new ArrayDeque<>());

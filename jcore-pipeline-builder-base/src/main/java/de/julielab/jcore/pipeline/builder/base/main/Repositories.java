@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import de.julielab.java.utilities.FileUtilities;
 import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants;
 import de.julielab.jcore.pipeline.builder.base.exceptions.GithubInformationException;
-import java_cup.version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +33,7 @@ public class Repositories {
     );
     private final static Logger log = LoggerFactory.getLogger(Repositories.class);
 
-    private static List<ComponentRepository> usedRepositories = new ArrayList<>();
+    private static List<ComponentRepository> activeRepositories = new ArrayList<>();
 
     static {
         File localdir = new File(LOCAL_STORAGE);
@@ -46,19 +45,19 @@ public class Repositories {
     }
 
     /**
-     * Looks in the local repository JSON meta information file for currently used repositories. Found repositories
-     * are set to this class as the used repositories from which components will be offered.
+     * Looks in the local repository JSON meta information file for currently active repositories. Found repositories
+     * are set to this class as the active repositories from which components will be offered.
      */
-    public static List<ComponentRepository> loadLocalRepositories() {
+    public static List<ComponentRepository> loadActiveRepositories() {
         File repositoriesFile = new File(LOCAL_STORAGE + File.separator + REPOSITORIES);
         ObjectMapper om = new ObjectMapper();
         try {
             if (repositoriesFile.exists())
-                usedRepositories = Arrays.asList(om.readValue(repositoriesFile, ComponentRepository[].class));
+                activeRepositories = Arrays.asList(om.readValue(repositoriesFile, ComponentRepository[].class));
         } catch (IOException e) {
             log.error("Could not load available repositories: ", e);
         }
-        return usedRepositories;
+        return activeRepositories;
     }
 
     /**
@@ -80,12 +79,12 @@ public class Repositories {
      */
     public static Stream<ComponentRepository> getRepositories(Predicate<ComponentRepository> filter) {
         if (filter == null)
-            return usedRepositories.stream();
-        return usedRepositories.stream().filter(filter);
+            return activeRepositories.stream();
+        return activeRepositories.stream().filter(filter);
     }
 
     /**
-     * Loads existing repositories from the JSON file in the {@link PipelineBuilderConstants.JcoreMeta#LOCAL_STORAGE}, if it exists, and adds the given repositories. If the file does not exist, it is created and initialized with the given repositories. Note that this can be used to circumvent the addition of the JCoRe repositories when this method is called before the first call to {@link #loadLocalRepositories()}.
+     * Loads existing repositories from the JSON file in the {@link PipelineBuilderConstants.JcoreMeta#LOCAL_STORAGE}, if it exists, and adds the given repositories. If the file does not exist, it is created and initialized with the given repositories. Note that this can be used to circumvent the addition of the JCoRe repositories when this method is called before the first call to {@link #loadActiveRepositories()}.
      *
      * @param repositories
      * @return
@@ -94,8 +93,8 @@ public class Repositories {
     public static void addRepositories(ComponentRepository... repositories) throws IOException {
         File repositoriesFile = new File(LOCAL_STORAGE + File.separator + REPOSITORIES);
         ObjectMapper om = new ObjectMapper();
-        Stream.of(repositories).forEach(usedRepositories::add);
-        om.writeValue(new FileOutputStream(repositoriesFile), usedRepositories);
+        Stream.of(repositories).forEach(activeRepositories::add);
+        om.writeValue(new FileOutputStream(repositoriesFile), activeRepositories);
     }
 
     public static File getMetaFile(ComponentRepository repository) {
