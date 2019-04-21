@@ -98,6 +98,12 @@
             <groupId>org.apache.uima</groupId>
             <artifactId>uimafit-cpe</artifactId>
             <version>${uimafit-version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-io</artifactId>
+                    <groupId>commons-io</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>de.julielab</groupId>
@@ -116,7 +122,11 @@
             <artifactId>julielab-maven-aether-utilities</artifactId>
             <version>1.1.1-SNAPSHOT</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava-version}</version>
+        </dependency>
     </dependencies>
 
     <properties>
