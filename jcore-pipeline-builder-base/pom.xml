@@ -114,7 +114,7 @@
         <dependency>
             <groupId>de.julielab</groupId>
             <artifactId>julielab-maven-aether-utilities</artifactId>
-            <version>1.1.0</version>
+            <version>1.1.1-SNAPSHOT</version>
         </dependency>
 
     </dependencies>
