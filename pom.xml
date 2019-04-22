@@ -22,6 +22,36 @@
         </dependencies>
     </dependencyManagement>
 
+    <dependencies>
+        <!-- This is only here to exclude the commons-io library -->
+        <dependency>
+            <groupId>org.apache.uima</groupId>
+            <artifactId>uimafit-core</artifactId>
+            <version>${uimafit-version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-io</artifactId>
+                    <groupId>commons-io</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.uima</groupId>
+            <artifactId>uimaj-core</artifactId>
+            <version>${uima-version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.uima</groupId>
+                    <artifactId>uimaj-adapter-vinci</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.uima</groupId>
+                    <artifactId>jVinci</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
     <modules>
         <module>jcore-pipeline-builder-base</module>
         <module>jcore-pipeline-runner</module>

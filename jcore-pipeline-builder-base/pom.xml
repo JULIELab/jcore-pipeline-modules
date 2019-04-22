@@ -86,22 +86,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.uima</groupId>
-            <artifactId>uimafit-core</artifactId>
-            <version>${uimafit-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.uima</groupId>
-            <artifactId>uimaj-core</artifactId>
-            <version>${uima-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.uima</groupId>
             <artifactId>uimafit-cpe</artifactId>
             <version>${uimafit-version}</version>
             <exclusions>
                 <exclusion>
-                    <artifactId>commons-io</artifactId>
                     <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
