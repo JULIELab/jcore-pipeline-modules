@@ -12,8 +12,6 @@ import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import de.julielab.utilities.aether.AetherUtilities;
 import de.julielab.utilities.aether.MavenArtifact;
 import de.julielab.utilities.aether.MavenException;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.impl.AnalysisEngineDescription_impl;
@@ -51,6 +49,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -409,14 +408,18 @@ public class JCoReUIMAPipeline {
         }
 
         // Write a file that indicates the pipeline builder version
-        InputStream versionFileStream = getClass().getResourceAsStream("/version.txt");
-        if (versionFileStream != null) {
-            try {
-                String version = IOUtils.toString(versionFileStream);
-                FileUtils.write(new File(directory.getAbsolutePath() + File.separator + "version-pipelinebuilder.txt"), version + System.getProperty("line.separator"), StandardCharsets.UTF_8.name());
-            } catch (IOException e) {
-                log.warn("Could not write pipeline builder version to file:", e);
+        try (InputStream versionFileStream = getClass().getResourceAsStream("/version.txt")) {
+            if (versionFileStream != null) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(new BufferedInputStream(versionFileStream)))) {
+                    String version = br.lines().filter(Predicate.not(String::isBlank)).findAny().get();
+                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(directory.getAbsolutePath() + File.separator + "version-pipelinebuilder.txt", StandardCharsets.UTF_8))) {
+                        bw.write(version);
+                        bw.newLine();
+                    }
+                }
             }
+        } catch (IOException e) {
+            throw new PipelineIOException(e);
         }
 
         // Store the required Maven artifacts in the lib directory
