@@ -47,6 +47,9 @@ public class PipelineBuilderCLI {
                 pipelinePath = args[0];
             }
             textIO = TextIoFactory.getTextIO();
+            if (Repositories.loadActiveRepositories().isEmpty()) {
+                new RepositoryAddDialog().enterInputLoop(textIO, new ArrayDeque<>());
+            }
             IndexDialog indexDialog = new IndexDialog();
             indexDialog.clearTerminal(textIO);
             textIO.getTextTerminal().executeWithPropertiesPrefix(WELCOME,
@@ -58,9 +61,6 @@ public class PipelineBuilderCLI {
                             "JCoRe and the individual JCoRe components is necessary. For help and " +
                             "pointers to the adequate documentation, please refer to the README of " +
                             "the pipeline modules at https://github.com/JULIELab/jcore-pipeline-modules"));
-            if (Repositories.loadActiveRepositories().isEmpty()) {
-                new RepositoryAddDialog().enterInputLoop(textIO, new ArrayDeque<>());
-            }
             indexDialog.enterInputLoop(pipeline, textIO, new ArrayDeque<>());
         } catch (GithubInformationException | MenuItemExecutionException e) {
             if (e instanceof GithubInformationException || e.getCause() instanceof GithubInformationException) {

@@ -6,10 +6,7 @@ import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.builder.base.main.JcoreGithubInformationService;
 import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
 import de.julielab.jcore.pipeline.builder.base.main.Repositories;
-import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
-import de.julielab.jcore.pipeline.builder.cli.menu.QuitMenuItem;
-import de.julielab.jcore.pipeline.builder.cli.menu.RefreshComponentRepositoryMenuItem;
-import de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes;
+import de.julielab.jcore.pipeline.builder.cli.menu.*;
 import de.julielab.jcore.pipeline.builder.cli.util.MenuItemExecutionException;
 import de.julielab.jcore.pipeline.builder.cli.util.StatusPrinter;
 import de.julielab.jcore.pipeline.builder.cli.util.TextIOUtils;
@@ -54,6 +51,7 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
         menuItems.add(new LoadPipelineDialog());
         menuItems.add(new RefreshComponentRepositoryMenuItem());
         menuItems.add(new RepositoryManagementDialog());
+        menuItems.add(new StorePomMenuItem());
         menuItems.add(new QuitMenuItem());
     }
 
@@ -105,6 +103,8 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
                 textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.EMPHASIS, t -> t.print("Applying repository changes. It might take a while to fetch remote component meta data." + System.getProperty("line.separator")));
                 initComponentRepository(false);
                 clearTerminal(textIO);
+            } else if (choice instanceof StorePomMenuItem) {
+                ((StorePomMenuItem)choice).execute(pipeline, textIO);
             }
         } catch (Exception e) {
             textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.ERROR, t -> t.print("An unexpected exception occurred: " + e.getMessage()));
