@@ -582,22 +582,37 @@ public class JCoReUIMAPipeline {
         File libDir = new File(directory.getAbsolutePath() + File.separator + DIR_LIB);
         if (!libDir.exists())
             libDir.mkdirs();
+        Stream<Description> descriptions = Stream.empty();
         if (crDescription != null && crDescription.getMetaDescription() != null) {
-            AetherUtilities.storeArtifactWithDependencies(crDescription.getMetaDescription().getMavenArtifact(), libDir);
+            descriptions = Stream.concat(descriptions, Stream.of(crDescription));
         }
-        Consumer<Description> storeArtifacts = desc -> {
-            try {
-                AetherUtilities.storeArtifactWithDependencies(desc.getMetaDescription().getMavenArtifact(), libDir);
-            } catch (MavenException e) {
-                log.error("Could not store dependencies of description {}", desc, e);
-            }
-        };
         if (cmDelegates != null)
-            cmDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())).forEach(storeArtifacts);
+            descriptions = Stream.concat(descriptions, cmDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())));
         if (aeDelegates != null)
-            aeDelegates.stream().filter(d -> !d.getMetaDescription().isPear() && Objects.nonNull(d.getMetaDescription())).forEach(storeArtifacts);
+            descriptions = Stream.concat(descriptions, aeDelegates.stream().filter(d -> !d.getMetaDescription().isPear() && Objects.nonNull(d.getMetaDescription())));
         if (ccDelegates != null)
-            ccDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())).forEach(storeArtifacts);
+            descriptions = Stream.concat(descriptions, ccDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())));
+        storeArtifactsOfDescriptions(descriptions, libDir);
+
+//        File libDir = new File(directory.getAbsolutePath() + File.separator + DIR_LIB);
+//        if (!libDir.exists())
+//            libDir.mkdirs();
+//        if (crDescription != null && crDescription.getMetaDescription() != null) {
+//            AetherUtilities.storeArtifactWithDependencies(crDescription.getMetaDescription().getMavenArtifact(), libDir);
+//        }
+//        Consumer<Description> storeArtifacts = desc -> {
+//            try {
+//                AetherUtilities.storeArtifactWithDependencies(desc.getMetaDescription().getMavenArtifact(), libDir);
+//            } catch (MavenException e) {
+//                log.error("Could not store dependencies of description {}", desc, e);
+//            }
+//        };
+//        if (cmDelegates != null)
+//            cmDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())).forEach(storeArtifacts);
+//        if (aeDelegates != null)
+//            aeDelegates.stream().filter(d -> !d.getMetaDescription().isPear() && Objects.nonNull(d.getMetaDescription())).forEach(storeArtifacts);
+//        if (ccDelegates != null)
+//            ccDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())).forEach(storeArtifacts);
     }
 
     /**
