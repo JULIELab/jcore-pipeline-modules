@@ -61,13 +61,11 @@ public class JCoReUIMAPipeline {
     public static final String DIR_LIB = "lib";
     public static final String DIR_CONF = "config";
     public static final String CPE_AAE_DESC_NAME = "cpeAAE.xml";
-    public static final String JAR_CONF_FILES = "jcore-pipeline-config.jar";
     private static final String SERIALIZED_CR_DESCS_FILE = "crDescriptions.json";
     private static final String SERIALIZED_CM_DESCS_FILE = "cmDescriptions.json";
     private static final String SERIALIZED_AE_DESCS_FILE = "aeDescriptions.json";
     private static final String SERIALIZED_CC_DESCS_FILE = "ccDescriptions.json";
     private final static Logger log = LoggerFactory.getLogger(JCoReUIMAPipeline.class);
-
     private static Function<List<Description>, Stream<Import>> tsImportsExtractor = descs -> descs.stream().flatMap(desc -> {
         final AnalysisEngineMetaData analysisEngineMetaData = desc.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData();
         if (analysisEngineMetaData == null)
@@ -77,12 +75,15 @@ public class JCoReUIMAPipeline {
             return null;
         return Stream.of(typeSystem.getImports());
     }).filter(Objects::nonNull);
-
+    /**
+     * The parent POM is used for dependency resolution of the component artifacts. It can be used to resolve
+     * library version conflicts using the dependencyManagement mechanism. May be <tt>null</tt>.
+     */
+    private MavenArtifact parentPom;
     private Description crDescription;
     private List<Description> aeDelegates;
     private List<Description> cmDelegates;
     private List<Description> ccDelegates;
-
     private CollectionReaderDescription crDesc;
     /**
      * All multipliers, analysis engines and, if possible, consumers are wrapped into an AAE.
@@ -90,7 +91,6 @@ public class JCoReUIMAPipeline {
     private AnalysisEngineDescription aaeDesc;
     private AnalysisEngineDescription aaeCmDesc;
     private ResourceCreationSpecifier ccDesc;
-
     /**
      * This file is only non-null when the pipeline has been loaded.
      */
@@ -127,6 +127,19 @@ public class JCoReUIMAPipeline {
         ccDelegates = new ArrayList<>();
     }
 
+    public MavenArtifact getParentPom() {
+        return parentPom;
+    }
+
+    public void setParentPom(MavenArtifact parentPom) {
+        this.parentPom = parentPom;
+        if ((parentPom.getGroupId() == null || parentPom.getArtifactId() == null || parentPom.getVersion() == null) && parentPom.getFile() != null)
+            parentPom.setCoordinatesFromFile();
+    }
+
+    /**
+     * @return Returns the multipliers from within the aeDelegates.
+     */
     public Stream<Description> getMultipliers() {
         return aeDelegates.stream().
                 filter(d -> ((AnalysisEngineDescription) d.getDescriptor()).getAnalysisEngineMetaData().getOperationalProperties().getOutputsNewCASes());
@@ -459,6 +472,16 @@ public class JCoReUIMAPipeline {
         } catch (IOException e) {
             throw new PipelineIOException(e);
         }
+
+        // Store the parent POM, if set
+        if (parentPom != null) {
+            ObjectMapper om = new ObjectMapper();
+            try {
+                om.writeValue(Path.of(directory.getAbsolutePath(), "pipelineParentPomSource.json").toFile(), parentPom);
+            } catch (IOException e) {
+                throw new PipelineIOException(e);
+            }
+        }
     }
 
     // I'm actually not sure why we need 'allDelegates' and 'aaeElements'. Perhaps we don't. Try it when there is time.
@@ -626,7 +649,7 @@ public class JCoReUIMAPipeline {
      * @throws MavenException
      */
     private void storeArtifactsOfDescriptions(Stream<Description> descriptions, File libDir) throws MavenException {
-        AetherUtilities.storeArtifactsWithDependencies(descriptions.map(d -> d.getMetaDescription().getMavenArtifact()), libDir);
+        AetherUtilities.storeArtifactsWithDependencies(parentPom, descriptions.map(d -> d.getMetaDescription().getMavenArtifact()), libDir);
     }
 
     private void serializeDescriptions(File pipelineStorageDir, String targetFileName, Object descriptions) throws IOException {
@@ -685,6 +708,12 @@ public class JCoReUIMAPipeline {
             } catch (ClassNotFoundException e) {
                 throw new PipelineIOException(e);
             }
+
+            // Load the parent pipeline POM
+            final ObjectMapper om = new ObjectMapper();
+            final File parentPomFile = Path.of(loadDirectory.getAbsolutePath(), ("pipelineParentPomSource.json")).toFile();
+            if (parentPomFile.exists())
+                parentPom = om.readValue(parentPomFile, MavenArtifact.class);
 
             File descDir = new File(loadDirectory.getAbsolutePath() + File.separator + DIR_DESC_ALL);
             if (!descDir.exists()) {
