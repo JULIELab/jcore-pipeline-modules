@@ -102,6 +102,7 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
             } else if (choice instanceof RepositoryManagementDialog) {
                 ((RepositoryManagementDialog) choice).enterInputLoop(textIO, path);
                 textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.EMPHASIS, t -> t.print("Applying repository changes. It might take a while to fetch remote component meta data." + System.getProperty("line.separator")));
+                Repositories.saveRepositoryConfiguration();
                 initComponentRepository(false);
                 clearTerminal(textIO);
             } else if (choice instanceof  ParentPomSettingDialog) {

@@ -91,9 +91,13 @@ public class Repositories {
      * @throws IOException
      */
     public static void addRepositories(ComponentRepository... repositories) throws IOException {
+        Stream.of(repositories).forEach(activeRepositories::add);
+        saveRepositoryConfiguration();
+    }
+
+    public static void saveRepositoryConfiguration() throws IOException {
         File repositoriesFile = new File(LOCAL_STORAGE + File.separator + REPOSITORIES);
         ObjectMapper om = new ObjectMapper();
-        Stream.of(repositories).forEach(activeRepositories::add);
         om.writeValue(new FileOutputStream(repositoriesFile), activeRepositories);
     }
 

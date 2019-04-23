@@ -5,17 +5,21 @@ import de.julielab.jcore.pipeline.builder.base.connectors.RepositoryBranchInform
 import de.julielab.jcore.pipeline.builder.base.exceptions.GithubInformationException;
 import de.julielab.jcore.pipeline.builder.base.main.ComponentRepository;
 import de.julielab.jcore.pipeline.builder.base.main.GitHubRepository;
+import de.julielab.jcore.pipeline.builder.base.main.Repositories;
 import java_cup.version;
 import org.beryx.textio.GenericInputReader;
 import org.beryx.textio.InputReader;
 import org.beryx.textio.TextIO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Deque;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class RepositorySelectVersionDialog implements IMenuDialog {
-
+private final static Logger log = LoggerFactory.getLogger(RepositorySelectVersionDialog.class);
     private ComponentRepository repository;
 
     public RepositorySelectVersionDialog(ComponentRepository repository) {

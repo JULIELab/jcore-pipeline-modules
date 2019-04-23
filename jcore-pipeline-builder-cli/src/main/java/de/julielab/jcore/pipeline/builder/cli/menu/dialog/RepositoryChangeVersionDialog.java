@@ -22,8 +22,8 @@ public class RepositoryChangeVersionDialog implements ILoopableDialog {
         String oldVersion = chosenRepo.getVersion();
         new RepositorySelectVersionDialog(chosenRepo).execute(textIO, path);
         String newVersion = chosenRepo.getVersion();
-        if (oldVersion != null && !oldVersion.equals(newVersion))
-            Repositories.deleteComponentList(chosenRepo.getName(), oldVersion);
+        //if (oldVersion != null && !oldVersion.equals(newVersion))
+        //    Repositories.deleteComponentList(chosenRepo.getName(), oldVersion);
         return new NoopMenuItem();
     }
 
