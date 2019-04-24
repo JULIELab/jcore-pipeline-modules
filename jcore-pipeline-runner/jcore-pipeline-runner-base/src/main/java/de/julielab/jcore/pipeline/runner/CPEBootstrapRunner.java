@@ -23,6 +23,7 @@ import org.xml.sax.SAXException;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,7 +52,11 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             classpathElements = Stream.concat(classpathElements, Stream.of(cpeRunnerJar, new File(plp + File.separator + JCoReUIMAPipeline.DIR_CONF), new File(plp + File.separator + "resources")));
             String classpath = classpathElements.map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
 
-            final String[] cmdarray = {"java", "-Xmx" + memory, "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads)};
+            String javaPath = "java";
+            if (System.getenv("JAVA_HOME") != null)
+                javaPath = Path.of(System.getenv("JAVA_HOME"), "bin", "java").toString();
+
+            final String[] cmdarray = {javaPath, "-Xmx" + memory, "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads)};
             log.info("Running the pipeline at {} with the following command line: {}", pipeline.getLoadDirectory(), Arrays.toString(cmdarray));
             final Process exec = Runtime.getRuntime().exec(cmdarray);
             final InputStreamGobbler isg = new InputStreamGobbler(exec.getInputStream(), "StdInGobbler", "std");
