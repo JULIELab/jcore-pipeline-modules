@@ -53,7 +53,7 @@ public class Repositories {
         ObjectMapper om = new ObjectMapper();
         try {
             if (repositoriesFile.exists())
-                activeRepositories = Arrays.asList(om.readValue(repositoriesFile, ComponentRepository[].class));
+                activeRepositories = new ArrayList<>(Arrays.asList(om.readValue(repositoriesFile, ComponentRepository[].class)));
         } catch (IOException e) {
             log.error("Could not load available repositories: ", e);
         }
