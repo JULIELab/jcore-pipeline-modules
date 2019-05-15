@@ -17,6 +17,8 @@ import org.apache.uima.collection.StatusCallbackListener;
 import org.apache.uima.collection.metadata.CpeDescription;
 import org.apache.uima.collection.metadata.CpeDescriptorException;
 import org.apache.uima.fit.cpe.CpeBuilder;
+import org.apache.uima.util.CasPool;
+import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;

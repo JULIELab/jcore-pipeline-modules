@@ -10,6 +10,7 @@ public class GitHubRepository extends ComponentRepository {
     }
 
     public GitHubRepository() {
+        this.type = "GitHubRepository";
     }
 
     public String getGitHubName() {

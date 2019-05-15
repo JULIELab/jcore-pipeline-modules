@@ -17,7 +17,7 @@ public class ComponentRepository implements Serializable {
     private String name;
     private String version;
     private boolean updateable;
-    private String type;
+    protected String type;
 
     public ComponentRepository(String name, String version, boolean updateable, String type) {
         this.name = name;
@@ -27,7 +27,7 @@ public class ComponentRepository implements Serializable {
     }
 
     public ComponentRepository() {
-
+        this.type = "ComponentRepository";
     }
 
     public String getType() {
