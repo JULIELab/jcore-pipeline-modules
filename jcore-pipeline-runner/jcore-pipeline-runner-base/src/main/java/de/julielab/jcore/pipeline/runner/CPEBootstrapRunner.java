@@ -50,12 +50,13 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             pipeline.load(false);
             final String plp = pipeline.getLoadDirectory().getAbsolutePath();
             int numThreads = runnerConfig.containsKey(NUMTHREADS) ? runnerConfig.getInt(NUMTHREADS) : 2;
+            String heapSize = runnerConfig.getString("heapsize", "2G");
             final File cpeRunnerJar = findCpeRunnerJar();
             Stream<File> classpathElements = pipeline.getClasspathElements();
             classpathElements = Stream.concat(classpathElements, Stream.of(cpeRunnerJar, new File(plp + File.separator + JCoReUIMAPipeline.DIR_CONF), new File(plp + File.separator + "resources")));
             String classpath = classpathElements.map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
 
-            final String[] cmdarray = {"java", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads)};
+            final String[] cmdarray = {"java", "-Xmx"+heapSize, "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads)};
             log.info("Running the pipeline at {} with the following command line: {}", pipeline.getLoadDirectory(), Arrays.toString(cmdarray));
             final Process exec = Runtime.getRuntime().exec(cmdarray);
             new InputStreamGobbler(exec.getInputStream(), "StdInGobbler", "std").start();
