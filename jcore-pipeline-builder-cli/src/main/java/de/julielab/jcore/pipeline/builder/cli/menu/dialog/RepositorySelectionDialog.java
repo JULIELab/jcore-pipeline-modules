@@ -1,14 +1,12 @@
 package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 
 import de.julielab.jcore.pipeline.builder.base.main.ComponentRepository;
-import de.julielab.jcore.pipeline.builder.base.main.JcoreGithubInformationService;
 import de.julielab.jcore.pipeline.builder.base.main.Repositories;
 import de.julielab.jcore.pipeline.builder.cli.menu.BackMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.PayloadMenuItem;
 import org.beryx.textio.TextIO;
 
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.stream.Collectors;

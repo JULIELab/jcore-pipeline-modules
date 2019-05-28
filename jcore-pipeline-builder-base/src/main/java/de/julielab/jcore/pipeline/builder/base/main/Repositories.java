@@ -130,7 +130,7 @@ public class Repositories {
             mapper.addMixIn(Description.class, DescriptionRepositoryStorageMixin.class);
             // enable pretty printing
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
-            mapper.writeValue(FileUtilities.getWriterToFile(metaFile), JcoreGithubInformationService.getInstance().getMetaInformation());
+            mapper.writeValue(FileUtilities.getWriterToFile(metaFile), ComponentMetaInformationService.getInstance().getMetaInformation());
         } catch (IOException e) {
             throw new GithubInformationException(e);
         }

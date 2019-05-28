@@ -250,7 +250,7 @@ public class MetaDescription implements IMetaDescription, Serializable {
         };
 
         try {
-            List<MavenArtifact> mavenArtifacts = JcoreGithubInformationService.getInstance().downloadArtifacts(Collections.singletonList(artifact));
+            List<MavenArtifact> mavenArtifacts = ComponentMetaInformationService.getInstance().downloadArtifacts(Collections.singletonList(artifact));
             MavenArtifact resolvedArtifact = mavenArtifacts.get(0);
             this.artifact.setFile(resolvedArtifact.getFile());
         } catch (MavenException e) {

@@ -1,8 +1,6 @@
 package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 
 import de.julielab.jcore.pipeline.builder.base.main.ComponentRepository;
-import de.julielab.jcore.pipeline.builder.base.main.JcoreGithubInformationService;
-import de.julielab.jcore.pipeline.builder.base.main.Repositories;
 import de.julielab.jcore.pipeline.builder.cli.menu.*;
 import org.beryx.textio.TextIO;
 

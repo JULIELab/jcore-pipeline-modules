@@ -3,7 +3,7 @@ package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 import de.julielab.jcore.pipeline.builder.base.exceptions.GithubInformationException;
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
-import de.julielab.jcore.pipeline.builder.base.main.JcoreGithubInformationService;
+import de.julielab.jcore.pipeline.builder.base.main.ComponentMetaInformationService;
 import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
 import de.julielab.jcore.pipeline.builder.base.main.Repositories;
 import de.julielab.jcore.pipeline.builder.cli.menu.*;
@@ -30,7 +30,7 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
         // Groups the meta descriptions by their categories. We cannot just use the groupBy Java8 collector because
         // we have multiple categories. In Java9 there is the stream group by which should work here:
         // http://www.baeldung.com/java9-stream-collectors
-        JcoreGithubInformationService.getInstance().getMetaInformation(loadNew).forEach(md -> {
+        ComponentMetaInformationService.getInstance().getMetaInformation(loadNew).forEach(md -> {
             for (Category category : md.getCategories()) {
                 categoryMap.compute(category, (k, v) -> {
                     List<MetaDescription> ret = v;

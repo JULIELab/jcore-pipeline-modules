@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
  * @see <url>https://developer.github.com/v3/#rate-limiting</url>
  */
 @Ignore
-public class JcoreGithubInformationServiceTest {
-    private final static Logger log = LoggerFactory.getLogger(JcoreGithubInformationServiceTest.class);
-    private JcoreGithubInformationService metaInf = JcoreGithubInformationService.getInstance();
+public class ComponentMetaInformationServiceTest {
+    private final static Logger log = LoggerFactory.getLogger(ComponentMetaInformationServiceTest.class);
+    private ComponentMetaInformationService metaInf = ComponentMetaInformationService.getInstance();
 
 
     @Test

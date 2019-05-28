@@ -25,20 +25,20 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class JcoreGithubInformationService implements IComponentMetaInformationService, Serializable {
-    private static Logger logger = LoggerFactory.getLogger(JcoreGithubInformationService.class);
-    private static JcoreGithubInformationService instance;
+public class ComponentMetaInformationService implements IComponentMetaInformationService, Serializable {
+    private static Logger logger = LoggerFactory.getLogger(ComponentMetaInformationService.class);
+    private static ComponentMetaInformationService instance;
     private String mvnLocal;
     private Map<String, MetaDescription> metaInformation = new HashMap<>();
     private Set<MavenArtifact> mavenDependencies = new HashSet<>();
 
-    private JcoreGithubInformationService() {
+    private ComponentMetaInformationService() {
         this.mvnLocal = Paths.get(System.getProperty("user.home"), Maven.LOCAL_REPO).toString();
     }
 
-    public static JcoreGithubInformationService getInstance() {
+    public static ComponentMetaInformationService getInstance() {
         if (instance == null)
-            instance = new JcoreGithubInformationService();
+            instance = new ComponentMetaInformationService();
         return instance;
     }
 
@@ -54,7 +54,6 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
     @Override
     public void loadMetaInformationFromDisk(ComponentRepository repository) throws GithubInformationException {
         logger.debug("Loading JCoRe component meta information from local file cache for repository {}.", repository);
-        Map<String, MetaDescription> metaInf = new HashMap<>();
         String eMessage = null;
         InputStream infile = null;
         File metaFile = Repositories.getMetaFile(repository);
@@ -111,14 +110,14 @@ public class JcoreGithubInformationService implements IComponentMetaInformationS
     @Override
     public void loadComponentMetaInformation(Boolean loadNew) throws GithubInformationException {
         metaInformation.clear();
-        final List<GitHubRepository> gitHubRepositories = getGitHubRepositories();
+        final List<ComponentRepository> gitHubRepositories = getRepositories();
         for (Integer i = 0; i < gitHubRepositories.size(); i++) {
             loadComponentMetaInformation(loadNew, gitHubRepositories.get(i));
         }
     }
 
-    public List<GitHubRepository> getGitHubRepositories() {
-        return Repositories.getRepositories(r -> r instanceof GitHubRepository).map(GitHubRepository.class::cast).collect(Collectors.toList());
+    public List<ComponentRepository> getRepositories() {
+        return Repositories.getRepositories().collect(Collectors.toList());
     }
 
     @Override
