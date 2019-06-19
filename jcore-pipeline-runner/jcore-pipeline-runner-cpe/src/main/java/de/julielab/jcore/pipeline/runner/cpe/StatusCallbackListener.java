@@ -1,20 +1,3 @@
-/**
- * StatusCallbackListener.java
- * <p>
- * Copyright (c) 2008, JULIE Lab.
- * All rights reserved. This program and the accompanying materials
- * are protected. Please contact JULIE Lab for further information.
- * <p>
- * Author: landefeld
- * <p>
- * Current version: //TODO insert current version number
- * Since version:   //TODO insert version number of first appearance of this class
- * <p>
- * Creation date: 16.09.2008
- * <p>
- * //TODO insert short description
- **/
-
 package de.julielab.jcore.pipeline.runner.cpe;
 
 import de.julielab.jcore.types.Header;
