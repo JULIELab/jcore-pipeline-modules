@@ -59,7 +59,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
                 javaPath = Path.of(System.getenv("JAVA_HOME"), "bin", "java").toString();
 
             final String[] cmdarray = {javaPath, "-Xmx" + memory, "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads)};
-            log.info("Running the pipeline at {} with the following command line: {}", pipeline.getLoadDirectory(), Arrays.toString(cmdarray));
+            log.debug("Running the pipeline at {} with the following command line: {}", pipeline.getLoadDirectory(), Arrays.toString(cmdarray));
             final Process exec = Runtime.getRuntime().exec(cmdarray);
             final InputStreamGobbler isg = new InputStreamGobbler(exec.getInputStream(), "StdInGobbler", "std");
             isg.start();
