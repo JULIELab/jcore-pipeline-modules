@@ -45,6 +45,8 @@ public interface IComponentMetaInformationService {
 
     Set<MavenArtifact> getArtifacts() throws GithubInformationException;
 
+    Collection<MetaDescription> getMetaInformation(ComponentRepository repository) throws GithubInformationException;
+
     /**
      * Lists all exposed components of the module this ComponentMetaInformation object belongs to/
      * was created from.

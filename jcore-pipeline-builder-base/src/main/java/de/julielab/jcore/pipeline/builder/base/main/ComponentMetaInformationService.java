@@ -58,12 +58,14 @@ public class ComponentMetaInformationService implements IComponentMetaInformatio
         InputStream infile = null;
         File metaFile = Repositories.getMetaFile(repository);
         logger.trace("Loading component meta description file {} for module {}:{}", metaFile, repository);
+        System.out.println(metaFile.getAbsolutePath());
         try {
             infile = FileUtilities.getInputStreamFromFile(metaFile);
             ObjectMapper objectMapper = new ObjectMapper();
             List<MetaDescription> asList = objectMapper.readValue(
                     infile, new TypeReference<List<MetaDescription>>() {
                     });
+//            asList.stream().map(MetaDescription::getName).forEach(md -> {System.out.println(repository.getName() + ": " +md);});
             asList.forEach(md -> this.metaInformation.put(md.getName(), md));
             asList.forEach(md -> md.setModule(repository));
             if (logger.isTraceEnabled()) {
@@ -155,6 +157,11 @@ public class ComponentMetaInformationService implements IComponentMetaInformatio
     @Override
     public Set<MavenArtifact> getArtifacts() throws GithubInformationException {
         return this.mavenDependencies;
+    }
+
+    @Override
+    public Collection<MetaDescription> getMetaInformation(ComponentRepository repository) throws GithubInformationException {
+        return metaInformation.values().stream().filter(md -> md.getModule().getName().equals(repository.getName())).collect(Collectors.toList());
     }
 
     @Override
