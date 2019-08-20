@@ -41,7 +41,7 @@ public class ArtifactVersionDialog extends AbstractComponentSelectionDialog {
         MenuItemList<IMenuItem> extendedList = new MenuItemList<>();
         extendedList.add(new UpdateAllArtifactsDialog());
         extendedList.addAll(itemList);
-        extendedList.add(new BackMenuItem());
+        extendedList.add(BackMenuItem.get());
         itemList = extendedList;
     }
 }

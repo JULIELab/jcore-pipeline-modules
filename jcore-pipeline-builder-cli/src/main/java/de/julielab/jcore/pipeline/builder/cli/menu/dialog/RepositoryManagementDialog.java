@@ -20,7 +20,7 @@ public class RepositoryManagementDialog implements ILoopableDialog {
         itemList = new MenuItemList<>();
         itemList.add(new RepositoryAddDialog());
         itemList.add(new RepositoryChangeVersionDialog());
-        itemList.add(new BackMenuItem());
+        itemList.add(BackMenuItem.get());
     }
 
     @Override
@@ -37,7 +37,7 @@ public class RepositoryManagementDialog implements ILoopableDialog {
             textIO.getTextTerminal().print(repository.getName() + ": " + repository.getVersion() + ls);
         }
         final IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
-                .withNumberedPossibleValues(itemList)
+                .withNumberedPossibleValues(itemList).withDefaultValue(BackMenuItem.get())
                 .read("Choose an option:");
         if (choice instanceof ILoopableDialog) {
             ((ILoopableDialog) choice).enterInputLoop(textIO, path);

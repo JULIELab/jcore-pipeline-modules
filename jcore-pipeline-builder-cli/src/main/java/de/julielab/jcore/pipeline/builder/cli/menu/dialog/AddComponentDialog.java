@@ -29,7 +29,7 @@ public class AddComponentDialog implements ILoopablePipelineManipulationDialog {
         for (MetaDescription aeDesc : aeDescriptions)
             menuItemList.add(new EditMenuItem(aeDesc, category));
         Collections.sort(menuItemList);
-        menuItemList.add(new BackMenuItem());
+        menuItemList.add(BackMenuItem.get());
     }
 
     @Override
@@ -37,7 +37,7 @@ public class AddComponentDialog implements ILoopablePipelineManipulationDialog {
         printPosition(textIO, path);
         StatusPrinter.printPipelineStatus(pipeline, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
-                .withNumberedPossibleValues(menuItemList)
+                .withNumberedPossibleValues(menuItemList).withDefaultValue(BackMenuItem.get())
                 .read("\nChoose a component.");
         boolean errorPrinted = false;
         try {
@@ -102,7 +102,7 @@ public class AddComponentDialog implements ILoopablePipelineManipulationDialog {
         } catch (CloneNotSupportedException e) {
             log.error("Could not clone the description", e);
         }
-        IMenuItem iMenuItem = category == Category.reader ? new BackMenuItem() : choice;
+        IMenuItem iMenuItem = category == Category.reader ? BackMenuItem.get() : choice;
         if (iMenuItem instanceof BackMenuItem && !errorPrinted)
             clearTerminal(textIO);
         if (choice instanceof EditMenuItem) {

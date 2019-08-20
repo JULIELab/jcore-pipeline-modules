@@ -19,15 +19,15 @@ public class ReorderComponentsDialog extends AbstractComponentSelectionDialog {
         printPosition(textIO, path);
         StatusPrinter.printPipelineStatus(pipeline, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
-                .withNumberedPossibleValues(itemList)
+                .withNumberedPossibleValues(itemList).withDefaultValue(BackMenuItem.get())
                 .read("\nChoose a component to move.");
         if (!(choice instanceof BackMenuItem)) {
             MenuItemList<IMenuItem> positionItems = new MenuItemList<>();
             itemList.stream().filter(i -> !(i instanceof BackMenuItem)).forEach(positionItems::add);
             positionItems.add(new PositionMenuItem("<Move to back>", itemList.size()));
-            positionItems.add(new BackMenuItem());
+            positionItems.add(BackMenuItem.get());
             IMenuItem choice2 = textIO.<IMenuItem>newGenericInputReader(null)
-                    .withNumberedPossibleValues(positionItems)
+                    .withNumberedPossibleValues(positionItems).withDefaultValue(BackMenuItem.get())
                     .read("\nChoose the position to move the component before.");
             if (!(choice2 instanceof BackMenuItem)) {
                 List<Description> aeDelegates = pipeline.getAeDelegates();

@@ -31,7 +31,7 @@ public class RepositoryAddDialog implements ILoopableDialog {
             List<Object> items = new ArrayList<>();
             items.addAll(unusedDefaultRepositories);
             items.add(new RepositoryCreateDialog());
-            items.add(new BackMenuItem());
+            items.add(BackMenuItem.get());
 
             List<String> menuItemStrings = items.stream().map(item -> {
                 if (item instanceof ComponentRepository)

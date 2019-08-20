@@ -92,7 +92,7 @@ public class PipelineParameterChecker {
                             for (int i = 0; i < declarations.length; i++) {
                                 ConfigurationParameter declaration = declarations[i];
                                 String name = declaration.getName();
-                                Object value = Optional.of(settings.get(name)).orElseGet(NameValuePair_impl::new).getValue();
+                                Object value = Optional.ofNullable(settings.get(name)).orElseGet(NameValuePair_impl::new).getValue();
                                 if (declaration.isMandatory() && (value == null || StringUtils.isBlank(value.toString())))
                                     list.add(new MissingComponentConfiguration(Missing.EXTERNAL_RESOURCE_PARAMETER, desc.getMetaData().getName(), dependency.getKey()));
 

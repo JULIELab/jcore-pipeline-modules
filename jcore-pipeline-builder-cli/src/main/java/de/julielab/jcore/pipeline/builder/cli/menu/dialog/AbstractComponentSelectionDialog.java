@@ -33,7 +33,7 @@ public abstract class AbstractComponentSelectionDialog implements ILoopablePipel
         }
         if (pipeline.getCcDelegates() != null && !pipeline.getCcDelegates().isEmpty() && categoriesForSelection.contains(Category.consumer))
             pipeline.getCcDelegates().stream().map(ComponentSelectionMenuItem::new).forEach(itemList::add);
-        itemList.add(new BackMenuItem());
+        itemList.add(BackMenuItem.get());
     }
 
     @Override
@@ -42,7 +42,7 @@ public abstract class AbstractComponentSelectionDialog implements ILoopablePipel
         printPosition(textIO, path);
         StatusPrinter.printPipelineStatus(pipeline, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
-                .withNumberedPossibleValues(itemList)
+                .withNumberedPossibleValues(itemList).withDefaultValue(BackMenuItem.get())
                 .read("\nChoose a component.");
         clearTerminal(textIO);
         return choice;

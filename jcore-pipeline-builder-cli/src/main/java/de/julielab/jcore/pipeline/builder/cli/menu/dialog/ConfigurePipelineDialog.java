@@ -20,7 +20,7 @@ public class ConfigurePipelineDialog implements ILoopablePipelineManipulationDia
         printPosition(textIO, path);
         StatusPrinter.printPipelineStatus(pipeline, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
-                .withNumberedPossibleValues(itemList)
+                .withNumberedPossibleValues(itemList).withDefaultValue(BackMenuItem.get())
                 .read("\nChoose an action to perform on your pipeline.");
         clearTerminal(textIO);
         if (!(choice instanceof BackMenuItem)) {
@@ -38,7 +38,7 @@ public class ConfigurePipelineDialog implements ILoopablePipelineManipulationDia
         itemList.add(new RemoveComponentDialog());
         itemList.add(new ActivationDialog());
         itemList.add(new ArtifactVersionDialog());
-        itemList.add(new BackMenuItem());
+        itemList.add(BackMenuItem.get());
 
     }
 

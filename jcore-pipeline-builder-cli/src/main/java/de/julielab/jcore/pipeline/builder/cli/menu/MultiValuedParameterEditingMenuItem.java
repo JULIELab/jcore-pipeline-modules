@@ -64,7 +64,7 @@ public class MultiValuedParameterEditingMenuItem implements IMenuDialog {
             case "Remove element":
                 Integer toRemove;
                 do {
-                    toRemove = textIO.newIntInputReader().withMinVal(0).withMaxVal(array.length).read("Select an item to remove or 0 for none:");
+                    toRemove = textIO.newIntInputReader().withMinVal(0).withMaxVal(array.length).withDefaultValue(0).read("Select an item to remove or 0 for none:");
                     if (toRemove > 0) {
                         List<Object> objList = new ArrayList<>(Arrays.asList(array));
                         objList.remove(toRemove - 1);

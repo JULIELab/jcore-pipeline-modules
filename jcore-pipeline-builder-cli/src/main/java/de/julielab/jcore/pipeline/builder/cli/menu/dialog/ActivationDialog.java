@@ -20,7 +20,7 @@ public class ActivationDialog extends AbstractComponentSelectionDialog {
         printPosition(textIO, path);
         StatusPrinter.printPipelineStatus(pipeline, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
-                .withNumberedPossibleValues(itemList)
+                .withNumberedPossibleValues(itemList).withDefaultValue(BackMenuItem.get())
                 .read("\nChoose a component.");
         clearTerminal(textIO);
         if (choice instanceof ComponentSelectionMenuItem) {
@@ -49,7 +49,7 @@ public class ActivationDialog extends AbstractComponentSelectionDialog {
         itemList.remove(itemList.size() - 1);
         itemList.add(new ActivateAllMenuItem());
         itemList.add(new DeactivateAllMenuItem());
-        itemList.add(new BackMenuItem());
+        itemList.add(BackMenuItem.get());
     }
 
     @Override

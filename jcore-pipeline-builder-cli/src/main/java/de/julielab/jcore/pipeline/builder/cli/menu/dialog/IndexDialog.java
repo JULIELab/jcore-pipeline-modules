@@ -18,6 +18,7 @@ import static de.julielab.jcore.pipeline.builder.base.configurations.PipelineBui
 
 public class IndexDialog implements ILoopablePipelineManipulationDialog {
 
+    public static final QuitMenuItem QUIT_MENU_ITEM = new QuitMenuItem();
     private Map<Category, List<MetaDescription>> categoryMap;
     private List<IMenuItem> menuItems;
 
@@ -53,7 +54,7 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
         menuItems.add(new RepositoryManagementDialog());
         menuItems.add(new ParentPomSettingDialog());
         menuItems.add(new StorePomMenuItem());
-        menuItems.add(new QuitMenuItem());
+        menuItems.add(QUIT_MENU_ITEM);
     }
 
 

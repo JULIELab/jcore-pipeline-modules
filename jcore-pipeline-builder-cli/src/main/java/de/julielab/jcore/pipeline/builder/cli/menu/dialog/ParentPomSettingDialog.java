@@ -24,9 +24,9 @@ public class ParentPomSettingDialog implements IMenuDialog {
                 "may specify the version to use in the dependencyManagement section." + linesep);
         String currentPom = pipeline.getParentPom() != null ? pipeline.getParentPom().getGroupId()  + ":" + pipeline.getParentPom().getArtifactId() + ":" + pipeline.getParentPom().getVersion() + "(file: " + pipeline.getParentPom().getFile().getAbsolutePath() + ")" : "<none>";
         textIO.getTextTerminal().print("Current parent POM: " + currentPom + linesep);
-        List<Object> pomSourceOptions = Arrays.asList("Specify parent through maven coordinates", "Specify parent POM file", new BackMenuItem());
+        List<Object> pomSourceOptions = Arrays.asList("Specify parent through maven coordinates", "Specify parent POM file",BackMenuItem.get());
         sourceChoice = textIO.newGenericInputReader(null)
-                .withNumberedPossibleValues(pomSourceOptions)
+                .withNumberedPossibleValues(pomSourceOptions).withDefaultValue(BackMenuItem.get())
                 .read("Choose an option:");
         if (pomSourceOptions.indexOf(sourceChoice) == 0) {
             String groupId = textIO.newStringInputReader().read("Specify the groupId:");

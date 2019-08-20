@@ -29,10 +29,10 @@ public class RepositorySelectionDialog implements IMenuDialog {
     public IMenuItem selectRepository(TextIO textIO, Deque<String> path) {
         path.add("Select a repository");
         printPosition(textIO, path);
-        final List<IMenuItem> repositories = Repositories.getRepositories().map(r -> new PayloadMenuItem<ComponentRepository>(r, x -> x.getName())).collect(Collectors.toList());
-        repositories.add(new BackMenuItem());
+        final List<IMenuItem> repositories = Repositories.getRepositories().map(r -> new PayloadMenuItem<>(r, x -> x.getName())).collect(Collectors.toList());
+        repositories.add(BackMenuItem.get());
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
-                .withNumberedPossibleValues(repositories)
+                .withNumberedPossibleValues(repositories).withDefaultValue(BackMenuItem.get())
                 .read("\nChoose a repository.");
         path.pop();
         return choice;

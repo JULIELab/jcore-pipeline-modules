@@ -81,7 +81,7 @@ public class ExternalResourceConfigurationDialog implements ILoopableDialog {
                 String desc = textIO.newStringInputReader().read("Enter the new resource description:");
                 resourceDescription.setDescription(desc);
             }
-            return new BackMenuItem();
+            return BackMenuItem.get();
         } else if (resourceDescription.getResourceSpecifier() instanceof ConfigurableDataResourceSpecifier) {
             ConfigurableDataResourceSpecifier spec = (ConfigurableDataResourceSpecifier) resourceDescription.getResourceSpecifier();
             // Create the items for fixed information about resources: Their resource URL, their name and their description
@@ -90,7 +90,7 @@ public class ExternalResourceConfigurationDialog implements ILoopableDialog {
                     getConfigurationParameters()).
                     map(p -> new ParameterEditingMenuItem(resourceDescription.getResourceSpecifier(), p)).
                     forEach(itemList::add);
-            itemList.add(new BackMenuItem());
+            itemList.add(BackMenuItem.get());
             IMenuItem response = textIO.<IMenuItem>newGenericInputReader(null).withNumberedPossibleValues(itemList).
                     read("Select the parameter you want to change:");
             if (response.equals(resourceUrlItem)) {
@@ -108,7 +108,7 @@ public class ExternalResourceConfigurationDialog implements ILoopableDialog {
             clearTerminal(textIO);
             return response;
         }
-        return new BackMenuItem();
+        return BackMenuItem.get();
     }
 
     private void renameExternalResource(TextIO textIO) {

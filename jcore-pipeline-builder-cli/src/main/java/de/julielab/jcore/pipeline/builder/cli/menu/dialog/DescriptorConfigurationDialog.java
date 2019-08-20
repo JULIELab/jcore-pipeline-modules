@@ -69,7 +69,7 @@ public class DescriptorConfigurationDialog implements ILoopablePipelineManipulat
         }
         if (description.getDescriptor() instanceof AnalysisEngineDescription)
             itemList.add(new ExternalResourceDependencyDefinitionMenuItem());
-        itemList.add(new BackMenuItem());
+        itemList.add(BackMenuItem.get());
     }
 
     @Override
@@ -83,7 +83,7 @@ public class DescriptorConfigurationDialog implements ILoopablePipelineManipulat
         StatusPrinter.printComponentStatus(description, false, textIO);
         StatusPrinter.printComponentMetaData(description, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
-                .withNumberedPossibleValues(itemList)
+                .withNumberedPossibleValues(itemList).withDefaultValue(BackMenuItem.get())
                 .read("\nChoose a parameter or external resource dependency.");
         if (choice instanceof ParameterEditingMenuItem) {
             ParameterEditingMenuItem item = (ParameterEditingMenuItem) choice;
