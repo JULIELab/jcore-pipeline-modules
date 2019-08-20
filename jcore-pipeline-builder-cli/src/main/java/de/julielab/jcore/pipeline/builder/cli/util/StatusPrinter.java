@@ -249,11 +249,11 @@ public class StatusPrinter {
                                 for (int i = 0; i < declarations.length; i++) {
                                     ConfigurationParameter declaration = declarations[i];
                                     String name = declaration.getName();
-                                    Object value = Optional.of(settings.get(name)).orElseGet(NameValuePair_impl::new).getValue();
+                                    Object value = Optional.ofNullable(settings.get(name)).orElseGet(NameValuePair_impl::new).getValue();
                                     String reportLevel = color.apply(DEFAULT);
                                     if (declaration.isMandatory() && (value == null || StringUtils.isBlank(value.toString())))
                                         reportLevel = color.apply(ERROR);
-                                    records.add(createPrintLine("       " + name + ": ", PARAM, value.toString(), reportLevel));
+                                    records.add(createPrintLine("       " + name + ": ", PARAM, (value != null ? value.toString() : "<null value>"), reportLevel));
 
                                 }
                             }
