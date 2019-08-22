@@ -3,6 +3,7 @@ package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants;
 import de.julielab.jcore.pipeline.builder.base.main.Description;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
+import de.julielab.jcore.pipeline.builder.cli.main.PipelineBuilderCLI;
 import de.julielab.jcore.pipeline.builder.cli.menu.BackMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.ComponentSelectionMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
@@ -18,7 +19,7 @@ public class ActivationDialog extends AbstractComponentSelectionDialog {
     public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) throws MenuItemExecutionException {
         init(pipeline, EnumSet.of(PipelineBuilderConstants.JcoreMeta.Category.multiplier, PipelineBuilderConstants.JcoreMeta.Category.ae, PipelineBuilderConstants.JcoreMeta.Category.consumer));
         printPosition(textIO, path);
-        StatusPrinter.printPipelineStatus(pipeline, textIO);
+        StatusPrinter.printPipelineStatus(pipeline, PipelineBuilderCLI.statusVerbosity, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
                 .withNumberedPossibleValues(itemList).withDefaultValue(BackMenuItem.get())
                 .read("\nChoose a component.");

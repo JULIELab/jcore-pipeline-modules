@@ -29,13 +29,13 @@ public class StatusPrinter {
 
     public enum Verbosity {MINIMAL, BRIEF, VERBOSE}
 
-    public static void printComponentStatus(Description description, boolean brief, TextIO textIO) {
-        List<PrintLine> records = getComponentStatusRecords(description, Verbosity.BRIEF);
+    public static void printComponentStatus(Description description, Verbosity verbosity, TextIO textIO) {
+        List<PrintLine> records = getComponentStatusRecords(description, verbosity);
         TextIOUtils.printLines(records.stream(), textIO);
     }
 
     public static void printComponentStatus(Description description, TextIO textIO) {
-        printComponentStatus(description, true, textIO);
+        printComponentStatus(description, Verbosity.BRIEF, textIO);
     }
 
     public static void printComponentMetaData(MetaDescription metaDescription, TextIO textIO) {
@@ -67,10 +67,6 @@ public class StatusPrinter {
             records.add(createPrintLine("    Path: " + description.getLocation(), color.apply(PARAM)));
         }
         return records;
-    }
-
-    public static void printPipelineStatus(JCoReUIMAPipeline pipeline, TextIO textIO) {
-        printPipelineStatus(pipeline, Verbosity.BRIEF, textIO);
     }
 
 

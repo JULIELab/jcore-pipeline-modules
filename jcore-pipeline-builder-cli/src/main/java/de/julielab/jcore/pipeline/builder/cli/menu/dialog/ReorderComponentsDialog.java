@@ -3,8 +3,8 @@ package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants;
 import de.julielab.jcore.pipeline.builder.base.main.Description;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
+import de.julielab.jcore.pipeline.builder.cli.main.PipelineBuilderCLI;
 import de.julielab.jcore.pipeline.builder.cli.menu.*;
-import de.julielab.jcore.pipeline.builder.cli.util.MenuItemExecutionException;
 import de.julielab.jcore.pipeline.builder.cli.util.StatusPrinter;
 import org.beryx.textio.TextIO;
 
@@ -12,7 +12,6 @@ import java.util.Deque;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public abstract class ReorderComponentsDialog extends AbstractComponentSelectionDialog {
     private PipelineBuilderConstants.JcoreMeta.Category componentCategory;
@@ -29,7 +28,7 @@ public abstract class ReorderComponentsDialog extends AbstractComponentSelection
     public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) {
         init(pipeline, EnumSet.of(componentCategory));
         printPosition(textIO, path);
-        StatusPrinter.printPipelineStatus(pipeline, textIO);
+        StatusPrinter.printPipelineStatus(pipeline, PipelineBuilderCLI.statusVerbosity, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
                 .withNumberedPossibleValues(itemList).withDefaultValue(BackMenuItem.get())
                 .read("\nChoose a component to move.");

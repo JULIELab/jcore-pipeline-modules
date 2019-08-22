@@ -1,6 +1,7 @@
 package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
+import de.julielab.jcore.pipeline.builder.cli.main.PipelineBuilderCLI;
 import de.julielab.jcore.pipeline.builder.cli.menu.BackMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.MenuItemList;
@@ -18,7 +19,7 @@ public class ConfigurePipelineDialog implements ILoopablePipelineManipulationDia
     public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) throws MenuItemExecutionException {
         init(pipeline);
         printPosition(textIO, path);
-        StatusPrinter.printPipelineStatus(pipeline, textIO);
+        StatusPrinter.printPipelineStatus(pipeline, PipelineBuilderCLI.statusVerbosity, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
                 .withNumberedPossibleValues(itemList).withDefaultValue(BackMenuItem.get())
                 .read("\nChoose an action to perform on your pipeline.");

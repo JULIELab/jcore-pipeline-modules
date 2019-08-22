@@ -6,6 +6,7 @@ import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.builder.base.main.ComponentMetaInformationService;
 import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
 import de.julielab.jcore.pipeline.builder.base.main.Repositories;
+import de.julielab.jcore.pipeline.builder.cli.main.PipelineBuilderCLI;
 import de.julielab.jcore.pipeline.builder.cli.menu.*;
 import de.julielab.jcore.pipeline.builder.cli.util.MenuItemExecutionException;
 import de.julielab.jcore.pipeline.builder.cli.util.StatusPrinter;
@@ -66,7 +67,7 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
     @Override
     public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) throws MenuItemExecutionException {
         printPosition(textIO, path);
-        StatusPrinter.printPipelineStatus(pipeline, textIO);
+        StatusPrinter.printPipelineStatus(pipeline, PipelineBuilderCLI.statusVerbosity, textIO);
         if (Repositories.getRepositories().count() == 0)
             TextIOUtils.printLine(TextIOUtils.createPrintLine("There are currently no component repositories active. Navigate to the repository management dialog to add components to build pipelines from.", TerminalPrefixes.WARN), textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)

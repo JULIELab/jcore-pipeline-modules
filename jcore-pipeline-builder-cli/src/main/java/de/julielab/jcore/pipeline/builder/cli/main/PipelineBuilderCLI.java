@@ -9,6 +9,7 @@ import de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes;
 import de.julielab.jcore.pipeline.builder.cli.menu.dialog.IndexDialog;
 import de.julielab.jcore.pipeline.builder.cli.menu.dialog.RepositoryAddDialog;
 import de.julielab.jcore.pipeline.builder.cli.util.MenuItemExecutionException;
+import de.julielab.jcore.pipeline.builder.cli.util.StatusPrinter;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.TextIoFactory;
 import org.slf4j.Logger;
@@ -27,6 +28,10 @@ public class PipelineBuilderCLI {
      * value is always set to this path.
      */
     public static String pipelinePath = "pipeline";
+    /**
+     * Specifies the degree of verbosity for the pipeline overview status printing.
+     */
+    public static StatusPrinter.Verbosity statusVerbosity = StatusPrinter.Verbosity.BRIEF;
     /**
      * This value keeps track for the case that the dependencies of the pipeline have changed. If so, they
      * need to be resolved and stored into the library directory upon pipeline storage.

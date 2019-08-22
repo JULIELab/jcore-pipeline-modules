@@ -35,7 +35,7 @@ public class AddComponentDialog implements ILoopablePipelineManipulationDialog {
     @Override
     public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) {
         printPosition(textIO, path);
-        StatusPrinter.printPipelineStatus(pipeline, textIO);
+        StatusPrinter.printPipelineStatus(pipeline, PipelineBuilderCLI.statusVerbosity, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
                 .withNumberedPossibleValues(menuItemList).withDefaultValue(BackMenuItem.get())
                 .read("\nChoose a component.");

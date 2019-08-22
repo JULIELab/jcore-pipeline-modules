@@ -80,7 +80,7 @@ public class DescriptorConfigurationDialog implements ILoopablePipelineManipulat
     @Override
     public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) {
         printPosition(textIO, path);
-        StatusPrinter.printComponentStatus(description, false, textIO);
+        StatusPrinter.printComponentStatus(description, StatusPrinter.Verbosity.VERBOSE, textIO);
         StatusPrinter.printComponentMetaData(description, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
                 .withNumberedPossibleValues(itemList).withDefaultValue(BackMenuItem.get())
