@@ -27,8 +27,10 @@ import static de.julielab.jcore.pipeline.builder.cli.util.TextIOUtils.createPrin
 public class StatusPrinter {
     private final static Logger log = LoggerFactory.getLogger(StatusPrinter.class);
 
+    public enum Verbosity {MINIMAL, BRIEF, VERBOSE}
+
     public static void printComponentStatus(Description description, boolean brief, TextIO textIO) {
-        List<PrintLine> records = getComponentStatusRecords(description, brief);
+        List<PrintLine> records = getComponentStatusRecords(description, Verbosity.BRIEF);
         TextIOUtils.printLines(records.stream(), textIO);
     }
 
@@ -50,10 +52,10 @@ public class StatusPrinter {
         printComponentMetaData(description.getMetaDescription(), textIO);
     }
 
-    private static List<PrintLine> getComponentStatusRecords(Description description, boolean brief) {
+    private static List<PrintLine> getComponentStatusRecords(Description description, Verbosity verbosity) {
         List<PrintLine> records = new ArrayList<>();
         if (!description.getMetaDescription().isPear()) {
-            ParameterAdder parameterAdder = new ParameterAdder(records, brief);
+            ParameterAdder parameterAdder = new ParameterAdder(records, verbosity);
             ExternalResourcesAdder externalResourcesAdderAdder = new ExternalResourcesAdder(records);
             parameterAdder.accept(description);
             if (description.getDescriptor() instanceof AnalysisEngineDescription)
@@ -68,19 +70,19 @@ public class StatusPrinter {
     }
 
     public static void printPipelineStatus(JCoReUIMAPipeline pipeline, TextIO textIO) {
-        printPipelineStatus(pipeline, true, textIO);
+        printPipelineStatus(pipeline, Verbosity.BRIEF, textIO);
     }
 
 
-    public static void printPipelineStatus(JCoReUIMAPipeline pipeline, boolean brief, TextIO textIO) {
-        List<PrintLine> records = getPipelineStatusRecords(pipeline, brief);
+    public static void printPipelineStatus(JCoReUIMAPipeline pipeline, Verbosity verbosity, TextIO textIO) {
+        List<PrintLine> records = getPipelineStatusRecords(pipeline, verbosity);
 
         TextIOUtils.printLines(records.stream(), textIO);
     }
 
-    private static List<PrintLine> getPipelineStatusRecords(JCoReUIMAPipeline pipeline, boolean brief) {
+    private static List<PrintLine> getPipelineStatusRecords(JCoReUIMAPipeline pipeline, Verbosity verbosity) {
         List<PrintLine> records = new ArrayList<>();
-        ParameterAdder parameterAdder = new ParameterAdder(records, brief);
+        ParameterAdder parameterAdder = new ParameterAdder(records, verbosity);
         records.add(createPrintLine("Collection Reader:", HEADER));
         if (pipeline.getCrDescription() != null)
             parameterAdder.accept(pipeline.getCrDescription());
@@ -88,18 +90,18 @@ public class StatusPrinter {
             records.add(createPrintLine("    none", EMPTY));
         if (pipeline.getCmDelegates() != null && !pipeline.getCmDelegates().isEmpty()) {
             records.add(createPrintLine("CAS Multipliers:", HEADER));
-            pipeline.getCmDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, brief)).forEach(records::addAll);
+            pipeline.getCmDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, verbosity)).forEach(records::addAll);
         }
         records.add(createPrintLine("Analysis Engines:", HEADER));
         if (pipeline.getAeDelegates() == null || pipeline.getAeDelegates().isEmpty())
             records.add(createPrintLine("    none", EMPTY));
         else {
-            pipeline.getAeDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, brief)).forEach(records::addAll);
+            pipeline.getAeDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, verbosity)).forEach(records::addAll);
         }
 
         if (pipeline.getCcDelegates() != null && !pipeline.getCcDelegates().isEmpty()) {
             records.add(createPrintLine("CAS Consumers:", HEADER));
-            pipeline.getCcDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, brief)).forEach(records::addAll);
+            pipeline.getCcDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, verbosity)).forEach(records::addAll);
         }
 
         // Check if there is an external resource name repeated
@@ -126,11 +128,11 @@ public class StatusPrinter {
     private static class ParameterAdder implements Consumer<Description> {
 
         private List<PrintLine> records;
-        private boolean brief;
+        private Verbosity verbosity;
 
-        public ParameterAdder(List<PrintLine> records, boolean brief) {
+        public ParameterAdder(List<PrintLine> records, Verbosity verbosity) {
             this.records = records;
-            this.brief = brief;
+            this.verbosity = verbosity;
         }
 
         @Override
@@ -161,7 +163,7 @@ public class StatusPrinter {
                         records.add(createPrintLine("    Mandatory Parameters:", color.apply(PARAMETERS)));
                     if (parameterSettings != null) {
                         for (NameValuePair parameter : parameterSettings) {
-                            if (!StringUtils.isBlank(parameter.getValue().toString()) && (mandatorySet.remove(parameter.getName()) || !brief)) {
+                            if (!StringUtils.isBlank(parameter.getValue().toString()) && (mandatorySet.remove(parameter.getName()) || verbosity.ordinal() > Verbosity.BRIEF.ordinal())) {
                                 String valueString = parameter.getValue().getClass().isArray() ?
                                         Arrays.toString((Object[]) parameter.getValue()) :
                                         String.valueOf(parameter.getValue());
