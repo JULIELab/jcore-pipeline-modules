@@ -51,8 +51,9 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
         menuItems.add(new ConfigurePipelineDialog());
         menuItems.add(new SavePipelineDialog());
         menuItems.add(new LoadPipelineDialog());
-        menuItems.add(new RefreshComponentRepositoryMenuItem());
+        menuItems.add(new SpecifyStatusVerbosityDialog());
         menuItems.add(new RepositoryManagementDialog());
+        menuItems.add(new RefreshComponentRepositoryMenuItem());
         menuItems.add(new ParentPomSettingDialog());
         menuItems.add(new StorePomMenuItem());
         menuItems.add(QUIT_MENU_ITEM);
@@ -65,7 +66,7 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
     }
 
     @Override
-    public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) throws MenuItemExecutionException {
+    public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) {
         printPosition(textIO, path);
         StatusPrinter.printPipelineStatus(pipeline, PipelineBuilderCLI.statusVerbosity, textIO);
         if (Repositories.getRepositories().count() == 0)
@@ -101,17 +102,18 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
                 } catch (GithubInformationException e) {
                     throw new MenuItemExecutionException(e);
                 }
+            } else if (choice instanceof SpecifyStatusVerbosityDialog) {
+                ((SpecifyStatusVerbosityDialog) choice).chooseVerbosity(textIO);
             } else if (choice instanceof RepositoryManagementDialog) {
                 ((RepositoryManagementDialog) choice).enterInputLoop(textIO, path);
                 textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.EMPHASIS, t -> t.print("Applying repository changes. It might take a while to fetch remote component meta data." + System.getProperty("line.separator")));
                 Repositories.saveRepositoryConfiguration();
                 initComponentRepository(false);
                 clearTerminal(textIO);
-            } else if (choice instanceof  ParentPomSettingDialog) {
-                ((ParentPomSettingDialog)choice).execute(pipeline, textIO, path);
-            }
-            else if (choice instanceof StorePomMenuItem) {
-                ((StorePomMenuItem)choice).execute(pipeline, textIO);
+            } else if (choice instanceof ParentPomSettingDialog) {
+                ((ParentPomSettingDialog) choice).execute(pipeline, textIO, path);
+            } else if (choice instanceof StorePomMenuItem) {
+                ((StorePomMenuItem) choice).execute(pipeline, textIO);
             }
         } catch (Exception e) {
             textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.ERROR, t -> t.print("An unexpected exception occurred: " + e.getMessage()));

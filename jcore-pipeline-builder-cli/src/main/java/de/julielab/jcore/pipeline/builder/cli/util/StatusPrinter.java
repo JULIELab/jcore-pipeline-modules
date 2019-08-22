@@ -27,8 +27,6 @@ import static de.julielab.jcore.pipeline.builder.cli.util.TextIOUtils.createPrin
 public class StatusPrinter {
     private final static Logger log = LoggerFactory.getLogger(StatusPrinter.class);
 
-    public enum Verbosity {MINIMAL, BRIEF, VERBOSE}
-
     public static void printComponentStatus(Description description, Verbosity verbosity, TextIO textIO) {
         List<PrintLine> records = getComponentStatusRecords(description, verbosity);
         TextIOUtils.printLines(records.stream(), textIO);
@@ -56,7 +54,7 @@ public class StatusPrinter {
         List<PrintLine> records = new ArrayList<>();
         if (!description.getMetaDescription().isPear()) {
             ParameterAdder parameterAdder = new ParameterAdder(records, verbosity);
-            ExternalResourcesAdder externalResourcesAdderAdder = new ExternalResourcesAdder(records);
+            ExternalResourcesAdder externalResourcesAdderAdder = new ExternalResourcesAdder(records, verbosity);
             parameterAdder.accept(description);
             if (description.getDescriptor() instanceof AnalysisEngineDescription)
                 externalResourcesAdderAdder.accept(description);
@@ -68,7 +66,6 @@ public class StatusPrinter {
         }
         return records;
     }
-
 
     public static void printPipelineStatus(JCoReUIMAPipeline pipeline, Verbosity verbosity, TextIO textIO) {
         List<PrintLine> records = getPipelineStatusRecords(pipeline, verbosity);
@@ -120,6 +117,7 @@ public class StatusPrinter {
         return records;
     }
 
+    public enum Verbosity {MINIMAL, BRIEF, VERBOSE}
 
     private static class ParameterAdder implements Consumer<Description> {
 
@@ -150,28 +148,30 @@ public class StatusPrinter {
                     records.add(createPrintLine("  - " + componentName, COMPONENT_NAME));
                 else
                     records.add(createPrintLine("  - " + componentName + " (DEACTIVATED)", DEACTIVATED_COMPONENT));
-                records.add(createPrintLine("    Maven artifact: " + getArtifactString(description), color.apply(DEFAULT)));
-                if (metaData != null) {
-                    NameValuePair[] parameterSettings = metaData.getConfigurationParameterSettings().getParameterSettings();
-                    Set<String> mandatorySet = Stream.of(metaData.getConfigurationParameterDeclarations().getConfigurationParameters()).
-                            filter(ConfigurationParameter::isMandatory).map(ConfigurationParameter::getName).collect(Collectors.toSet());
-                    if ((parameterSettings != null && parameterSettings.length > 0) || !mandatorySet.isEmpty())
-                        records.add(createPrintLine("    Mandatory Parameters:", color.apply(PARAMETERS)));
-                    if (parameterSettings != null) {
-                        for (NameValuePair parameter : parameterSettings) {
-                            if (!StringUtils.isBlank(parameter.getValue().toString()) && (mandatorySet.remove(parameter.getName()) || verbosity.ordinal() > Verbosity.BRIEF.ordinal())) {
-                                String valueString = parameter.getValue().getClass().isArray() ?
-                                        Arrays.toString((Object[]) parameter.getValue()) :
-                                        String.valueOf(parameter.getValue());
-                                records.add(createPrintLine("    " + parameter.getName() + ": ", color.apply(PARAM), valueString, color.apply(DEFAULT)));
+                if (verbosity.ordinal() > Verbosity.MINIMAL.ordinal()) {
+                    records.add(createPrintLine("    Maven artifact: " + getArtifactString(description), color.apply(DEFAULT)));
+                    if (metaData != null) {
+                        NameValuePair[] parameterSettings = metaData.getConfigurationParameterSettings().getParameterSettings();
+                        Set<String> mandatorySet = Stream.of(metaData.getConfigurationParameterDeclarations().getConfigurationParameters()).
+                                filter(ConfigurationParameter::isMandatory).map(ConfigurationParameter::getName).collect(Collectors.toSet());
+                        if ((parameterSettings != null && parameterSettings.length > 0) || !mandatorySet.isEmpty())
+                            records.add(createPrintLine("    Mandatory Parameters:", color.apply(PARAMETERS)));
+                        if (parameterSettings != null) {
+                            for (NameValuePair parameter : parameterSettings) {
+                                if (!StringUtils.isBlank(parameter.getValue().toString()) && (mandatorySet.remove(parameter.getName()) || verbosity.ordinal() > Verbosity.BRIEF.ordinal())) {
+                                    String valueString = parameter.getValue().getClass().isArray() ?
+                                            Arrays.toString((Object[]) parameter.getValue()) :
+                                            String.valueOf(parameter.getValue());
+                                    records.add(createPrintLine("    " + parameter.getName() + ": ", color.apply(PARAM), valueString, color.apply(DEFAULT)));
+                                }
                             }
                         }
+                        for (String notSetMandatoryParameter : mandatorySet) {
+                            records.add(createPrintLine("    " + notSetMandatoryParameter + ": <not set>", color.apply(ERROR)));
+                        }
+                    } else {
+                        records.add(createPrintLine("Cannot read configuration parameters because no descriptor has been loaded.", color.apply(ERROR)));
                     }
-                    for (String notSetMandatoryParameter : mandatorySet) {
-                        records.add(createPrintLine("    " + notSetMandatoryParameter + ": <not set>", color.apply(ERROR)));
-                    }
-                } else {
-                    records.add(createPrintLine("Cannot read configuration parameters because no descriptor has been loaded.", color.apply(ERROR)));
                 }
             } catch (Throwable t) {
                 log.error("Error occurred when trying to write the information for component " + description);
@@ -191,75 +191,79 @@ public class StatusPrinter {
     private static class ExternalResourcesAdder implements Consumer<Description> {
 
         private List<PrintLine> records;
+        private Verbosity verbosity;
 
-        public ExternalResourcesAdder(List<PrintLine> records) {
+        public ExternalResourcesAdder(List<PrintLine> records, Verbosity verbosity) {
             this.records = records;
+            this.verbosity = verbosity;
         }
 
         @Override
         public void accept(Description description) {
-            Function<String, String> color = str -> description.isActive() ? str : DEACTIVATED_COMPONENT;
-            final AnalysisEngineDescription desc = description.getDescriptorAsAnalysisEngineDescription();
-            ExternalResourceDependency[] externalResourceDependencies = desc.getExternalResourceDependencies();
-            if (externalResourceDependencies != null && externalResourceDependencies.length > 0) {
-                records.add(createPrintLine("    External Resources:", color.apply(HEADER)));
-                // Show all external resource dependencies by displaying their key and the resource name
-                // the key is bound to.
-                Set<String> dependenciesToSatisfy = Stream.of(externalResourceDependencies).
-                        map(ExternalResourceDependency::getKey).
-                        collect(Collectors.toSet());
-                ResourceManagerConfiguration resourceManagerConfiguration = desc.getResourceManagerConfiguration();
-                Map<String, String> bindingMap = new HashMap<>();
-                if (resourceManagerConfiguration != null) {
-                    // Get all the binding and build a map from resource dependency key to the name of the resource the
-                    // key is bound to.
-                    ExternalResourceBinding[] externalResourceBindings = resourceManagerConfiguration.getExternalResourceBindings();
-                    bindingMap.putAll(Stream.of(externalResourceBindings).
-                            collect(Collectors.toMap(ExternalResourceBinding::getKey, ExternalResourceBinding::getResourceName)));
-                }
+            if (verbosity.ordinal() > Verbosity.MINIMAL.ordinal()) {
+                Function<String, String> color = str -> description.isActive() ? str : DEACTIVATED_COMPONENT;
+                final AnalysisEngineDescription desc = description.getDescriptorAsAnalysisEngineDescription();
+                ExternalResourceDependency[] externalResourceDependencies = desc.getExternalResourceDependencies();
+                if (externalResourceDependencies != null && externalResourceDependencies.length > 0) {
+                    records.add(createPrintLine("    External Resources:", color.apply(HEADER)));
+                    // Show all external resource dependencies by displaying their key and the resource name
+                    // the key is bound to.
+                    Set<String> dependenciesToSatisfy = Stream.of(externalResourceDependencies).
+                            map(ExternalResourceDependency::getKey).
+                            collect(Collectors.toSet());
+                    ResourceManagerConfiguration resourceManagerConfiguration = desc.getResourceManagerConfiguration();
+                    Map<String, String> bindingMap = new HashMap<>();
+                    if (resourceManagerConfiguration != null) {
+                        // Get all the binding and build a map from resource dependency key to the name of the resource the
+                        // key is bound to.
+                        ExternalResourceBinding[] externalResourceBindings = resourceManagerConfiguration.getExternalResourceBindings();
+                        bindingMap.putAll(Stream.of(externalResourceBindings).
+                                collect(Collectors.toMap(ExternalResourceBinding::getKey, ExternalResourceBinding::getResourceName)));
+                    }
 
-                Stream.of(externalResourceDependencies).forEach(dependency -> {
-                    if (bindingMap.keySet().contains(dependency.getKey())) {
-                        String resourceName = bindingMap.get(dependency.getKey());
-                        records.add(createPrintLine("    " + dependency.getKey() + ": " + resourceName, color.apply(DEFAULT)));
-                        Optional<ExternalResourceDescription> resDescOpt =
-                                Stream.of(desc.getResourceManagerConfiguration().getExternalResources()).
-                                        filter(res -> res.getName().equals(resourceName)).
-                                        findFirst();
-                        if (resDescOpt.isPresent()) {
-                            ExternalResourceDescription resourceDesc = resDescOpt.get();
-                            records.add(createPrintLine("       Name: ", color.apply(FIXED), resourceDesc.getName(), color.apply(DEFAULT)));
-                            records.add(createPrintLine("       Description: ", color.apply(FIXED), resourceDesc.getDescription(), color.apply(DEFAULT)));
-                            records.add(createPrintLine("       Implementation: ", color.apply(FIXED), resourceDesc.getImplementationName(), color.apply(DEFAULT)));
-                            String url = null;
-                            ResourceSpecifier resourceSpecifier = resourceDesc.getResourceSpecifier();
-                            if (resourceSpecifier instanceof FileResourceSpecifier)
-                                url = ((FileResourceSpecifier) resourceSpecifier).getFileUrl();
-                            else if (resourceSpecifier instanceof ConfigurableDataResourceSpecifier)
-                                url = ((ConfigurableDataResourceSpecifier) resourceSpecifier).getUrl();
-                            records.add(createPrintLine("       Resource URL: ", StringUtils.isBlank(url) ? color.apply(ERROR) : color.apply(FIXED), url, color.apply(DEFAULT)));
-                            if (resourceSpecifier instanceof ConfigurableDataResourceSpecifier) {
-                                ConfigurableDataResourceSpecifier configurableDataResourceSpecifier = (ConfigurableDataResourceSpecifier) resourceSpecifier;
-                                ConfigurationParameter[] declarations = configurableDataResourceSpecifier.
-                                        getMetaData().getConfigurationParameterDeclarations().
-                                        getConfigurationParameters();
-                                Map<String, NameValuePair> settings = Stream.of(configurableDataResourceSpecifier.getMetaData().getConfigurationParameterSettings().getParameterSettings()).flatMap(Stream::of).collect(Collectors.toMap(NameValuePair::getName, Function.identity()));
-                                for (int i = 0; i < declarations.length; i++) {
-                                    ConfigurationParameter declaration = declarations[i];
-                                    String name = declaration.getName();
-                                    Object value = Optional.ofNullable(settings.get(name)).orElseGet(NameValuePair_impl::new).getValue();
-                                    String reportLevel = color.apply(DEFAULT);
-                                    if (declaration.isMandatory() && (value == null || StringUtils.isBlank(value.toString())))
-                                        reportLevel = color.apply(ERROR);
-                                    records.add(createPrintLine("       " + name + ": ", PARAM, (value != null ? value.toString() : "<setting not defined>"), reportLevel));
+                    Stream.of(externalResourceDependencies).forEach(dependency -> {
+                        if (bindingMap.keySet().contains(dependency.getKey())) {
+                            String resourceName = bindingMap.get(dependency.getKey());
+                            records.add(createPrintLine("    " + dependency.getKey() + ": " + resourceName, color.apply(DEFAULT)));
+                            Optional<ExternalResourceDescription> resDescOpt =
+                                    Stream.of(desc.getResourceManagerConfiguration().getExternalResources()).
+                                            filter(res -> res.getName().equals(resourceName)).
+                                            findFirst();
+                            if (resDescOpt.isPresent()) {
+                                ExternalResourceDescription resourceDesc = resDescOpt.get();
+                                records.add(createPrintLine("       Name: ", color.apply(FIXED), resourceDesc.getName(), color.apply(DEFAULT)));
+                                records.add(createPrintLine("       Description: ", color.apply(FIXED), resourceDesc.getDescription(), color.apply(DEFAULT)));
+                                records.add(createPrintLine("       Implementation: ", color.apply(FIXED), resourceDesc.getImplementationName(), color.apply(DEFAULT)));
+                                String url = null;
+                                ResourceSpecifier resourceSpecifier = resourceDesc.getResourceSpecifier();
+                                if (resourceSpecifier instanceof FileResourceSpecifier)
+                                    url = ((FileResourceSpecifier) resourceSpecifier).getFileUrl();
+                                else if (resourceSpecifier instanceof ConfigurableDataResourceSpecifier)
+                                    url = ((ConfigurableDataResourceSpecifier) resourceSpecifier).getUrl();
+                                records.add(createPrintLine("       Resource URL: ", StringUtils.isBlank(url) ? color.apply(ERROR) : color.apply(FIXED), url, color.apply(DEFAULT)));
+                                if (resourceSpecifier instanceof ConfigurableDataResourceSpecifier) {
+                                    ConfigurableDataResourceSpecifier configurableDataResourceSpecifier = (ConfigurableDataResourceSpecifier) resourceSpecifier;
+                                    ConfigurationParameter[] declarations = configurableDataResourceSpecifier.
+                                            getMetaData().getConfigurationParameterDeclarations().
+                                            getConfigurationParameters();
+                                    Map<String, NameValuePair> settings = Stream.of(configurableDataResourceSpecifier.getMetaData().getConfigurationParameterSettings().getParameterSettings()).flatMap(Stream::of).collect(Collectors.toMap(NameValuePair::getName, Function.identity()));
+                                    for (int i = 0; i < declarations.length; i++) {
+                                        ConfigurationParameter declaration = declarations[i];
+                                        String name = declaration.getName();
+                                        Object value = Optional.ofNullable(settings.get(name)).orElseGet(NameValuePair_impl::new).getValue();
+                                        String reportLevel = color.apply(DEFAULT);
+                                        if (declaration.isMandatory() && (value == null || StringUtils.isBlank(value.toString())))
+                                            reportLevel = color.apply(ERROR);
+                                        records.add(createPrintLine("       " + name + ": ", PARAM, (value != null ? value.toString() : "<setting not defined>"), reportLevel));
 
+                                    }
                                 }
                             }
+                        } else {
+                            records.add(createPrintLine("    " + dependency.getKey() + ": <not bound>", color.apply(ERROR)));
                         }
-                    } else {
-                        records.add(createPrintLine("    " + dependency.getKey() + ": <not bound>", color.apply(ERROR)));
-                    }
-                });
+                    });
+                }
             }
         }
     }
