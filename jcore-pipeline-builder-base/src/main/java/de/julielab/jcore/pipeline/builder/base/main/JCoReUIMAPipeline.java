@@ -26,6 +26,7 @@ import org.apache.uima.collection.metadata.CpeDescription;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.resource.ResourceCreationSpecifier;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.ResourceManager;
 import org.apache.uima.resource.ResourceSpecifier;
 import org.apache.uima.resource.metadata.Import;
 import org.apache.uima.resource.metadata.MetaDataObject;
@@ -565,10 +566,11 @@ public class JCoReUIMAPipeline {
     private void storeDescriptor(ResourceCreationSpecifier spec, File path) throws IOException, SAXException {
         spec.setSourceUrl(path.toURI().toURL());
         try (final BufferedWriter writer = FileUtilities.getWriterToFile(path)) {
-            if (spec instanceof AnalysisEngineDescription)
+            if (spec instanceof AnalysisEngineDescription) {
                 ((AnalysisEngineDescription) spec).toXML(writer, true);
-            else
+            } else {
                 spec.toXML(writer);
+            }
         }
     }
 
@@ -730,16 +732,16 @@ public class JCoReUIMAPipeline {
             List<AnalysisEngineDescription> aaeCmDescs = new ArrayList<>();
             List<AnalysisEngineDescription> aeDescs = new ArrayList<>();
             List<AnalysisEngineDescription> aaeDescs = new ArrayList<>();
-            List<ResourceSpecifier> ccDescs = new ArrayList<>();
-            List<ResourceSpecifier> aaeCcDescs = new ArrayList<>();
+            List<ResourceCreationSpecifier> ccDescs = new ArrayList<>();
+            List<ResourceCreationSpecifier> aaeCcDescs = new ArrayList<>();
             for (File xmlFile : xmlFiles) {
                 // don't load the CPE AAE descriptor, it is solely needed when using the CPE descriptor on its own
                 if (xmlFile.getName().equals(CPE_AAE_DESC_NAME))
                     continue;
                 XMLParser parser = UIMAFramework.getXMLParser();
-                ResourceSpecifier spec = null;
+                ResourceCreationSpecifier spec = null;
                 try {
-                    spec = parser.parseResourceSpecifier(
+                    spec = (ResourceCreationSpecifier) parser.parseResourceSpecifier(
                             new XMLInputSource(xmlFile));
                 } catch (InvalidXMLException e) {
                     if (log.isDebugEnabled()) {
@@ -839,11 +841,11 @@ public class JCoReUIMAPipeline {
                 if (crDescription != null && !crDescs.isEmpty())
                     crDescription.setDescriptor(crDescs.get(0));
                 if (aaeCmDesc != null && !cmDelegates.isEmpty())
-                    setAaeDescriptors(aaeCmDesc, cmDelegates, "CAS Multiplier");
+                    setAaeDescriptors(aaeCmDesc, cmDelegates, cmDescs, "CAS Multiplier");
                 if (aaeDesc != null && !aeDelegates.isEmpty())
-                    setAaeDescriptors(aaeDesc, aeDelegates, "Analysis Engine");
+                    setAaeDescriptors(aaeDesc, aeDelegates, aeDescs, "Analysis Engine");
                 if (ccDesc != null && !ccDelegates.isEmpty() && ccDesc instanceof AnalysisEngineDescription)
-                    setAaeDescriptors((AnalysisEngineDescription) ccDesc, ccDelegates, "CAS Consumer");
+                    setAaeDescriptors((AnalysisEngineDescription) ccDesc, ccDelegates, ccDescs, "CAS Consumer");
             } catch (Exception e) {
                 log.warn("Could not set descriptor files from the {}/ directory to the serialized meta descriptions. Changes in the descriptors that have not been stored in the meta descriptions won't be available.", DIR_DESC_ALL, e);
             }
@@ -864,9 +866,10 @@ public class JCoReUIMAPipeline {
      * @throws PipelineIOException
      * @throws InvalidXMLException
      */
-    private void setAaeDescriptors(AnalysisEngineDescription aae, List<Description> descriptions, String type) throws PipelineIOException, InvalidXMLException {
+    private void setAaeDescriptors(AnalysisEngineDescription aae, List<Description> descriptions, List<? extends ResourceCreationSpecifier> loadedDescriptors, String type) throws PipelineIOException, InvalidXMLException {
         if (!aae.isPrimitive()) {
             Map<String, Description> descByName = descriptions.stream().collect(Collectors.toMap(Description::getName, Function.identity()));
+            Map<String, ResourceSpecifier> specByName = loadedDescriptors.stream().collect(Collectors.toMap(s -> s.getMetaData().getName(), Function.identity()));
             FlowConstraints flowConstraints = aae.getAnalysisEngineMetaData().getFlowConstraints();
             if (!(flowConstraints instanceof FixedFlow))
                 throw new PipelineIOException(String.format("The %s aggregate does not define a FixedFlow. Only FixedFlow constraints are currently supported.", type));
@@ -874,21 +877,9 @@ public class JCoReUIMAPipeline {
             for (int i = 0; i < flow.getFixedFlow().length; ++i) {
                 String component = flow.getFixedFlow()[i];
                 ResourceSpecifier descriptor;
-                try {
-                    descriptor = aae.getDelegateAnalysisEngineSpecifiers().get(component);
-                } catch (InvalidXMLException e) {
-                    // This exception can happen because the types of the AAE are missing. Try to load all JAR with "types" in them
-                    // We also load "splitter" because this applies to the jcore-xmi-splitter which has its own types
-                    // Obviously, some better mechanism could be of use here.
-                    getClasspathElements().filter(f -> f.getName().contains("types") || f.getName().contains("splitter")).forEach(JarLoader::addJarToClassPath);
-                    try {
-                        descriptor = aae.getDelegateAnalysisEngineSpecifiers().get(component);
-                    } catch (InvalidXMLException e1) {
-                        // Still no luck, load everything.
-                        getClasspathElements().forEach(JarLoader::addJarToClassPath);
-                        descriptor = aae.getDelegateAnalysisEngineSpecifiers().get(component);
-                    }
-                }
+                descriptor = specByName.get(component);
+                if (descriptor == null)
+                    throw new IllegalStateException("The " + type + " AAE specifies the component key " + component + " but no descriptor loaded from the descAll/ directory has this name. Names in the stored descriptors may not be changed outside of the Pipeline Builder or they can possibly not be loaded any more.");
                 if (i < descriptions.size()) {
                     if (!descByName.containsKey(component))
                         throw new IllegalStateException("The " + type + " AAE specifies the component key " + component + " but no descriptor has this name. The descriptor names and the AAE keys must match.");
