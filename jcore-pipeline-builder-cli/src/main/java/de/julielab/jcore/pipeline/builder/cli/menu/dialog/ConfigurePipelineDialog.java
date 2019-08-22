@@ -34,7 +34,9 @@ public class ConfigurePipelineDialog implements ILoopablePipelineManipulationDia
     private void init(JCoReUIMAPipeline pipeline) {
         itemList = new MenuItemList<>();
         itemList.add(new ComponentConfigurationSelectionDialog());
-        itemList.add(new ReorderComponentsDialog());
+        itemList.add(new ReorderMultipliersDialog());
+        itemList.add(new ReorderAnalysisEnginesDialog());
+        itemList.add(new ReorderConsumersDialog());
         itemList.add(new RemoveComponentDialog());
         itemList.add(new ActivationDialog());
         itemList.add(new ArtifactVersionDialog());

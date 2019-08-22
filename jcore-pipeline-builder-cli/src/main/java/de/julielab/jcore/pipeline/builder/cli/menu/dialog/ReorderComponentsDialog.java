@@ -11,11 +11,23 @@ import org.beryx.textio.TextIO;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-public class ReorderComponentsDialog extends AbstractComponentSelectionDialog {
+public abstract class ReorderComponentsDialog extends AbstractComponentSelectionDialog {
+    private PipelineBuilderConstants.JcoreMeta.Category componentCategory;
+    private String dialogName;
+    private Function<JCoReUIMAPipeline, List<Description>> delegateSupplier;
+
+    public ReorderComponentsDialog(PipelineBuilderConstants.JcoreMeta.Category componentCategory, String dialogName, Function<JCoReUIMAPipeline, List<Description>> delegateSupplier) {
+        this.componentCategory = componentCategory;
+        this.dialogName = dialogName;
+        this.delegateSupplier = delegateSupplier;
+    }
+
     @Override
-    public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) throws MenuItemExecutionException {
-        init(pipeline, EnumSet.of(PipelineBuilderConstants.JcoreMeta.Category.ae));
+    public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) {
+        init(pipeline, EnumSet.of(componentCategory));
         printPosition(textIO, path);
         StatusPrinter.printPipelineStatus(pipeline, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)
@@ -30,21 +42,21 @@ public class ReorderComponentsDialog extends AbstractComponentSelectionDialog {
                     .withNumberedPossibleValues(positionItems).withDefaultValue(BackMenuItem.get())
                     .read("\nChoose the position to move the component before.");
             if (!(choice2 instanceof BackMenuItem)) {
-                List<Description> aeDelegates = pipeline.getAeDelegates();
+                List<Description> componentDescriptions = delegateSupplier.apply(pipeline);
                 ComponentSelectionMenuItem selection1 = (ComponentSelectionMenuItem) choice;
                 ComponentSelectionMenuItem selection2 = null;
                 if (!(choice2 instanceof PositionMenuItem))
                     selection2 = (ComponentSelectionMenuItem) choice2;
-                int index1 = aeDelegates.indexOf(selection1.getDescription());
-                int index2 = selection2 != null ? aeDelegates.indexOf(selection2.getDescription()) : aeDelegates.size();
+                int index1 = componentDescriptions.indexOf(selection1.getDescription());
+                int index2 = selection2 != null ? componentDescriptions.indexOf(selection2.getDescription()) : componentDescriptions.size();
                 if (index1 < index2) {
-                    for (int i = index1; i < index2 && i < aeDelegates.size()-1; i++)
-                        aeDelegates.set(i, aeDelegates.get(i + 1));
-                aeDelegates.set(index2-1, selection1.getDescription());
+                    for (int i = index1; i < index2 && i < componentDescriptions.size()-1; i++)
+                        componentDescriptions.set(i, componentDescriptions.get(i + 1));
+                componentDescriptions.set(index2-1, selection1.getDescription());
                 } else if (index1 > index2) {
                     for (int i = index1; i > index2; i--)
-                        aeDelegates.set(i, aeDelegates.get(i - 1));
-                    aeDelegates.set(index2, selection1.getDescription());
+                        componentDescriptions.set(i, componentDescriptions.get(i - 1));
+                    componentDescriptions.set(index2, selection1.getDescription());
                 }
             } else {
                 choice = choice2;
@@ -56,6 +68,6 @@ public class ReorderComponentsDialog extends AbstractComponentSelectionDialog {
 
     @Override
     public String getName() {
-        return "Reorder Components";
+        return dialogName;
     }
 }

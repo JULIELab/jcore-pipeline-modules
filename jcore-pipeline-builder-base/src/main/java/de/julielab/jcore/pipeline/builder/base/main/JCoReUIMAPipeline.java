@@ -845,7 +845,7 @@ public class JCoReUIMAPipeline {
                 if (ccDesc != null && !ccDelegates.isEmpty() && ccDesc instanceof AnalysisEngineDescription)
                     setAaeDescriptors((AnalysisEngineDescription) ccDesc, ccDelegates, "CAS Consumer");
             } catch (Exception e) {
-                log.warn("Could not set descriptor files from the {}/ directory to the serialized meta descriptions. Changes in the descriptors that have not been stored in the meta descriptions won't be available.", DIR_DESC, e);
+                log.warn("Could not set descriptor files from the {}/ directory to the serialized meta descriptions. Changes in the descriptors that have not been stored in the meta descriptions won't be available.", DIR_DESC_ALL, e);
             }
         } catch (IOException | InvalidXMLException | URISyntaxException | ResourceInitializationException e) {
             throw new PipelineIOException(e);
