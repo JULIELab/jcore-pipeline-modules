@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import de.julielab.java.utilities.FileUtilities;
 import de.julielab.java.utilities.classpath.JarLoader;
 import de.julielab.jcore.pipeline.builder.base.PipelineParameterChecker;
+import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants;
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import de.julielab.utilities.aether.AetherUtilities;
 import de.julielab.utilities.aether.MavenArtifact;
@@ -156,8 +157,8 @@ public class JCoReUIMAPipeline {
     }
 
     public void setCrDescription(Description crDescription) {
-        this.crDescription = crDescription;
         avoidNamingCollisions(crDescription);
+        this.crDescription = crDescription;
         this.crDesc = crDescription.getDescriptorAsCollectionReaderDescription();
     }
 
@@ -1017,6 +1018,7 @@ public class JCoReUIMAPipeline {
         String basename = desc.getName();
         while (existingDescriptorNames.contains(desc.getName())) {
             desc.setName(basename + " " + i++);
+            ((ResourceCreationSpecifier)desc.getDescriptor()).getMetaData().setName(desc.getName());
         }
     }
 
