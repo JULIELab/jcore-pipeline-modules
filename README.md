@@ -23,7 +23,7 @@ After a successful build, the following files are found in the subproject `targe
 The first and second files are executable JARs. The third file must be co-located to the second for successfully running
 a pipeline with the pipeline runner.
 
-It is recommended to put all files into one directory, e.g. `$(HOME)/bin`, and create aliases like these:
+Thus, it is recommended to put all three files into one directory, e.g. `$(HOME)/bin`, and create aliases like these:
 
     alias editpipeline="java -jar $HOME/bin/jcore-pipeline-builder-*.jar"
     alias runpipeline="java -jar $HOME/bin/jcore-pipeline-runner-base-*.jar"
