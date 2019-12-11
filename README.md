@@ -16,7 +16,7 @@ To build the project you require Maven >= 3 and Java JDK >= 11. In the root dire
     
 After a successful build, the following files are found in the subproject `target/` directories:
 
-    1. jcore-pipeline-builder-cli/target/core-pipeline-builder-cli-*-jar-with-dependencies.jar
+    1. jcore-pipeline-builder-cli/target/jcore-pipeline-builder-cli-*-jar-with-dependencies.jar
     2. jcore-pipeline-runner/jcore-pipeline-runner-base/target/jcore-pipeline-runner-base-*-cli-assembly.jar 
     3. jcore-pipeline-runner/jcore-pipeline-runner-cpe/target/jcore-pipeline-runner-cpe-*-jar-with-dependencies.jar
     
