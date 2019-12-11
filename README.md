@@ -58,7 +58,7 @@ edited with an editor of your choice before actually running a pipeline.
 
 Opening the file, there are two `<runner>` elements. The first is named `CPERunner`, the second one
 `DuccRunner`. One of those should be removed before running the pipeline as otherwise both runners will be called,
-leading to errors witht he `DuccRunner` which would require further configuration.
+leading to errors with the `DuccRunner` which would require further configuration.
 
 We will stick to the `CPERunner` for the remainder of this documentation. The `DuccRunner` section should be rather
 self-explanatory for users familiar with [UIMA DUCC](https://uima.apache.org/doc-uimaducc-whatitam.html).
