@@ -50,7 +50,7 @@ There will be a message similar to
      
 which can be ignored.
 
-    NOTE: The above command did create a configuration file draft for you, you don't need to create it yourself but only to shorten it as is described below.
+**NOTE: The above command did create a configuration file draft for you, you don't need to create it yourself but only to shorten it as is described below.**
 
 We recommend to put the 
 configuration file into the pipeline root folder. This file must be
