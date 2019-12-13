@@ -16,14 +16,14 @@ To build the project you require Maven >= 3 and Java JDK >= 11. In the root dire
     
 After a successful build, the following files are found in the subproject `target/` directories:
 
-    1. jcore-pipeline-builder-cli/target/core-pipeline-builder-cli-*-jar-with-dependencies.jar
+    1. jcore-pipeline-builder-cli/target/jcore-pipeline-builder-cli-*-jar-with-dependencies.jar
     2. jcore-pipeline-runner/jcore-pipeline-runner-base/target/jcore-pipeline-runner-base-*-cli-assembly.jar 
     3. jcore-pipeline-runner/jcore-pipeline-runner-cpe/target/jcore-pipeline-runner-cpe-*-jar-with-dependencies.jar
     
 The first and second files are executable JARs. The third file must be co-located to the second for successfully running
 a pipeline with the pipeline runner.
 
-It is recommended to put all files into one directory, e.g. `$(HOME)/bin`, and create aliases like these:
+Thus, it is recommended to put all three files into one directory, e.g. `$(HOME)/bin`, and create aliases like these:
 
     alias editpipeline="java -jar $HOME/bin/jcore-pipeline-builder-*.jar"
     alias runpipeline="java -jar $HOME/bin/jcore-pipeline-runner-base-*.jar"
@@ -50,13 +50,15 @@ There will be a message similar to
      
 which can be ignored.
 
+**NOTE: The above command did create a configuration file draft for you, you don't need to create it yourself but only to shorten it as is described below.**
+
 We recommend to put the 
 configuration file into the pipeline root folder. This file must be
 edited with an editor of your choice before actually running a pipeline.
 
 Opening the file, there are two `<runner>` elements. The first is named `CPERunner`, the second one
 `DuccRunner`. One of those should be removed before running the pipeline as otherwise both runners will be called,
-leading to errors witht he `DuccRunner` which would require further configuration.
+leading to errors with the `DuccRunner` which would require further configuration.
 
 We will stick to the `CPERunner` for the remainder of this documentation. The `DuccRunner` section should be rather
 self-explanatory for users familiar with [UIMA DUCC](https://uima.apache.org/doc-uimaducc-whatitam.html).
