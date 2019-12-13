@@ -219,6 +219,8 @@ public class JCoReUIMAPipeline {
                                 filter(Description::isActive).
                                 map(Description::getDescriptorAsAnalysisEngineDescription);
                 aaeDesc = createAAE(descDir, "AggregateAnalysisEngine", aeDelegates, descStream, true);
+            } else {
+                aaeDesc = null;
             }
             // Create the CM AAE, if required
             if (cmDelegates != null && cmDelegates.stream().filter(Description::isActive).count() > 1) {
