@@ -1,12 +1,17 @@
 package de.julielab.jcore.pipeline.runner.cpe;
 
 import de.julielab.jcore.types.Header;
+import de.julielab.jcore.types.casmultiplier.JCoReURI;
+import de.julielab.jcore.types.casmultiplier.RowBatch;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.FSIterator;
+import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.collection.CollectionProcessingEngine;
 import org.apache.uima.collection.EntityProcessStatus;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,6 +132,17 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
     public synchronized void entityProcessComplete(CAS aCas, EntityProcessStatus aStatus) {
         try {
             JCas jCas = aCas.getJCas();
+            FSIterator<Annotation> multiplierUris = jCas.getAnnotationIndex(JCoReURI.type).iterator();
+            FSIterator<Annotation> dbMultiplierBatch = jCas.getAnnotationIndex(RowBatch.type).iterator();
+            if (multiplierUris.hasNext()) {
+                while(multiplierUris.hasNext())
+                    ++entityCount;
+            } else if (dbMultiplierBatch.hasNext()) {
+                while(dbMultiplierBatch.hasNext())
+                    ++entityCount;
+            } else {
+                ++entityCount;
+            }
             String docId = "<unknown>";
             try {
                 final Header header = JCasUtil.selectSingle(jCas, Header.class);
@@ -152,7 +168,6 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
         } catch (IOException e) {
             e.printStackTrace();
         }
-        entityCount++;
 
     }
 
