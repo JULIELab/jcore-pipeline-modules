@@ -132,12 +132,12 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
     public synchronized void entityProcessComplete(CAS aCas, EntityProcessStatus aStatus) {
         try {
             JCas jCas = aCas.getJCas();
-            FSIterator<Annotation> multiplierUris = jCas.getAnnotationIndex(JCoReURI.type).iterator();
-            FSIterator<Annotation> dbMultiplierBatch = jCas.getAnnotationIndex(RowBatch.type).iterator();
-            if (multiplierUris.hasNext()) {
+            FSIterator<Annotation> multiplierUris = jCas.getTypeSystem().getType(JCoReURI.class.getCanonicalName()) != null ? jCas.getAnnotationIndex(JCoReURI.type).iterator() : null;
+            FSIterator<Annotation> dbMultiplierBatch = jCas.getTypeSystem().getType(RowBatch.class.getCanonicalName()) != null ?jCas.getAnnotationIndex(RowBatch.type).iterator() : null;
+            if (multiplierUris != null && multiplierUris.hasNext()) {
                 while(multiplierUris.hasNext())
                     ++entityCount;
-            } else if (dbMultiplierBatch.hasNext()) {
+            } else if (dbMultiplierBatch != null && dbMultiplierBatch.hasNext()) {
                 while(dbMultiplierBatch.hasNext())
                     ++entityCount;
             } else {
