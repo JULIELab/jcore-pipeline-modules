@@ -133,14 +133,14 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
         try {
             JCas jCas = aCas.getJCas();
             FSIterator<Annotation> multiplierUris = jCas.getTypeSystem().getType(JCoReURI.class.getCanonicalName()) != null ? jCas.getAnnotationIndex(JCoReURI.type).iterator() : null;
-            FSIterator<Annotation> dbMultiplierBatch = jCas.getTypeSystem().getType(RowBatch.class.getCanonicalName()) != null ?jCas.getAnnotationIndex(RowBatch.type).iterator() : null;
+            FSIterator<Annotation> dbMultiplierBatch = jCas.getTypeSystem().getType(RowBatch.class.getCanonicalName()) != null ? jCas.getAnnotationIndex(RowBatch.type).iterator() : null;
             if (multiplierUris != null && multiplierUris.hasNext()) {
-                while(multiplierUris.hasNext()) {
+                while (multiplierUris.hasNext()) {
                     multiplierUris.next();
                     ++entityCount;
                 }
             } else if (dbMultiplierBatch != null && dbMultiplierBatch.hasNext()) {
-                while(dbMultiplierBatch.hasNext()) {
+                while (dbMultiplierBatch.hasNext()) {
                     dbMultiplierBatch.next();
                     ++entityCount;
                 }
@@ -158,6 +158,8 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
                 LOGGER.debug("Document with ID {} finished processing.", docId);
             } else {
                 String filename = "pipeline-error-" + docId + ".err";
+                LOGGER.error("Components failed: {}", aStatus.getFailedComponentNames());
+                LOGGER.error("Error message: {}", aStatus.getStatusMessage());
                 LOGGER.debug("Exception occurred while processing document with ID {}. Writing error message to {}", docId, aStatus.getExceptions(), filename);
                 final String log = createLog(aStatus);
                 try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), StandardCharsets.UTF_8))) {
