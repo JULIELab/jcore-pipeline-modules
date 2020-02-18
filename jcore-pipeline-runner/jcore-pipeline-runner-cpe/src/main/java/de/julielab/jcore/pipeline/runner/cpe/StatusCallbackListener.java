@@ -135,11 +135,15 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
             FSIterator<Annotation> multiplierUris = jCas.getTypeSystem().getType(JCoReURI.class.getCanonicalName()) != null ? jCas.getAnnotationIndex(JCoReURI.type).iterator() : null;
             FSIterator<Annotation> dbMultiplierBatch = jCas.getTypeSystem().getType(RowBatch.class.getCanonicalName()) != null ?jCas.getAnnotationIndex(RowBatch.type).iterator() : null;
             if (multiplierUris != null && multiplierUris.hasNext()) {
-                while(multiplierUris.hasNext())
+                while(multiplierUris.hasNext()) {
+                    multiplierUris.next();
                     ++entityCount;
+                }
             } else if (dbMultiplierBatch != null && dbMultiplierBatch.hasNext()) {
-                while(dbMultiplierBatch.hasNext())
+                while(dbMultiplierBatch.hasNext()) {
+                    dbMultiplierBatch.next();
                     ++entityCount;
+                }
             } else {
                 ++entityCount;
             }

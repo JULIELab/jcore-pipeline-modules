@@ -53,10 +53,10 @@
                     <groupId>javax.json</groupId>
                     <artifactId>javax.json-api</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
+<!--                <exclusion>-->
+<!--                    <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--                    <artifactId>jackson-databind</artifactId>-->
+<!--                </exclusion>-->
                 <exclusion>
                     <groupId>org.apache.maven</groupId>
                     <artifactId>*</artifactId>
