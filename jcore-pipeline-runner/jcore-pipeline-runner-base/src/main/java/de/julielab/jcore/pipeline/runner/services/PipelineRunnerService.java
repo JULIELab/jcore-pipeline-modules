@@ -53,8 +53,6 @@ public class PipelineRunnerService implements ParameterExposing{
     public void runPipeline(HierarchicalConfiguration<ImmutableNode> runnerConfig) throws ConfigurationException, PipelineIOException, PipelineRunningException, PipelineInstantiationException {
         String pipelinePath = ConfigurationUtilities.requirePresent(PIPELINEPATH, runnerConfig::getString);
         JCoReUIMAPipeline jCoReUIMAPipeline = new JCoReUIMAPipeline(new File(pipelinePath));
-        //Stream<File> classpathElements = jCoReUIMAPipeline.getClasspathElements();
-        //classpathElements.forEach(JarLoader::addJarToClassPath);
         jCoReUIMAPipeline.load(false);
         runPipeline(jCoReUIMAPipeline,runnerConfig );
     }

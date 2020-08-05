@@ -51,22 +51,27 @@ public class PipelineBuilderCLI {
                 pipeline.load(true);
                 pipelinePath = args[0];
             }
-            textIO = TextIoFactory.getTextIO();
-            if (Repositories.loadActiveRepositories().isEmpty()) {
-                new RepositoryAddDialog().enterInputLoop(textIO, new ArrayDeque<>());
+            if (args.length > 1 && args[1].equalsIgnoreCase("-s")){
+                log.info("Storing pipeline to {} and updating libraries.", pipelinePath);
+                pipeline.store(new File(pipelinePath), true);
+            } else {
+                textIO = TextIoFactory.getTextIO();
+                if (Repositories.loadActiveRepositories().isEmpty()) {
+                    new RepositoryAddDialog().enterInputLoop(textIO, new ArrayDeque<>());
+                }
+                IndexDialog indexDialog = new IndexDialog();
+                indexDialog.clearTerminal(textIO);
+                textIO.getTextTerminal().executeWithPropertiesPrefix(WELCOME,
+                        t -> t.println("Welcome to the JCoRe Pipeline Builder"));
+                textIO.getTextTerminal().executeWithPropertiesPrefix(DEFAULT, t ->
+                        t.println("This tool is supposed to help with the creation of UIMA workflows using " +
+                                "components from the JCoRe repository. While the tool tries to be as " +
+                                "transparent and helpful as possible, a basic understanding of UIMA, " +
+                                "JCoRe and the individual JCoRe components is necessary. For help and " +
+                                "pointers to the adequate documentation, please refer to the README of " +
+                                "the pipeline modules at https://github.com/JULIELab/jcore-pipeline-modules"));
+                indexDialog.enterInputLoop(pipeline, textIO, new ArrayDeque<>());
             }
-            IndexDialog indexDialog = new IndexDialog();
-            indexDialog.clearTerminal(textIO);
-            textIO.getTextTerminal().executeWithPropertiesPrefix(WELCOME,
-                    t -> t.println("Welcome to the JCoRe Pipeline Builder"));
-            textIO.getTextTerminal().executeWithPropertiesPrefix(DEFAULT, t ->
-                    t.println("This tool is supposed to help with the creation of UIMA workflows using " +
-                            "components from the JCoRe repository. While the tool tries to be as " +
-                            "transparent and helpful as possible, a basic understanding of UIMA, " +
-                            "JCoRe and the individual JCoRe components is necessary. For help and " +
-                            "pointers to the adequate documentation, please refer to the README of " +
-                            "the pipeline modules at https://github.com/JULIELab/jcore-pipeline-modules"));
-            indexDialog.enterInputLoop(pipeline, textIO, new ArrayDeque<>());
         } catch (GithubInformationException | MenuItemExecutionException e) {
             if (e instanceof GithubInformationException || e.getCause() instanceof GithubInformationException) {
                 log.debug("Error when loading component list", e);

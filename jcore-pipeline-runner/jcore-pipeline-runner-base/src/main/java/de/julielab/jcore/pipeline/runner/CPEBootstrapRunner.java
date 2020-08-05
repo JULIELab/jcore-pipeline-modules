@@ -45,7 +45,6 @@ public class CPEBootstrapRunner implements IPipelineRunner {
     @Override
     public void runPipeline(JCoReUIMAPipeline pipeline, HierarchicalConfiguration<ImmutableNode> runnerConfig) throws PipelineRunningException, PipelineIOException {
         try {
-            // pipeline.load(false);
             final String plp = pipeline.getLoadDirectory().getAbsolutePath();
             int numThreads = runnerConfig.containsKey(NUMTHREADS) ? runnerConfig.getInt(NUMTHREADS) : 2;
             String memory = runnerConfig.containsKey(HEAP_SIZE) ? runnerConfig.getString(HEAP_SIZE) : "2G";
@@ -58,7 +57,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             if (System.getenv("JAVA_HOME") != null)
                 javaPath = Path.of(System.getenv("JAVA_HOME"), "bin", "java").toString();
 
-            final String[] cmdarray = {javaPath, "-Xmx" + memory, "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads), "-a", String.valueOf(numThreads+5)};
+            final String[] cmdarray = {javaPath, "-Xmx" + memory, "-Dfile.encoding=UTF-8", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads), "-a", String.valueOf(numThreads+5)};
             log.debug("Running the pipeline at {} with the following command line: {}", pipeline.getLoadDirectory(), Arrays.toString(cmdarray));
             final Process exec = Runtime.getRuntime().exec(cmdarray);
             final InputStreamGobbler isg = new InputStreamGobbler(exec.getInputStream(), "StdInGobbler", "std");
