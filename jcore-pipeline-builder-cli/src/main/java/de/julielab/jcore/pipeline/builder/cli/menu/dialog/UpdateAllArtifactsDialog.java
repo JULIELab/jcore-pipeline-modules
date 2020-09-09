@@ -33,7 +33,11 @@ private final static Logger log = LoggerFactory.getLogger(UpdateAllArtifactsDial
 
         String updateAll = "Update all component artifacts to their newest available version";
         String selectManually = "Select the version for each component manually";
-        String response = textIO.newStringInputReader().withNumberedPossibleValues(updateAll, selectManually).read("Would you like to update all components at once or select a specific version for each component individually?");
+        String back = "Back";
+        String response = textIO.newStringInputReader()
+                .withNumberedPossibleValues(updateAll, selectManually, back)
+                .withDefaultValue(back)
+                .read("Would you like to update all components at once or select a specific version for each component individually?");
 
         if (updateAll.equals(response)) {
             for (Description description : itemList) {

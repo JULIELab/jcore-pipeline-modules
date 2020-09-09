@@ -1115,7 +1115,7 @@ public class JCoReUIMAPipeline {
     public Stream<MavenArtifact> getMavenComponentArtifacts() {
         List<Stream<MavenArtifact>> artifactList = new ArrayList<>();
         Function<Description, MavenArtifact> artifactExtractor = d ->
-                d.getMetaDescription() != null ? d.getMetaDescription().getMavenArtifact() : null;
+                d.getMetaDescription() != null ? d.getMetaDescription().getMavenArtifactCoordinates() : null;
         if (crDescription != null)
             artifactList.add(Stream.of(artifactExtractor.apply(crDescription)));
         if (cmDelegates != null)

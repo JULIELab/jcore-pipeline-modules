@@ -20,7 +20,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class ExternalResourceConfigurationDialog implements ILoopableDialog {
-    private final static Logger log = LoggerFactory.getLogger(ExternalResourceConfigurationDialog.class);
     private Description description;
     private ExternalResourceDescription resourceDescription;
 
@@ -70,6 +69,7 @@ public class ExternalResourceConfigurationDialog implements ILoopableDialog {
         itemList.add(resourceDescItem);
         if (resourceDescription.getResourceSpecifier() instanceof FileResourceSpecifier) {
             IMenuItem response = textIO.<IMenuItem>newGenericInputReader(null).withNumberedPossibleValues(itemList).
+                    withDefaultValue(BackMenuItem.get()).
                     read("Select the parameter you want to change:");
             if (response.equals(resourceUrlItem)) {
                 FileResourceSpecifier spec = (FileResourceSpecifier) resourceDescription.getResourceSpecifier();
@@ -91,16 +91,19 @@ public class ExternalResourceConfigurationDialog implements ILoopableDialog {
                     map(p -> new ParameterEditingMenuItem(resourceDescription.getResourceSpecifier(), p)).
                     forEach(itemList::add);
             itemList.add(BackMenuItem.get());
-            IMenuItem response = textIO.<IMenuItem>newGenericInputReader(null).withNumberedPossibleValues(itemList).
-                    read("Select the parameter you want to change:");
+            IMenuItem response = textIO.<IMenuItem>newGenericInputReader(null).withNumberedPossibleValues(itemList)
+                    .withDefaultValue(BackMenuItem.get())
+                    .read("Select the parameter you want to change:");
             if (response.equals(resourceUrlItem)) {
-                String url = textIO.newStringInputReader().read("Enter the new resource URL:");
-                spec.setUrl(url);
+                String url = textIO.newStringInputReader().withMinLength(0).read("Enter the new resource URL:");
+                if (url.length() > 0)
+                    spec.setUrl(url);
             } else if (response.equals(resourceNameItem)) {
                 renameExternalResource(textIO);
             } else if (response.equals(resourceDescItem)) {
-                String desc = textIO.newStringInputReader().read("Enter the new resource description:");
-                resourceDescription.setDescription(desc);
+                String desc = textIO.newStringInputReader().withMinLength(0).read("Enter the new resource description:");
+                if (desc.length() > 0)
+                    resourceDescription.setDescription(desc);
             } else if (response instanceof ParameterEditingMenuItem) {
                 ParameterEditingMenuItem item = (ParameterEditingMenuItem) response;
                 item.setParameterValue(textIO);
