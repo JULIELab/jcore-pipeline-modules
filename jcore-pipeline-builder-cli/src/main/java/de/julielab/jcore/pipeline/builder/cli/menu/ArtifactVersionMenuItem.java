@@ -23,8 +23,8 @@ public class ArtifactVersionMenuItem implements IMenuItem {
         PrerequisiteChecker.checkThat()
                 .notNull(description)
                 .supplyNotNull(() -> description.getMetaDescription())
-                .supplyNotNull(() -> description.getMetaDescription().getMavenArtifact())
-                .withNames("Description", "MetaDescription", "MavenArtifact").execute();
+                .supplyNotNull(() -> description.getMetaDescription().getMavenArtifactCoordinates())
+                .withNames("Description", "MetaDescription", "MavenArtifactCoordinates").execute();
 
         MavenArtifact artifact = description.getMetaDescription().getMavenArtifact();
         try {

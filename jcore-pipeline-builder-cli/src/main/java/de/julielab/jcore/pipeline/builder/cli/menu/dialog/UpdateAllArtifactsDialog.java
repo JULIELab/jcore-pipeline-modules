@@ -44,8 +44,8 @@ private final static Logger log = LoggerFactory.getLogger(UpdateAllArtifactsDial
                     continue;
                 }
                 try {
-                    String newestVersion = AetherUtilities.getNewestVersion(description.getMetaDescription().getMavenArtifact());
-                    description.getMetaDescription().getMavenArtifact().setVersion(newestVersion);
+                    String newestVersion = AetherUtilities.getNewestVersion(description.getMetaDescription().getMavenArtifactCoordinates());
+                    description.getMetaDescription().getMavenArtifactCoordinates().setVersion(newestVersion);
                     textIO.getTextTerminal().print("Set artifact version of component " + description.getName() + " to " + newestVersion + System.getProperty("line.separator"));
                 } catch (MavenException e) {
                     log.error("Could not set the new version to component {}", description.getName(), e);

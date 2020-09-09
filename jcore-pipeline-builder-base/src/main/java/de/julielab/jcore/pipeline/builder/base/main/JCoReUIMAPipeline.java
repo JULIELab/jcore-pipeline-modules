@@ -672,7 +672,7 @@ public class JCoReUIMAPipeline {
             return null;
         final ObjectMapper om = new ObjectMapper();
         try (BufferedReader reader = FileUtilities.getReaderFromFile(sourceFile)) {
-            return om.readValue(reader, typeRef);
+            return (T) om.readValue(reader, typeRef);
         }
     }
 
