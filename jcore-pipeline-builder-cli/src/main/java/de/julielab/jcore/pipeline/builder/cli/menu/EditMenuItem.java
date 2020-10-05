@@ -11,12 +11,10 @@ public class EditMenuItem implements IMenuItem {
         return description;
     }
 
-    private MetaDescription description;
-    private PipelineBuilderConstants.JcoreMeta.Category category;
+    private final MetaDescription description;
 
     public EditMenuItem(MetaDescription description, PipelineBuilderConstants.JcoreMeta.Category category) {
         this.description = description;
-        this.category = category;
     }
 
 

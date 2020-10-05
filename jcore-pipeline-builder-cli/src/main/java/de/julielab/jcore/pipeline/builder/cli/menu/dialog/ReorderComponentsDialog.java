@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.function.Function;
 
 public abstract class ReorderComponentsDialog extends AbstractComponentSelectionDialog {
-    private PipelineBuilderConstants.JcoreMeta.Category componentCategory;
-    private String dialogName;
-    private Function<JCoReUIMAPipeline, List<Description>> delegateSupplier;
+    private final PipelineBuilderConstants.JcoreMeta.Category componentCategory;
+    private final String dialogName;
+    private final Function<JCoReUIMAPipeline, List<Description>> delegateSupplier;
 
     public ReorderComponentsDialog(PipelineBuilderConstants.JcoreMeta.Category componentCategory, String dialogName, Function<JCoReUIMAPipeline, List<Description>> delegateSupplier) {
         this.componentCategory = componentCategory;

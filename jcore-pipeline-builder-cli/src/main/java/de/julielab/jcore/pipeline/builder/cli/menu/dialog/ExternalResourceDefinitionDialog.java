@@ -22,8 +22,8 @@ import java.util.List;
 
 public class ExternalResourceDefinitionDialog implements IMenuDialog {
     private final static Logger log = LoggerFactory.getLogger(ExternalResourceDefinitionDialog.class);
-    private JCoReUIMAPipeline pipeline;
-    private Description description;
+    private final JCoReUIMAPipeline pipeline;
+    private final Description description;
 
     public ExternalResourceDefinitionDialog(JCoReUIMAPipeline pipeline, Description description) {
         this.pipeline = pipeline;

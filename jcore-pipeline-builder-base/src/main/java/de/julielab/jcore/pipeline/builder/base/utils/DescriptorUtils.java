@@ -25,7 +25,7 @@ import java.util.zip.ZipFile;
 public class DescriptorUtils {
     private final static Logger log = LoggerFactory.getLogger(DescriptorUtils.class);
 
-    private final static Map<String, String> descRoots = new HashMap<String, String>(){{
+    private final static Map<String, String> descRoots = new HashMap<>() {{
         put("collectionReaderDescription", "processingResourceMetaData");
         put("analysisEngineDescription", "analysisEngineMetaData");
         put("casConsumerDescription", "processingResourceMetaData");

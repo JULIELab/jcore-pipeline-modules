@@ -18,8 +18,8 @@ import static de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes.HEADE
 
 public class MultiValuedParameterEditingMenuItem implements IMenuDialog {
 
-    private Description description;
-    private ConfigurationParameter parameter;
+    private final Description description;
+    private final ConfigurationParameter parameter;
 
     public MultiValuedParameterEditingMenuItem(Description description, ConfigurationParameter parameter) {
         this.description = description;
@@ -87,7 +87,7 @@ public class MultiValuedParameterEditingMenuItem implements IMenuDialog {
             sb.append(ls);
             for (int i = 0; i < array.length; ++i) {
                 Object o = array[i];
-                sb.append((i + 1) + ": ");
+                sb.append(i + 1).append(": ");
                 sb.append(o.toString());
                 sb.append(ls);
             }

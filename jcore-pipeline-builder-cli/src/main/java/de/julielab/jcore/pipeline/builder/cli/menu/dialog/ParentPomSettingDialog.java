@@ -12,8 +12,6 @@ import java.util.List;
 
 public class ParentPomSettingDialog implements IMenuDialog {
 
-    private Object sourceChoice;
-
     public void execute(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) {
         clearTerminal(textIO);
         path.add(getName());
@@ -25,7 +23,7 @@ public class ParentPomSettingDialog implements IMenuDialog {
         String currentPom = pipeline.getParentPom() != null ? pipeline.getParentPom().getGroupId()  + ":" + pipeline.getParentPom().getArtifactId() + ":" + pipeline.getParentPom().getVersion() + "(file: " + pipeline.getParentPom().getFile().getAbsolutePath() + ")" : "<none>";
         textIO.getTextTerminal().print("Current parent POM: " + currentPom + linesep);
         List<Object> pomSourceOptions = Arrays.asList("Specify parent through maven coordinates", "Specify parent POM file",BackMenuItem.get());
-        sourceChoice = textIO.newGenericInputReader(null)
+        Object sourceChoice = textIO.newGenericInputReader(null)
                 .withNumberedPossibleValues(pomSourceOptions).withDefaultValue(BackMenuItem.get())
                 .read("Choose an option:");
         if (pomSourceOptions.indexOf(sourceChoice) == 0) {

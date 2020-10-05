@@ -37,7 +37,7 @@ public class Description implements Serializable, Cloneable {
      * incompatible with older version.
      */
     private static final long serialVersionUID = 2019_01_21_001L;
-    private static Logger logger = LoggerFactory.getLogger(Description.class);
+    private static final Logger logger = LoggerFactory.getLogger(Description.class);
     /**
      * The URI of the original UIMA descriptor within a JAR.
      */
@@ -62,7 +62,7 @@ public class Description implements Serializable, Cloneable {
      * The descriptor category as read from the actual descriptor.
      */
     private String descriptorType;
-    private Map<String, ArrayList<String>> capabilities = new HashMap<String, ArrayList<String>>() {{
+    private final Map<String, ArrayList<String>> capabilities = new HashMap<>() {{
         put(Descriptor.CAPABILITIES_IN, new ArrayList<>());
         put(Descriptor.CAPABILITIES_OUT, new ArrayList<>());
     }};

@@ -5,7 +5,7 @@ import org.apache.uima.collection.metadata.*;
 import org.apache.uima.resource.metadata.impl.Import_impl;
 
 public class CPE {
-    private CpeDescription cpe;
+    private final CpeDescription cpe;
 
     public CPE() {
         cpe = new CpeDescriptionImpl();

@@ -21,8 +21,8 @@ import static de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes.HEADE
 
 public class ParameterEditingMenuItem implements IMenuDialog {
 
-    private ResourceSpecifier descriptor;
-    private ConfigurationParameter parameter;
+    private final ResourceSpecifier descriptor;
+    private final ConfigurationParameter parameter;
 
     public ParameterEditingMenuItem(ResourceSpecifier descriptor, ConfigurationParameter parameter) {
         this.descriptor = descriptor;

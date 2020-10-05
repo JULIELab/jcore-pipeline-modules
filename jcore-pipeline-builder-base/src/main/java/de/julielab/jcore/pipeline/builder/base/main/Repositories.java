@@ -91,7 +91,7 @@ public class Repositories {
      * @throws IOException
      */
     public static void addRepositories(ComponentRepository... repositories) throws IOException {
-        Stream.of(repositories).forEach(activeRepositories::add);
+        activeRepositories.addAll(Arrays.asList(repositories));
         saveRepositoryConfiguration();
     }
 

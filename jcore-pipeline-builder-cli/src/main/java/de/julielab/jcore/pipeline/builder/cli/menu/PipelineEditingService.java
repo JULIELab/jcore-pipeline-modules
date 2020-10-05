@@ -6,7 +6,7 @@ public class PipelineEditingService {
 
     private static PipelineEditingService service;
 
-    public static final PipelineEditingService getInstance() {
+    public static PipelineEditingService getInstance() {
         if (service == null)
             service = new PipelineEditingService();
         return service;

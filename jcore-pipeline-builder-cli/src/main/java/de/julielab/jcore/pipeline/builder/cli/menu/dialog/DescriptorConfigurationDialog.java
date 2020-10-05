@@ -25,7 +25,7 @@ import static de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes.ERROR
 public class DescriptorConfigurationDialog implements ILoopablePipelineManipulationDialog {
     private final static Logger log = LoggerFactory.getLogger(DescriptorConfigurationDialog.class);
     private MenuItemList<IMenuItem> itemList;
-    private Description description;
+    private final Description description;
 
     public DescriptorConfigurationDialog(Description description) {
         this.description = description;
@@ -123,9 +123,7 @@ public class DescriptorConfigurationDialog implements ILoopablePipelineManipulat
                             getResourceManagerConfiguration().getExternalResources()).
                             filter(res -> res.getName().equals(resourceName)).
                             findFirst();
-                    if (resource.isPresent()) {
-                        new ExternalResourceConfigurationDialog(description, resource.get()).enterInputLoop(textIO, path);
-                    }
+                    resource.ifPresent(externalResourceDescription -> new ExternalResourceConfigurationDialog(description, externalResourceDescription).enterInputLoop(textIO, path));
                 }
             } catch (MenuItemExecutionException e) {
                 log.error("External resource configuration failed: ", e);

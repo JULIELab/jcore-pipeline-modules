@@ -102,7 +102,7 @@ public class StatusPrinter {
         Stream<Description> aeStream = pipeline.getAeDelegates() != null ? pipeline.getAeDelegates().stream() : Stream.empty();
         Stream<Description> ccStream = pipeline.getCcDelegates() != null ? pipeline.getCcDelegates().stream() : Stream.empty();
         Stream<Description> aes = Stream.concat(Stream.concat(cmStream, aeStream), ccStream).filter(d -> d.getDescriptor() instanceof AnalysisEngineDescription);
-        Map<String, List<ExternalResourceDescription>> resourcesByName = aes.map(Description::getDescriptorAsAnalysisEngineDescription).filter(ae -> ae.getResourceManagerConfiguration() != null).filter(ae -> ae.getResourceManagerConfiguration() != null).flatMap(ae -> Stream.of(ae.getResourceManagerConfiguration().getExternalResources())).collect(Collectors.groupingBy(er -> er.getName()));
+        Map<String, List<ExternalResourceDescription>> resourcesByName = aes.map(Description::getDescriptorAsAnalysisEngineDescription).filter(ae -> ae.getResourceManagerConfiguration() != null).filter(ae -> ae.getResourceManagerConfiguration() != null).flatMap(ae -> Stream.of(ae.getResourceManagerConfiguration().getExternalResources())).collect(Collectors.groupingBy(ExternalResourceDescription::getName));
         resourcesByName.entrySet().stream().filter(e -> e.getValue().size() > 1).forEach(e -> records.add(createPrintLine("Configuration error: There are multiple external resources with the name " + e.getKey() + ".\n    Go to the configuration dialog and adapt the names.", ERROR)));
 
         // Check if there is a component name repeated
@@ -121,8 +121,8 @@ public class StatusPrinter {
 
     private static class ParameterAdder implements Consumer<Description> {
 
-        private List<PrintLine> records;
-        private Verbosity verbosity;
+        private final List<PrintLine> records;
+        private final Verbosity verbosity;
 
         public ParameterAdder(List<PrintLine> records, Verbosity verbosity) {
             this.records = records;
@@ -190,8 +190,8 @@ public class StatusPrinter {
 
     private static class ExternalResourcesAdder implements Consumer<Description> {
 
-        private List<PrintLine> records;
-        private Verbosity verbosity;
+        private final List<PrintLine> records;
+        private final Verbosity verbosity;
 
         public ExternalResourcesAdder(List<PrintLine> records, Verbosity verbosity) {
             this.records = records;
@@ -247,8 +247,7 @@ public class StatusPrinter {
                                             getMetaData().getConfigurationParameterDeclarations().
                                             getConfigurationParameters();
                                     Map<String, NameValuePair> settings = Stream.of(configurableDataResourceSpecifier.getMetaData().getConfigurationParameterSettings().getParameterSettings()).flatMap(Stream::of).collect(Collectors.toMap(NameValuePair::getName, Function.identity()));
-                                    for (int i = 0; i < declarations.length; i++) {
-                                        ConfigurationParameter declaration = declarations[i];
+                                    for (ConfigurationParameter declaration : declarations) {
                                         String name = declaration.getName();
                                         Object value = Optional.ofNullable(settings.get(name)).orElseGet(NameValuePair_impl::new).getValue();
                                         String reportLevel = color.apply(DEFAULT);

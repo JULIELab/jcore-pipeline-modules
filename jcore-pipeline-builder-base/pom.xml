@@ -8,7 +8,7 @@
     <parent>
         <groupId>de.julielab</groupId>
         <artifactId>jcore-pipeline-modules</artifactId>
-        <version>0.4.1-SNAPSHOT</version>
+        <version>0.4.1</version>
     </parent>
 
     <build>
@@ -109,7 +109,7 @@
         <dependency>
             <groupId>de.julielab</groupId>
             <artifactId>julielab-maven-aether-utilities</artifactId>
-            <version>1.1.1-SNAPSHOT</version>
+            <version>1.1.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

@@ -1,6 +1,5 @@
 package de.julielab.jcore.pipeline.builder.cli.menu;
 
-import de.julielab.java.utilities.FileUtilities;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.builder.cli.main.PipelineBuilderCLI;
 import de.julielab.utilities.aether.MavenArtifact;
@@ -16,7 +15,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class StorePomMenuItem implements IMenuItem {
     private final static Logger log = LoggerFactory.getLogger(StorePomMenuItem.class);

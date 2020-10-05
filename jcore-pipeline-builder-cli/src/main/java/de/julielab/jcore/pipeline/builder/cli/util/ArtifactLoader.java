@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ArtifactLoader {
-    private static Set<File> loadedArtifacts = new HashSet<>();
+    private static final Set<File> loadedArtifacts = new HashSet<>();
 
     public synchronized static void loadArtifact(File file) {
         File absolute = file.getAbsoluteFile();

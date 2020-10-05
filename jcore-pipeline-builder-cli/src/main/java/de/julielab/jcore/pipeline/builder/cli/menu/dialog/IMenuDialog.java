@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public interface IMenuDialog extends IMenuItem {
     default void printPosition(TextIO textIO, Deque<String> path) {
         String LS = System.getProperty("line.separator");
-        String pathString = path.stream().collect(Collectors.joining("/"));
+        String pathString = String.join("/", path);
         textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.PATH, t -> t.print("You are here: " + pathString));
         // For the SwingTextTerminal: It does not reset its properties after the above line
         textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.DEFAULT ,t -> t.print(LS));

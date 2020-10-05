@@ -11,7 +11,6 @@ import de.julielab.jcore.pipeline.builder.base.exceptions.GithubInformationExcep
 import de.julielab.jcore.pipeline.builder.base.main.GitHubRepository;
 import de.julielab.jcore.pipeline.builder.base.main.MetaDescription;
 import de.julielab.xml.JulieXMLTools;
-import java_cup.version;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,7 @@ import java.util.*;
 public class GitHubConnector {
 
     private static Map<String, MetaDescription> componentMap = null;
-    private static Logger log = LoggerFactory.getLogger(GitHubConnector.class);
+    private static final Logger log = LoggerFactory.getLogger(GitHubConnector.class);
 
     /**
      * Builds a URL of the form "https://raw.githubusercontent.com/JULIELab/{@code module}/{@code version}/{@code name}/component.meta
@@ -148,7 +147,7 @@ public class GitHubConnector {
         connection.addRequestProperty("User-Agent", "JCoRe Pipeline Builder");
         try {
             Integer rateLimit = Integer.parseInt(connection.getHeaderField("X-RateLimit-Limit"));
-            Integer rateLimitRemaining = Integer.parseInt(connection.getHeaderField("X-RateLimit-Remaining"));
+            int rateLimitRemaining = Integer.parseInt(connection.getHeaderField("X-RateLimit-Remaining"));
             log.debug("GitHub API requests rate limit: {} of {} remaining", rateLimitRemaining, rateLimit);
             if (rateLimitRemaining == 0)
                 throw new GithubInformationException("Cannot request JCoRe component meta data from GitHub due to " +
@@ -243,9 +242,7 @@ public class GitHubConnector {
         URL meta = getRepoContentsURL(repository);
         try {
             return connectWithHeader(meta).getInputStream();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (NullPointerException e) {
+        } catch (IOException | NullPointerException e) {
             e.printStackTrace();
         }
         return null;

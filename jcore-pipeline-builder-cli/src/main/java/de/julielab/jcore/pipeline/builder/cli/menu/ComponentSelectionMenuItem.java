@@ -4,7 +4,7 @@ import de.julielab.jcore.pipeline.builder.base.main.Description;
 
 public class ComponentSelectionMenuItem implements IMenuItem {
 
-    private Description description;
+    private final Description description;
 
     public ComponentSelectionMenuItem(Description description) {
         this.description = description;

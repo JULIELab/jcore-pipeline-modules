@@ -3,7 +3,6 @@ package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 import de.julielab.jcore.pipeline.builder.cli.menu.BackMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.QuitMenuItem;
-import de.julielab.jcore.pipeline.builder.cli.util.MenuItemExecutionException;
 import org.beryx.textio.TextIO;
 
 import java.util.Deque;

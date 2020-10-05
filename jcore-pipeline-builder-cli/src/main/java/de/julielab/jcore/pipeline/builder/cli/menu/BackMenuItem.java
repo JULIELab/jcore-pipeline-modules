@@ -1,7 +1,7 @@
 package de.julielab.jcore.pipeline.builder.cli.menu;
 
 public class BackMenuItem implements IMenuItem {
-    private static BackMenuItem item = new BackMenuItem();
+    private static final BackMenuItem item = new BackMenuItem();
 
     private BackMenuItem() {
     }

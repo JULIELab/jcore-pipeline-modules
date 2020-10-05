@@ -28,7 +28,7 @@ public class PipelineParameterChecker {
     private PipelineParameterChecker() {
     }
 
-    public static void main(String args[]) throws PipelineIOException, IOException {
+    public static void main(String[] args) throws PipelineIOException, IOException {
         if (args.length != 1) {
             System.out.println("Usage: " + PipelineParameterChecker.class.getSimpleName() + " <root directory of the JCoRe pipeline>");
             System.exit(1);
@@ -89,8 +89,7 @@ public class PipelineParameterChecker {
                                     getConfigurationParameters();
                             // Map the values to their names so for each parameter declaration we can quickly check the value
                             Map<String, NameValuePair> settings = Stream.of(configurableDataResourceSpecifier.getMetaData().getConfigurationParameterSettings().getParameterSettings()).flatMap(Stream::of).collect(Collectors.toMap(NameValuePair::getName, Function.identity()));
-                            for (int i = 0; i < declarations.length; i++) {
-                                ConfigurationParameter declaration = declarations[i];
+                            for (ConfigurationParameter declaration : declarations) {
                                 String name = declaration.getName();
                                 Object value = Optional.ofNullable(settings.get(name)).orElseGet(NameValuePair_impl::new).getValue();
                                 if (declaration.isMandatory() && (value == null || StringUtils.isBlank(value.toString())))
@@ -158,7 +157,7 @@ public class PipelineParameterChecker {
         Stream<Description> aeStream = pipeline.getAeDelegates() != null ? pipeline.getAeDelegates().stream() : Stream.empty();
         Stream<Description> ccStream = pipeline.getCcDelegates() != null ? pipeline.getCcDelegates().stream() : Stream.empty();
         Stream<Description> aes = Stream.concat(Stream.concat(cmStream, aeStream), ccStream).filter(d -> d.getDescriptor() instanceof AnalysisEngineDescription);
-        Map<String, List<ExternalResourceDescription>> resourcesByName = aes.map(Description::getDescriptorAsAnalysisEngineDescription).filter(ae -> ae.getResourceManagerConfiguration() != null).filter(ae -> ae.getResourceManagerConfiguration().getExternalResources() != null).flatMap(ae -> Stream.of(ae.getResourceManagerConfiguration().getExternalResources())).collect(Collectors.groupingBy(er -> er.getName()));
+        Map<String, List<ExternalResourceDescription>> resourcesByName = aes.map(Description::getDescriptorAsAnalysisEngineDescription).filter(ae -> ae.getResourceManagerConfiguration() != null).filter(ae -> ae.getResourceManagerConfiguration().getExternalResources() != null).flatMap(ae -> Stream.of(ae.getResourceManagerConfiguration().getExternalResources())).collect(Collectors.groupingBy(ExternalResourceDescription::getName));
         resourcesByName.entrySet().stream().filter(e -> e.getValue().size() > 1).forEach(e -> list.add(new MissingComponentConfiguration(Missing.DUPLICATE_EXTERNAL_RESOURCE_NAME, null, e.getKey()) ));
         return list;
     }

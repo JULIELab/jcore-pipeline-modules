@@ -58,7 +58,7 @@ public class ActivationDialog extends AbstractComponentSelectionDialog {
         return "Manage Component Activation Status";
     }
 
-    private class ActivateAllMenuItem implements IMenuItem {
+    private static class ActivateAllMenuItem implements IMenuItem {
         @Override
         public String getName() {
             return "Activate all";
@@ -70,7 +70,7 @@ public class ActivationDialog extends AbstractComponentSelectionDialog {
         }
     }
 
-    private class DeactivateAllMenuItem implements IMenuItem {
+    private static class DeactivateAllMenuItem implements IMenuItem {
         @Override
         public String getName() {
             return "Deactivate all";

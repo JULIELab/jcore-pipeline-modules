@@ -23,7 +23,7 @@ import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.RUN
 public class PipelineRunnerCLI implements ConfigurationTemplateGenerator {
     private final static Logger log = LoggerFactory.getLogger(PipelineRunnerCLI.class);
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         if (args.length != 1) {
             log.error("Usage: {} <XML configuration file path; configuration template will be written if " +
                     "path does not exist>", PipelineRunnerCLI.class.getSimpleName());
@@ -52,7 +52,7 @@ public class PipelineRunnerCLI implements ConfigurationTemplateGenerator {
                 log.error("Configuration file {} could not be read: {}", configurationFile, e.getMessage());
             } catch (PipelineIOException e) {
                 e.printStackTrace();
-                log.error("One of the pipelines given in the configuration file {} could not be loaded: ",
+                log.error("One of the pipelines given in the configuration file {} could not be loaded: {}",
                         configurationFile, e.getMessage());
             }
         } else {

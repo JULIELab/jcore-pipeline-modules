@@ -3,8 +3,8 @@ package de.julielab.jcore.pipeline.builder.cli.menu;
 import java.util.function.Function;
 
 public class PayloadMenuItem<T> implements IMenuItem {
-    private T payload;
-    private Function<T, String> nameFunc;
+    private final T payload;
+    private final Function<T, String> nameFunc;
 
     public PayloadMenuItem(T payload, Function<T, String> nameFunc) {
         this.payload = payload;

@@ -40,7 +40,7 @@ public class PipelineBuilderCLI {
      */
     public static boolean dependenciesHaveChanged = false;
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         System.setProperty(PrerequisiteChecker.PREREQUISITE_CHECKS_ENABLED, "true");
 
         TextIO textIO = null;

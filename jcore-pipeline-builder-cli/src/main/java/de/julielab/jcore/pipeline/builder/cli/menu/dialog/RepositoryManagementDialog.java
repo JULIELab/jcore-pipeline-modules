@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class RepositoryManagementDialog implements ILoopableDialog {
 
 
-    private MenuItemList<IMenuItem> itemList;
+    private final MenuItemList<IMenuItem> itemList;
 
     public RepositoryManagementDialog() {
         itemList = new MenuItemList<>();

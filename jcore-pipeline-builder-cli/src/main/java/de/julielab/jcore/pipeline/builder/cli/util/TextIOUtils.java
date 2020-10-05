@@ -18,8 +18,8 @@ public class TextIOUtils {
      */
     public static class EmptyStringParser<T> implements Function<String, InputReader.ParseResult<Object>> {
         public static final Object EMPTY_VALUE = new Object();
-        private Function<String, T> converter;
-        private String typeName;
+        private final Function<String, T> converter;
+        private final String typeName;
 
         public EmptyStringParser(Function<String, T> converter, String typeName) {
             this.converter = converter;

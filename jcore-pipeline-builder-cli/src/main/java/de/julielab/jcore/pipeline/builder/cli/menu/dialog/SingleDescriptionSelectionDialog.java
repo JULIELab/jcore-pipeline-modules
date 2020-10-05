@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class SingleDescriptionSelectionDialog implements IMenuDialog {
     private final MenuItemList<DescriptorSelectionMenuItem> menuItems;
-    private MetaDescription metaDescription;
+    private final MetaDescription metaDescription;
 
     public SingleDescriptionSelectionDialog(MetaDescription metaDescription, Predicate<Description> descriptionFilter) throws DescriptorLoadingException {
         this.metaDescription = metaDescription;

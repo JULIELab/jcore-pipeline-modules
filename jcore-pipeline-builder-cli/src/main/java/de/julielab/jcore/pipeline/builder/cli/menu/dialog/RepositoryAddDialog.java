@@ -5,7 +5,6 @@ import de.julielab.jcore.pipeline.builder.base.main.ComponentRepository;
 import de.julielab.jcore.pipeline.builder.base.main.Repositories;
 import de.julielab.jcore.pipeline.builder.cli.menu.BackMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
-import de.julielab.jcore.pipeline.builder.cli.menu.MenuItemList;
 import de.julielab.jcore.pipeline.builder.cli.menu.NoopMenuItem;
 import org.beryx.textio.TextIO;
 import org.slf4j.Logger;
@@ -28,8 +27,7 @@ public class RepositoryAddDialog implements ILoopableDialog {
             final TreeSet<ComponentRepository> currentlyUsed = Repositories.getRepositories().collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ComponentRepository::getName))));
             final TreeSet<ComponentRepository> defaultRepositories = Repositories.JCORE_REPOSITORIES.stream().collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ComponentRepository::getName))));
             final Sets.SetView<ComponentRepository> unusedDefaultRepositories = Sets.difference(defaultRepositories, currentlyUsed);
-            List<Object> items = new ArrayList<>();
-            items.addAll(unusedDefaultRepositories);
+            List<Object> items = new ArrayList<>(unusedDefaultRepositories);
             items.add(new RepositoryCreateDialog());
             items.add(BackMenuItem.get());
 

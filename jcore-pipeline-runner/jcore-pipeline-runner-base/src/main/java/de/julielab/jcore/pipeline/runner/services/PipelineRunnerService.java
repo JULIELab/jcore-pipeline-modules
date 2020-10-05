@@ -21,7 +21,7 @@ import static de.julielab.jcore.pipeline.runner.util.PipelineRunnerConstants.PIP
 
 public class PipelineRunnerService implements ParameterExposing{
     private static PipelineRunnerService service;
-    private ServiceLoader<IPipelineRunner> loader;
+    private final ServiceLoader<IPipelineRunner> loader;
 
     public static PipelineRunnerService getInstance() {
         if (service == null)

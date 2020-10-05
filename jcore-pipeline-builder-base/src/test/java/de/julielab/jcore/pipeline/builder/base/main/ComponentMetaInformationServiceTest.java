@@ -20,14 +20,14 @@ import java.util.stream.Collectors;
 @Ignore
 public class ComponentMetaInformationServiceTest {
     private final static Logger log = LoggerFactory.getLogger(ComponentMetaInformationServiceTest.class);
-    private ComponentMetaInformationService metaInf = ComponentMetaInformationService.getInstance();
+    private final ComponentMetaInformationService metaInf = ComponentMetaInformationService.getInstance();
 
 
     @Test
     public void saveMetaInformationToDisk() throws GithubInformationException, IOException {
         final List<ComponentRepository> repositories = Repositories.getRepositories().collect(Collectors.toList());
-        for (Integer i = 0; i < repositories.size(); i++) {
-            Repositories.saveMetaInformationToDisk(repositories.get(i));
+        for (ComponentRepository repository : repositories) {
+            Repositories.saveMetaInformationToDisk(repository);
         }
     }
 

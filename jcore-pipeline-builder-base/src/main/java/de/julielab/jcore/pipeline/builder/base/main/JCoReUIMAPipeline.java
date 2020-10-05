@@ -8,7 +8,6 @@ import com.google.common.collect.Sets;
 import de.julielab.java.utilities.FileUtilities;
 import de.julielab.java.utilities.classpath.JarLoader;
 import de.julielab.jcore.pipeline.builder.base.PipelineParameterChecker;
-import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants;
 import de.julielab.jcore.pipeline.builder.base.exceptions.PipelineIOException;
 import de.julielab.utilities.aether.AetherUtilities;
 import de.julielab.utilities.aether.MavenArtifact;
@@ -27,7 +26,6 @@ import org.apache.uima.collection.metadata.CpeDescription;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.resource.ResourceCreationSpecifier;
 import org.apache.uima.resource.ResourceInitializationException;
-import org.apache.uima.resource.ResourceManager;
 import org.apache.uima.resource.ResourceSpecifier;
 import org.apache.uima.resource.metadata.Import;
 import org.apache.uima.resource.metadata.MetaDataObject;
@@ -68,7 +66,7 @@ public class JCoReUIMAPipeline {
     private static final String SERIALIZED_AE_DESCS_FILE = "aeDescriptions.json";
     private static final String SERIALIZED_CC_DESCS_FILE = "ccDescriptions.json";
     private final static Logger log = LoggerFactory.getLogger(JCoReUIMAPipeline.class);
-    private static Function<List<Description>, Stream<Import>> tsImportsExtractor = descs -> descs.stream().flatMap(desc -> {
+    private static final Function<List<Description>, Stream<Import>> tsImportsExtractor = descs -> descs.stream().flatMap(desc -> {
         final AnalysisEngineMetaData analysisEngineMetaData = desc.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData();
         if (analysisEngineMetaData == null)
             return null;
@@ -86,7 +84,6 @@ public class JCoReUIMAPipeline {
     private List<Description> aeDelegates;
     private List<Description> cmDelegates;
     private List<Description> ccDelegates;
-    private CollectionReaderDescription crDesc;
     /**
      * All multipliers, analysis engines and, if possible, consumers are wrapped into an AAE.
      */
@@ -101,7 +98,7 @@ public class JCoReUIMAPipeline {
      * We keep track components removed from the pipeline. If the respective changes are stored to disc,
      * the respective descriptor files ought to be removed.
      */
-    private Set<String> filesToDeleteOnSave = new HashSet<>();
+    private final Set<String> filesToDeleteOnSave = new HashSet<>();
 
     /**
      * <p>
@@ -159,7 +156,7 @@ public class JCoReUIMAPipeline {
     public void setCrDescription(Description crDescription) {
         avoidNamingCollisions(crDescription);
         this.crDescription = crDescription;
-        this.crDesc = crDescription.getDescriptorAsCollectionReaderDescription();
+        CollectionReaderDescription crDesc = crDescription.getDescriptorAsCollectionReaderDescription();
     }
 
     /**
@@ -176,7 +173,7 @@ public class JCoReUIMAPipeline {
     }
 
     public void addCcDesc(Description ccDesc) {
-        if (ccDelegates.stream().map(Description::getDescriptor).filter(CasConsumerDescription.class::isInstance).findAny().isPresent())
+        if (ccDelegates.stream().map(Description::getDescriptor).anyMatch(CasConsumerDescription.class::isInstance))
             throw new IllegalArgumentException("There is already a consumer represented by a " +
                     " " + CasConsumerDescription.class.getCanonicalName() + ". " +
                     "Those are deprecated and only one can be used in each pipeline.");
@@ -213,7 +210,7 @@ public class JCoReUIMAPipeline {
                 Stream.of(descDir.listFiles()).forEach(File::delete);
             }
             storeAllDescriptors(descDirAll);
-            if (aeDelegates.stream().filter(Description::isActive).count() > 0) {
+            if (aeDelegates.stream().anyMatch(Description::isActive)) {
                 Stream<AnalysisEngineDescription> descStream = aeDelegates.stream().
                         // filter(desc -> !desc.getMetaDescription().isPear()).
                                 filter(Description::isActive).
@@ -274,7 +271,7 @@ public class JCoReUIMAPipeline {
                     "AggregateConsumer.xml");
             if (ccFile.exists())
                 ccFile.delete();
-            if (ccDelegates != null && ccDelegates.stream().filter(Description::isActive).count() != 0) {
+            if (ccDelegates != null && ccDelegates.stream().anyMatch(Description::isActive)) {
                 final List<Description> activeCCs = ccDelegates.stream().filter(Description::isActive).collect(Collectors.toList());
                 for (Description ccDesc : activeCCs) {
                     storeCCDescriptor(ccDesc, descDir);
@@ -299,7 +296,7 @@ public class JCoReUIMAPipeline {
                 final File cpeAAEFile = new File(descDir.getAbsolutePath() + File.separator + CPE_AAE_DESC_NAME);
                 final File cpeFile = new File(descDir.getAbsolutePath() + File.separator +
                         "CPE.xml");
-                if (ccDelegates == null || ccDelegates.stream().map(Description::getDescriptor).filter(CasConsumer.class::isInstance).count() == 0) {
+                if (ccDelegates == null || ccDelegates.stream().map(Description::getDescriptor).noneMatch(CasConsumer.class::isInstance)) {
 
                     final CPE cpe = new CPE();
                     if (crDescription != null) {
@@ -309,7 +306,7 @@ public class JCoReUIMAPipeline {
 
                     boolean multipleDeploymentAllowed = true;
                     cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().clear();
-                    if (cmDelegates.stream().filter(Description::isActive).count() > 0) {
+                    if (cmDelegates.stream().anyMatch(Description::isActive)) {
                         Import_impl cmImport = new Import_impl();
                         cmImport.setLocation(cmFile.getName());
                         cmImport.setSourceUrl(cmFile.toURI().toURL());
@@ -330,7 +327,7 @@ public class JCoReUIMAPipeline {
                         multipleDeploymentAllowed &= aaeMultipleDeploymentAllowed;
 
                     }
-                    if (ccDelegates != null && ccDelegates.stream().filter(Description::isActive).count() > 0) {
+                    if (ccDelegates != null && ccDelegates.stream().anyMatch(Description::isActive)) {
                         Import_impl ccImport = new Import_impl();
                         ccImport.setLocation(ccFile.getName());
                         ccImport.setSourceUrl(ccFile.toURI().toURL());
@@ -348,7 +345,7 @@ public class JCoReUIMAPipeline {
                         log.warn("The sole AggregateAnalysisEngine created for the CPE cannot allow multiple deployment because one of its delegate does not. This will render multithreading ineffective.");
                     cpeAAE.getAnalysisEngineMetaData().getOperationalProperties().setMultipleDeploymentAllowed(multipleDeploymentAllowed);
                     Stream<ResourceCreationSpecifier> descriptorsForFlow = Stream.of(this.aaeCmDesc, aaeDesc);
-                    if (ccDelegates != null && ccDelegates.stream().filter(Description::isActive).count() > 0)
+                    if (ccDelegates != null && ccDelegates.stream().anyMatch(Description::isActive))
                         descriptorsForFlow = Stream.concat(descriptorsForFlow, Stream.of(ccDesc));
                     String[] flow = descriptorsForFlow.filter(Objects::nonNull).map(ResourceCreationSpecifier::getMetaData).map(ResourceMetaData::getName).toArray(String[]::new);
                     ((FixedFlow) cpeAAE.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flow);
@@ -495,8 +492,7 @@ public class JCoReUIMAPipeline {
         delegatesWithImports.clear();
         List<String> flowNames = new ArrayList<>();
         boolean multipleDeploymentAllowed = true;
-        for (int i = 0; i < allDelegates.size(); ++i) {
-            Description description = allDelegates.get(i);
+        for (Description description : allDelegates) {
             final boolean currentComponentAllowsMultipleDeployment = description.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
             if (!currentComponentAllowsMultipleDeployment) {
                 log.warn("The component {} does not allow multiple deployment. Thus, multiple deployment won't be allowed for the whole AAE with name {}.", description.getName(), name);
@@ -525,7 +521,7 @@ public class JCoReUIMAPipeline {
             getClasspathElements().forEach(JarLoader::addJarToClassPath);
             aaeDesc.getDelegateAnalysisEngineSpecifiers();
         }
-        ((FixedFlow) aaeDesc.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flowNames.toArray(new String[flowNames.size()]));
+        ((FixedFlow) aaeDesc.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flowNames.toArray(new String[0]));
         aaeDesc.getAnalysisEngineMetaData().setName(name);
         if (!multipleDeploymentAllowed) {
             log.warn("Deactivating multiple deployments for the AAE {} because at least one delegate does not support multiple deployments.", name);
@@ -579,8 +575,7 @@ public class JCoReUIMAPipeline {
 
     private Path getDescriptorStoragePath(Description desc, File destinationDir) {
         final String filename = desc.getName() + ".xml";
-        Path path = Paths.get(destinationDir.getAbsolutePath(), filename);
-        return path;
+        return Paths.get(destinationDir.getAbsolutePath(), filename);
     }
 
     private void storeCCDescriptor(Description ccDesc, File descDir) throws SAXException, IOException {
@@ -754,7 +749,7 @@ public class JCoReUIMAPipeline {
                             messages.add(cause.getMessage());
                             cause = cause.getCause();
                         } while (cause != null);
-                        log.debug("File {} could not be parsed as a UIMA component and is skipped: {}", xmlFile, messages.stream().collect(joining("; ")));
+                        log.debug("File {} could not be parsed as a UIMA component and is skipped: {}", xmlFile, String.join("; ", messages));
                     }
                 }
                 if (spec != null) {
@@ -890,7 +885,7 @@ public class JCoReUIMAPipeline {
                 }
 
             }
-            log.debug("For the {} aggregate, the following delegate descriptors were set: {}", type, Stream.of(flow.getFixedFlow()).collect(joining(", ")));
+            log.debug("For the {} aggregate, the following delegate descriptors were set: {}", type, String.join(", ", flow.getFixedFlow()));
         } else {
             if (descriptions.size() > 1)
                 log.error("The {} is not an aggregate but there are {} descriptions with the following names: {}", type, descriptions.size(), descriptions.stream().map(Description::getName).collect(joining(", ")));
@@ -995,17 +990,15 @@ public class JCoReUIMAPipeline {
             File pearDescriptorFile = new File(aeDesc.getLocation());
             imp.setLocation(pearDescriptorFile.toURI().toString());
             delegatesWithImports.put(aeDesc.getName(), imp);
-            List<String> flowNames = Arrays.asList(aeDesc.getName());
+            List<String> flowNames = Collections.singletonList(aeDesc.getName());
 
             aaePear.getAnalysisEngineMetaData().setFlowConstraints(new FixedFlow_impl());
-            ((FixedFlow) aaePear.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flowNames.toArray(new String[flowNames.size()]));
+            ((FixedFlow) aaePear.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flowNames.toArray(new String[0]));
             try {
                 aaePear.getDelegateAnalysisEngineSpecifiers();
                 aeDesc = aeDesc.clone();
                 aeDesc.setDescriptor(aaePear);
-            } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
-            } catch (InvalidXMLException e) {
+            } catch (CloneNotSupportedException | InvalidXMLException e) {
                 e.printStackTrace();
             }
         }
@@ -1072,9 +1065,7 @@ public class JCoReUIMAPipeline {
                     && a.getGroupId().equalsIgnoreCase(artifact.getGroupId())
                     && ((a.getClassifier() == null && artifact.getClassifier() == null) || a.getClassifier().equalsIgnoreCase(artifact.getClassifier()))
                     && a.getPackaging().equalsIgnoreCase(artifact.getPackaging())).findAny();
-            if (anyExistingArtifactForComponent.isPresent()) {
-                description.getMetaDescription().getMavenArtifact().setVersion(anyExistingArtifactForComponent.get().getVersion());
-            }
+            anyExistingArtifactForComponent.ifPresent(mavenArtifact -> description.getMetaDescription().getMavenArtifact().setVersion(mavenArtifact.getVersion()));
         }
     }
 

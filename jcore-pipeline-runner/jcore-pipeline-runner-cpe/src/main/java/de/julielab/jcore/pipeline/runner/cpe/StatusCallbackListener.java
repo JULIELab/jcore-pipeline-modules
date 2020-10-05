@@ -6,7 +6,6 @@ import de.julielab.jcore.types.casmultiplier.RowBatch;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.FSIterator;
-import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.collection.CollectionProcessingEngine;
 import org.apache.uima.collection.EntityProcessStatus;
 import org.apache.uima.fit.util.JCasUtil;
@@ -26,32 +25,29 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
 
     private final static Logger LOGGER = LoggerFactory.getLogger(StatusCallbackListener.class);
     int entityCount = 0;
-    private CollectionProcessingEngine cpe;
+    private final CollectionProcessingEngine cpe;
     /**
      * list holding primary keys of documents that have been successfully
      * processed
      */
-    private ArrayList<byte[][]> processed = new ArrayList<byte[][]>();
+    private final ArrayList<byte[][]> processed = new ArrayList<>();
     /**
      * list holding primary keys of documents during the processing of which an
      * exception occured
      */
-    private ArrayList<byte[][]> exceptions = new ArrayList<byte[][]>();
+    private final ArrayList<byte[][]> exceptions = new ArrayList<>();
     /**
      * matches primary keys of unsuccessfully processed documents and exceptions
      * that occured during the processing
      */
-    private HashMap<byte[][], String> logException = new HashMap<byte[][], String>();
+    private final HashMap<byte[][], String> logException = new HashMap<>();
     /**
      * Start time of the processing
      */
     private long mInitCompleteTime;
-    private long mBatchTime;
-    private Integer batchSize;
 
     public StatusCallbackListener(CollectionProcessingEngine cpe, Integer batchSize) {
         this.cpe = cpe;
-        this.batchSize = batchSize;
     }
 
     /**
@@ -62,7 +58,7 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
     public void initializationComplete() {
         LOGGER.info("CPE Initialization complete");
         mInitCompleteTime = System.currentTimeMillis();
-        mBatchTime = System.currentTimeMillis();
+        long mBatchTime = System.currentTimeMillis();
     }
 
     /**
@@ -160,18 +156,16 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
                 String filename = "pipeline-error-" + docId + ".err";
                 LOGGER.error("Components failed: {}", aStatus.getFailedComponentNames());
                 LOGGER.error("Error message: {}", aStatus.getStatusMessage());
-                LOGGER.debug("Exception occurred while processing document with ID {}. Writing error message to {}", docId, aStatus.getExceptions(), filename);
+                LOGGER.debug("Exception occurred while processing document with ID {}: {} Writing error message to {}", docId, aStatus.getExceptions(), filename);
                 final String log = createLog(aStatus);
                 try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), StandardCharsets.UTF_8))) {
                     bw.write(log);
                     bw.newLine();
                 }
             }
-        } catch (CASException e) {
-            e.printStackTrace();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } catch (IOException e) {
+        } catch (CASException | IOException e) {
             e.printStackTrace();
         }
 
@@ -186,19 +180,19 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
     public String createLog(EntityProcessStatus status) {
         StringBuilder builder = new StringBuilder();
 
-        builder.append("Error happened on: " + new Date());
+        builder.append("Error happened on: ").append(new Date());
         builder.append("-------------- Failed Components -------------- \n");
         @SuppressWarnings("rawtypes")
         List componentNames = status.getFailedComponentNames();
         for (int i = 0; i < componentNames.size(); i++) {
-            builder.append((i + 1) + ". " + componentNames.get(i) + "\n");
+            builder.append(i + 1).append(". ").append(componentNames.get(i)).append("\n");
         }
 
         builder.append("-------------- Stack Traces -------------- \n");
         @SuppressWarnings("rawtypes")
         List exceptions = status.getExceptions();
-        for (int i = 0; i < exceptions.size(); i++) {
-            Throwable throwable = (Throwable) exceptions.get(i);
+        for (Object exception : exceptions) {
+            Throwable throwable = (Throwable) exception;
             StringWriter writer = new StringWriter();
             throwable.printStackTrace(new PrintWriter(writer));
             builder.append(writer.toString());

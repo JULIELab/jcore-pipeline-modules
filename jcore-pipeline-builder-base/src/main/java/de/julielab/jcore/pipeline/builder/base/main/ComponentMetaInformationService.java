@@ -26,11 +26,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ComponentMetaInformationService implements IComponentMetaInformationService, Serializable {
-    private static Logger logger = LoggerFactory.getLogger(ComponentMetaInformationService.class);
+    private static final Logger logger = LoggerFactory.getLogger(ComponentMetaInformationService.class);
     private static ComponentMetaInformationService instance;
-    private String mvnLocal;
-    private Map<String, MetaDescription> metaInformation = new HashMap<>();
-    private Set<MavenArtifact> mavenDependencies = new HashSet<>();
+    private final String mvnLocal;
+    private final Map<String, MetaDescription> metaInformation = new HashMap<>();
+    private final Set<MavenArtifact> mavenDependencies = new HashSet<>();
 
     private ComponentMetaInformationService() {
         this.mvnLocal = Paths.get(System.getProperty("user.home"), Maven.LOCAL_REPO).toString();
@@ -57,13 +57,13 @@ public class ComponentMetaInformationService implements IComponentMetaInformatio
         String eMessage = null;
         InputStream infile = null;
         File metaFile = Repositories.getMetaFile(repository);
-        logger.trace("Loading component meta description file {} for module {}:{}", metaFile, repository);
+        logger.trace("Loading component meta description file {} for module {}:{}", metaFile, repository.getName(), repository.getVersion());
         System.out.println(metaFile.getAbsolutePath());
         try {
             infile = FileUtilities.getInputStreamFromFile(metaFile);
             ObjectMapper objectMapper = new ObjectMapper();
             List<MetaDescription> asList = objectMapper.readValue(
-                    infile, new TypeReference<List<MetaDescription>>() {
+                    infile, new TypeReference<>() {
                     });
 //            asList.stream().map(MetaDescription::getName).forEach(md -> {System.out.println(repository.getName() + ": " +md);});
             asList.forEach(md -> this.metaInformation.put(md.getName(), md));
@@ -113,8 +113,8 @@ public class ComponentMetaInformationService implements IComponentMetaInformatio
     public void loadComponentMetaInformation(Boolean loadNew) throws GithubInformationException {
         metaInformation.clear();
         final List<ComponentRepository> gitHubRepositories = getRepositories();
-        for (Integer i = 0; i < gitHubRepositories.size(); i++) {
-            loadComponentMetaInformation(loadNew, gitHubRepositories.get(i));
+        for (ComponentRepository gitHubRepository : gitHubRepositories) {
+            loadComponentMetaInformation(loadNew, gitHubRepository);
         }
     }
 

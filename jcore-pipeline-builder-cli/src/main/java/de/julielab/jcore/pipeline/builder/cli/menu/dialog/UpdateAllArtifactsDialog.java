@@ -20,13 +20,13 @@ private final static Logger log = LoggerFactory.getLogger(UpdateAllArtifactsDial
         if (pipeline.getCrDescription() != null)
             itemList.add(pipeline.getCrDescription());
         if (pipeline.getCmDelegates() != null && !pipeline.getCmDelegates().isEmpty()) {
-            pipeline.getCmDelegates().stream().forEach(itemList::add);
+            itemList.addAll(pipeline.getCmDelegates());
         }
         if (pipeline.getAeDelegates() != null && !pipeline.getAeDelegates().isEmpty()) {
-            pipeline.getAeDelegates().stream().forEach(itemList::add);
+            itemList.addAll(pipeline.getAeDelegates());
         }
         if (pipeline.getCcDelegates() != null && !pipeline.getCcDelegates().isEmpty())
-            pipeline.getCcDelegates().stream().forEach(itemList::add);
+            itemList.addAll(pipeline.getCcDelegates());
 
         if (itemList.isEmpty())
             textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.WARN, t -> t.print("No components selected yet."));

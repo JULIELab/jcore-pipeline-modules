@@ -42,7 +42,7 @@ public class CPERunner {
      */
     protected String descriptorPath;
     protected CpeDescription cpeDescription;
-    protected Options options;
+    protected final Options options;
     protected CollectionProcessingEngine cpe;
     protected StatusCallbackListener statusCallbackListener;
     protected Integer processingUnitThreadCount;

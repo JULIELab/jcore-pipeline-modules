@@ -30,9 +30,9 @@ public class MetaDescription implements IMetaDescription, Serializable {
      * incompatible with older version.
      */
     private static final long serialVersionUID = 2018_06_21_001L;
-    private static Logger logger = LoggerFactory.getLogger(MetaDescription.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetaDescription.class);
     private String description;
-    private Map<String, Description> descriptionMap = new HashMap<>();
+    private final Map<String, Description> descriptionMap = new HashMap<>();
     private String group;
     private ComponentRepository module;
     private String base;
@@ -46,7 +46,7 @@ public class MetaDescription implements IMetaDescription, Serializable {
     private List<JcoreMeta.Category> categories;
     private Integer chosenDescriptor;
     @JsonProperty("descriptors")
-    private List<Description> descriptorList = new ArrayList<>();
+    private final List<Description> descriptorList = new ArrayList<>();
 
     private Boolean isPear = false;
     /**

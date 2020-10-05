@@ -18,14 +18,13 @@ import static de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes.ERROR
 
 public class AddComponentDialog implements ILoopablePipelineManipulationDialog {
     private final static Logger log = LoggerFactory.getLogger(AddComponentDialog.class);
-    private final List<MetaDescription> aeDescriptions;
     private final Category category;
-    private MenuItemList<IMenuItem> menuItemList;
+    private final MenuItemList<IMenuItem> menuItemList;
 
     public AddComponentDialog(Map<Category, List<MetaDescription>> categoryMap, Category category) {
-        this.aeDescriptions = categoryMap.getOrDefault(category, Collections.emptyList());
+        List<MetaDescription> aeDescriptions = categoryMap.getOrDefault(category, Collections.emptyList());
         this.category = category;
-        menuItemList = new MenuItemList();
+        menuItemList = new MenuItemList<>();
         for (MetaDescription aeDesc : aeDescriptions)
             menuItemList.add(new EditMenuItem(aeDesc, category));
         Collections.sort(menuItemList);

@@ -17,8 +17,6 @@ import org.apache.uima.collection.StatusCallbackListener;
 import org.apache.uima.collection.metadata.CpeDescription;
 import org.apache.uima.collection.metadata.CpeDescriptorException;
 import org.apache.uima.fit.cpe.CpeBuilder;
-import org.apache.uima.util.CasPool;
-import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -72,18 +70,16 @@ public class CPEBootstrapRunner implements IPipelineRunner {
                 throw new RuntimeException("Pipeline runner process exited with status " + i);
             }
 
-        } catch (IOException e) {
-            throw new PipelineRunningException(e);
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             throw new PipelineRunningException(e);
         } finally {
             log.info("Pipeline run completed.");
         }
     }
 
-    private class InputStreamGobbler extends Thread {
-        private InputStream is;
-        private String type;
+    private static class InputStreamGobbler extends Thread {
+        private final InputStream is;
+        private final String type;
 
         public InputStreamGobbler(InputStream is, String threadName, String type) {
             this.is = is;
@@ -173,15 +169,13 @@ public class CPEBootstrapRunner implements IPipelineRunner {
 
     private static class StatusCallbackListenerImpl implements StatusCallbackListener {
 
-        private final List<Exception> exceptions = new ArrayList<Exception>();
+        private final List<Exception> exceptions = new ArrayList<>();
 
         private boolean isProcessing = true;
 
         public void entityProcessComplete(CAS arg0, EntityProcessStatus arg1) {
             if (arg1.isException()) {
-                for (Exception e : arg1.getExceptions()) {
-                    exceptions.add(e);
-                }
+                exceptions.addAll(arg1.getExceptions());
             }
         }
 

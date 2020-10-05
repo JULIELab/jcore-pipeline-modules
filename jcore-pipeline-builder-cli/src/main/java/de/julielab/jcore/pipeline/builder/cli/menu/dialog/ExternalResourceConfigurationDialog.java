@@ -10,8 +10,6 @@ import org.apache.uima.resource.ExternalResourceDescription;
 import org.apache.uima.resource.FileResourceSpecifier;
 import org.apache.uima.resource.metadata.ExternalResourceBinding;
 import org.beryx.textio.TextIO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Deque;
@@ -20,8 +18,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class ExternalResourceConfigurationDialog implements ILoopableDialog {
-    private Description description;
-    private ExternalResourceDescription resourceDescription;
+    private final Description description;
+    private final ExternalResourceDescription resourceDescription;
 
     public ExternalResourceConfigurationDialog(Description description, ExternalResourceDescription resourceDescription) {
         this.description = description;
@@ -120,8 +118,7 @@ public class ExternalResourceConfigurationDialog implements ILoopableDialog {
         resourceDescription.setName(name);
         Optional<ExternalResourceBinding> any = Stream.of(description.getDescriptorAsAnalysisEngineDescription().getResourceManagerConfiguration().getExternalResourceBindings()).filter(binding -> binding.getResourceName().equals(oldname)).findAny();
         // There might not (yet) be a binding
-        if (any.isPresent())
-            any.get().setResourceName(name);
+        any.ifPresent(externalResourceBinding -> externalResourceBinding.setResourceName(name));
     }
 
     @Override

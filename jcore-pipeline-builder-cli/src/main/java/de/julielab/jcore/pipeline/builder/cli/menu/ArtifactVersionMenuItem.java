@@ -7,14 +7,13 @@ import de.julielab.utilities.aether.AetherUtilities;
 import de.julielab.utilities.aether.MavenArtifact;
 import de.julielab.utilities.aether.MavenException;
 import org.beryx.textio.TextIO;
-import org.eclipse.aether.artifact.Artifact;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ArtifactVersionMenuItem implements IMenuItem {
-    private Description description;
+    private final Description description;
 
     public ArtifactVersionMenuItem(Description description) {
         this.description = description;
