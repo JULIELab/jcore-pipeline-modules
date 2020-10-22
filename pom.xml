@@ -5,7 +5,7 @@
 
     <artifactId>jcore-pipeline-modules</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.1</version>
+    <version>0.4.2-SNAPSHOT</version>
     <parent>
         <groupId>de.julielab</groupId>
         <artifactId>jcore-base</artifactId>

@@ -46,6 +46,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             final String plp = pipeline.getLoadDirectory().getAbsolutePath();
             int numThreads = runnerConfig.containsKey(NUMTHREADS) ? runnerConfig.getInt(NUMTHREADS) : 2;
             String memory = runnerConfig.containsKey(HEAP_SIZE) ? runnerConfig.getString(HEAP_SIZE) : "2G";
+            String jvmOptions = runnerConfig.containsKey(JVM_OPTS) ? runnerConfig.getString(JVM_OPTS) : "";
             final File cpeRunnerJar = findCpeRunnerJar();
             Stream<File> classpathElements = pipeline.getClasspathElements();
             classpathElements = Stream.concat(classpathElements, Stream.of(cpeRunnerJar, new File(plp + File.separator + JCoReUIMAPipeline.DIR_CONF), new File(plp + File.separator + "resources")));
@@ -55,7 +56,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             if (System.getenv("JAVA_HOME") != null)
                 javaPath = Path.of(System.getenv("JAVA_HOME"), "bin", "java").toString();
 
-            final String[] cmdarray = {javaPath, "-Xmx" + memory, "-Dfile.encoding=UTF-8", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads), "-a", String.valueOf(numThreads+5)};
+            final String[] cmdarray = {javaPath, jvmOptions, "-Xmx" + memory, "-Dfile.encoding=UTF-8", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads), "-a", String.valueOf(numThreads+5)};
             log.debug("Running the pipeline at {} with the following command line: {}", pipeline.getLoadDirectory(), Arrays.toString(cmdarray));
             final Process exec = Runtime.getRuntime().exec(cmdarray);
             final InputStreamGobbler isg = new InputStreamGobbler(exec.getInputStream(), "StdInGobbler", "std");
@@ -130,6 +131,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
         template.addProperty(slash(basePath, PIPELINEPATH), ".");
         template.addProperty(slash(basePath, NUMTHREADS), "1");
         template.addProperty(slash(basePath, HEAP_SIZE), "512M");
+        template.addProperty(slash(basePath, JVM_OPTS), "");
 
     }
 
