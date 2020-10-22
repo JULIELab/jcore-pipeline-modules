@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.4.2 (22/10/2020)
+- [Release 0.4.2.](https://github.com/JULIELab/jcore-pipeline-modules/commit/5056e2fa3ba059dc6071f74733cff15cfd0e0250) - @khituras
+
+---
+
+## v0.4.1 (05/10/2020)
+Fixed bugs where artifact versions could not be adapted. Fixed more menus to have the default 'back' action.
+---
+
+## v0.4.0 (06/08/2019)
+- [Version 0.4.0.](https://github.com/JULIELab/jcore-pipeline-modules/commit/a319c6fa69a536f9c0aa4d41d470b95d92eba17b) - @khituras
+- [Fixed a bug where the componentList.json files would contain all components currently loaded.](https://github.com/JULIELab/jcore-pipeline-modules/commit/c5611f2d24adb42aced2bd07b7c1146360b31327) - @khituras
+- [Setting the command line output to debug.](https://github.com/JULIELab/jcore-pipeline-modules/commit/d8847e285689f8bf14fb5c64104e637c9063f122) - @khituras
+- [Updating to jcore-base 2.5.0-SNAPSHOT.](https://github.com/JULIELab/jcore-pipeline-modules/commit/159fccdebbf0047f2f024c983d0d11c08eff9ac5) - @khituras
+- [Trying to avoid an NPE with PEARs (artifact version check).](https://github.com/JULIELab/jcore-pipeline-modules/commit/b8b2660257339b009e57aaddb10892e455efd33f) - @khituras
+- [Fixed an issue where repositories could not be added.](https://github.com/JULIELab/jcore-pipeline-modules/commit/8116a44e5e48dc288402b184cac0307199badf0b) - @khituras
+- [The command calling the pipeline runner now takes $JAVA_HOME into account.](https://github.com/JULIELab/jcore-pipeline-modules/commit/efdbfa7c99c8a42edd8ee541ba9d918a5c30b2dd) - @khituras
+- [The JCoRePipeline can now have a parent POM.](https://github.com/JULIELab/jcore-pipeline-modules/commit/b0c5ccc57c559ef2c1a68dc45f5b175c3a8970dc) - @khituras
+- [Added a dialog to write a POM with all component dependencies.](https://github.com/JULIELab/jcore-pipeline-modules/commit/e97ee5bb4fa8f4bb87c01d8e2e4cfe3fbd7fc544) - @khituras
+- [Component repositories can now be added and changed in version.](https://github.com/JULIELab/jcore-pipeline-modules/commit/79c4a579dc4ad0991b40d46d6525a77293707876) - @khituras
+
+---
+
 ## v0.2.5.1 (23/05/2019)
 This release contains a backport to allow the heap size specification for the actual pipeline run.
 

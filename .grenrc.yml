@@ -1,5 +1,5 @@
 ---
-  dataSource: "commits"
-  prefix: ""
-  includeMessages: "commits"
+  dataSource: "issues"
+  onlyMilestones: false
+  groupBy: false
   changelogFilename: "CHANGELOG.md"
