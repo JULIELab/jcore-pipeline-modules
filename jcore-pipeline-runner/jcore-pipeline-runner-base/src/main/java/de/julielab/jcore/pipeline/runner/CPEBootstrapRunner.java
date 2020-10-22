@@ -46,7 +46,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             final String plp = pipeline.getLoadDirectory().getAbsolutePath();
             int numThreads = runnerConfig.containsKey(NUMTHREADS) ? runnerConfig.getInt(NUMTHREADS) : 2;
             String memory = runnerConfig.containsKey(HEAP_SIZE) ? runnerConfig.getString(HEAP_SIZE) : "2G";
-            String jvmOptions = (runnerConfig.containsKey(JVM_OPTS) ? runnerConfig.getString(JVM_OPTS) : "") + "-Xmx"+memory ;
+            String jvmOptions = (runnerConfig.containsKey(JVM_OPTS) ? runnerConfig.getString(JVM_OPTS) : "") + " -Xmx"+memory ;
             final File cpeRunnerJar = findCpeRunnerJar();
             Stream<File> classpathElements = pipeline.getClasspathElements();
             classpathElements = Stream.concat(classpathElements, Stream.of(cpeRunnerJar, new File(plp + File.separator + JCoReUIMAPipeline.DIR_CONF), new File(plp + File.separator + "resources")));
