@@ -46,7 +46,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             final String plp = pipeline.getLoadDirectory().getAbsolutePath();
             int numThreads = runnerConfig.containsKey(NUMTHREADS) ? runnerConfig.getInt(NUMTHREADS) : 2;
             String memory = runnerConfig.containsKey(HEAP_SIZE) ? runnerConfig.getString(HEAP_SIZE) : "2G";
-            String jvmOptions = (runnerConfig.containsKey(JVM_OPTS) ? runnerConfig.getString(JVM_OPTS) : "") + " -Xmx"+memory ;
+            String[] jvmOptions = ((runnerConfig.containsKey(JVM_OPTS) ? runnerConfig.getString(JVM_OPTS) : "") + " -Xmx"+memory).split("\\s+") ;
             final File cpeRunnerJar = findCpeRunnerJar();
             Stream<File> classpathElements = pipeline.getClasspathElements();
             classpathElements = Stream.concat(classpathElements, Stream.of(cpeRunnerJar, new File(plp + File.separator + JCoReUIMAPipeline.DIR_CONF), new File(plp + File.separator + "resources")));
@@ -56,7 +56,14 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             if (System.getenv("JAVA_HOME") != null)
                 javaPath = Path.of(System.getenv("JAVA_HOME"), "bin", "java").toString();
 
-            final String[] cmdarray = {javaPath, jvmOptions, "-Dfile.encoding=UTF-8", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads), "-a", String.valueOf(numThreads+5)};
+            String[] cmdarray = {javaPath, "-Dfile.encoding=UTF-8", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads), "-a", String.valueOf(numThreads+5)};
+            if (jvmOptions.length > 0) {
+                String[] tmp = new String[cmdarray.length + jvmOptions.length];
+                tmp[0] = javaPath;
+                System.arraycopy(jvmOptions, 0, tmp, 1, jvmOptions.length);
+                System.arraycopy(cmdarray, 1, tmp, jvmOptions.length+1, cmdarray.length-1);
+                cmdarray = tmp;
+            }
             log.debug("Running the pipeline at {} with the following command line: {}", pipeline.getLoadDirectory(), Arrays.toString(cmdarray));
             final Process exec = Runtime.getRuntime().exec(cmdarray);
             final InputStreamGobbler isg = new InputStreamGobbler(exec.getInputStream(), "StdInGobbler", "std");
