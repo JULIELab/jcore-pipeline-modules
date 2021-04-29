@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class StatusCallbackListener implements org.apache.uima.collection.StatusCallbackListener {
 
@@ -128,11 +129,12 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
     public synchronized void entityProcessComplete(CAS aCas, EntityProcessStatus aStatus) {
         try {
             JCas jCas = aCas.getJCas();
-            FSIterator<Annotation> multiplierUris = jCas.getTypeSystem().getType(JCoReURI.class.getCanonicalName()) != null ? jCas.getAnnotationIndex(JCoReURI.type).iterator() : null;
-            FSIterator<Annotation> dbMultiplierBatch = jCas.getTypeSystem().getType(RowBatch.class.getCanonicalName()) != null ? jCas.getAnnotationIndex(RowBatch.type).iterator() : null;
+            FSIterator<JCoReURI> multiplierUris = jCas.getTypeSystem().getType(JCoReURI.class.getCanonicalName()) != null ? jCas.<JCoReURI>getAnnotationIndex(JCoReURI.type).iterator() : null;
+            FSIterator<RowBatch> dbMultiplierBatch = jCas.getTypeSystem().getType(RowBatch.class.getCanonicalName()) != null ? jCas.<RowBatch>getAnnotationIndex(RowBatch.type).iterator() : null;
+            List<JCoReURI> multiplierUriList = multiplierUris != null ? new ArrayList<>() : null;
             if (multiplierUris != null && multiplierUris.hasNext()) {
                 while (multiplierUris.hasNext()) {
-                    multiplierUris.next();
+                    multiplierUriList.add(multiplierUris.next());
                     ++entityCount;
                 }
             } else if (dbMultiplierBatch != null && dbMultiplierBatch.hasNext()) {
@@ -156,8 +158,12 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
                 String filename = "pipeline-error-" + docId + ".err";
                 LOGGER.error("Components failed: {}", aStatus.getFailedComponentNames());
                 LOGGER.error("Error message: {}", aStatus.getStatusMessage());
-                LOGGER.debug("Exception occurred while processing document with ID {}: {} Writing error message to {}", docId, aStatus.getExceptions(), filename);
-                final String log = createLog(aStatus);
+                LOGGER.error("Process trace: {}", aStatus.getProcessTrace().toString());
+                LOGGER.error("Last exception: ", aStatus.getExceptions().get(0));
+                if (multiplierUriList != null)
+                    LOGGER.error("This CAS was created for a multiplier. The following URIs are contained: {}", multiplierUriList.stream().map(JCoReURI::getUri).collect(Collectors.toList()));
+                LOGGER.error("Exception occurred while processing document with ID {}: {} Writing error message to {}", docId, aStatus.getExceptions(), filename);
+                final String log = createLog(aStatus, multiplierUriList);
                 try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), StandardCharsets.UTF_8))) {
                     bw.write(log);
                     bw.newLine();
@@ -176,26 +182,37 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
      * document
      *
      * @param status the status that is an exception
+     * @param multiplierUriList
      */
-    public String createLog(EntityProcessStatus status) {
+    public String createLog(EntityProcessStatus status, List<JCoReURI> multiplierUriList) {
+        String ls = System.getProperty("line.separator");
         StringBuilder builder = new StringBuilder();
 
         builder.append("Error happened on: ").append(new Date());
-        builder.append("-------------- Failed Components -------------- \n");
+        builder.append(ls);
+        builder.append("-------------- Failed Components -------------- ").append(ls);
         @SuppressWarnings("rawtypes")
         List componentNames = status.getFailedComponentNames();
         for (int i = 0; i < componentNames.size(); i++) {
-            builder.append(i + 1).append(". ").append(componentNames.get(i)).append("\n");
+            builder.append(i + 1).append(". ").append(componentNames.get(i)).append(ls);
         }
 
-        builder.append("-------------- Stack Traces -------------- \n");
+        builder.append("-------------- Stack Traces -------------- ").append(ls);
         @SuppressWarnings("rawtypes")
         List exceptions = status.getExceptions();
         for (Object exception : exceptions) {
             Throwable throwable = (Throwable) exception;
             StringWriter writer = new StringWriter();
             throwable.printStackTrace(new PrintWriter(writer));
-            builder.append(writer.toString());
+            builder.append(writer);
+        }
+
+        if (multiplierUriList != null) {
+            builder.append(ls);
+            builder.append("This CAS was meant for a multiplier. URIs meant for the multiplier contained in this CAS:");
+            for (JCoReURI jCoReURI : multiplierUriList) {
+                builder.append(jCoReURI.getUri()).append(ls);
+            }
         }
 
         return builder.toString();
