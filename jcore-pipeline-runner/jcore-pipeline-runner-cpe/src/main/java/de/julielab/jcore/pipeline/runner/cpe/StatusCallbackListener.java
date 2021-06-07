@@ -156,13 +156,13 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
                 LOGGER.debug("Document with ID {} finished processing.", docId);
             } else {
                 String filename = "pipeline-error-" + docId + ".err";
+                LOGGER.error("Exception occurred while processing document with ID {}: {} Writing error message to {}", docId, aStatus.getExceptions(), filename);
                 LOGGER.error("Components failed: {}", aStatus.getFailedComponentNames());
                 LOGGER.error("Error message: {}", aStatus.getStatusMessage());
                 LOGGER.error("Process trace: {}", aStatus.getProcessTrace().toString());
                 LOGGER.error("Last exception: ", aStatus.getExceptions().get(0));
                 if (multiplierUriList != null)
                     LOGGER.error("This CAS was created for a multiplier. The following URIs are contained: {}", multiplierUriList.stream().map(JCoReURI::getUri).collect(Collectors.toList()));
-                LOGGER.error("Exception occurred while processing document with ID {}: {} Writing error message to {}", docId, aStatus.getExceptions(), filename);
                 final String log = createLog(aStatus, multiplierUriList);
                 try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), StandardCharsets.UTF_8))) {
                     bw.write(log);
