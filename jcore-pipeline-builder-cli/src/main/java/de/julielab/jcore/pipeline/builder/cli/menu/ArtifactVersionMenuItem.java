@@ -12,6 +12,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * For a concrete description, lists the available maven artifact versions to choose from.
+ */
 public class ArtifactVersionMenuItem implements IMenuItem {
     private final Description description;
 
@@ -35,7 +38,8 @@ public class ArtifactVersionMenuItem implements IMenuItem {
             }
             // In tests, the received list was sorted ascendingly, we want it descending
             Collections.reverse(versionList);
-            String selectedVersion = textIO.newStringInputReader().withNumberedPossibleValues(versionList).withDefaultValue(versionList.get(0)).read("These are the available versions for the component " + description.getName() + ":");
+            int currentVersionIndex = versionList.indexOf(artifact.getVersion());
+            String selectedVersion = textIO.newStringInputReader().withNumberedPossibleValues(versionList).withDefaultValue(versionList.get(currentVersionIndex >= 0 ? currentVersionIndex : 0)).read("These are the available versions for the component " + description.getName() + ":");
 
             // Set the very same version to equivalent maven artifacts in all other components (this is mainly the case when a component has multiple instances in the pipeline)
             pipeline.getMavenComponentArtifacts().filter(a -> a.getArtifactId().equalsIgnoreCase(artifact.getArtifactId())

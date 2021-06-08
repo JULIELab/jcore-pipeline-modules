@@ -4,17 +4,23 @@ import de.julielab.jcore.pipeline.builder.base.main.Description;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.jcore.pipeline.builder.cli.menu.ArtifactVersionMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes;
+import de.julielab.jcore.pipeline.builder.cli.util.TextIOUtils;
 import de.julielab.utilities.aether.AetherUtilities;
+import de.julielab.utilities.aether.MavenArtifact;
 import de.julielab.utilities.aether.MavenException;
 import org.beryx.textio.TextIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 public class UpdateAllArtifactsDialog implements IMenuDialog {
-private final static Logger log = LoggerFactory.getLogger(UpdateAllArtifactsDialog.class);
+    private final static Logger log = LoggerFactory.getLogger(UpdateAllArtifactsDialog.class);
+
     public void execute(JCoReUIMAPipeline pipeline, TextIO textIO) {
         List<Description> itemList = new ArrayList<>();
         if (pipeline.getCrDescription() != null)
@@ -56,8 +62,14 @@ private final static Logger log = LoggerFactory.getLogger(UpdateAllArtifactsDial
                 }
             }
         } else {
+            Set<String> alreadySpecifiedArtifacts = new HashSet<>();
             for (Description description : itemList) {
-                new ArtifactVersionMenuItem(description).selectVersion(textIO, pipeline);
+                MavenArtifact coordinates = description.getMetaDescription().getMavenArtifactCoordinates();
+                if (alreadySpecifiedArtifacts.add(coordinates.getGroupId()+":"+coordinates.getArtifactId()))
+                    new ArtifactVersionMenuItem(description).selectVersion(textIO, pipeline);
+                else
+                    // We can just skip the component and don't need to set the correct version because that already happened in the ArtifactVersionMenuItem on first occurrence of the current artifact.
+                    TextIOUtils.printLines(Stream.of(TextIOUtils.createPrintLine("Skipping component " + description.getName() + " because the version of the artifact " + coordinates.getGroupId() + ":" + coordinates.getArtifactId() + " has already selected for another component." + System.getProperty("line.separator"), TerminalPrefixes.EMPHASIS)), textIO);
             }
         }
     }
