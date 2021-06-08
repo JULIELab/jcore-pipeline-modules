@@ -39,6 +39,10 @@ public class Description implements Serializable, Cloneable {
      */
     private static final long serialVersionUID = 2019_01_21_001L;
     private static final Logger logger = LoggerFactory.getLogger(Description.class);
+    private final Map<String, ArrayList<String>> capabilities = new HashMap<>() {{
+        put(Descriptor.CAPABILITIES_IN, new ArrayList<>());
+        put(Descriptor.CAPABILITIES_OUT, new ArrayList<>());
+    }};
     /**
      * The URI of the original UIMA descriptor within a JAR.
      */
@@ -63,10 +67,6 @@ public class Description implements Serializable, Cloneable {
      * The descriptor category as read from the actual descriptor.
      */
     private String descriptorType;
-    private final Map<String, ArrayList<String>> capabilities = new HashMap<>() {{
-        put(Descriptor.CAPABILITIES_IN, new ArrayList<>());
-        put(Descriptor.CAPABILITIES_OUT, new ArrayList<>());
-    }};
     private Boolean initCapabilities = false;
     private Map<String, ConfigurationParameter> configurationParameter = null;
     private MetaDescription metaDescription;
@@ -201,6 +201,7 @@ public class Description implements Serializable, Cloneable {
 
     /**
      * <p>Returns the input or output capabilities as specified in the underlying UIMA descriptor of this description.</p>
+     *
      * @param type The type of capabilities to return, i.e. {@link Descriptor#CAPABILITIES_IN} or {@link Descriptor#CAPABILITIES_OUT}-
      * @return The requested UIMA type capabilities.
      */
@@ -208,11 +209,11 @@ public class Description implements Serializable, Cloneable {
     public List<String> getCapabilities(String type) {
         if (!initCapabilities) {
             Capability[] capsArray = (Capability[]) getMetaData().getAttributeValue(Descriptor.CAPABILITIES);
-            for (int i = 0; i < capsArray[0].getInputs().length; i++) {
+            for (int i = 0; capsArray.length > 0 && i < capsArray[0].getInputs().length; i++) {
                 TypeOrFeature tof = capsArray[0].getInputs()[i];
                 addCapability(Descriptor.CAPABILITIES_IN, tof.getName());
             }
-            for (int i = 0; i < capsArray[0].getOutputs().length; i++) {
+            for (int i = 0; capsArray.length > 0 && i < capsArray[0].getOutputs().length; i++) {
                 TypeOrFeature tof = capsArray[0].getOutputs()[i];
                 addCapability(Descriptor.CAPABILITIES_OUT, tof.getName());
             }
