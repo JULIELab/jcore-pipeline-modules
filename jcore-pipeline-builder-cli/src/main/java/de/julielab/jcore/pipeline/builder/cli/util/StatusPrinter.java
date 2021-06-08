@@ -1,6 +1,10 @@
 package de.julielab.jcore.pipeline.builder.cli.util;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
+import de.julielab.jcore.pipeline.builder.base.configurations.PipelineBuilderConstants;
 import de.julielab.jcore.pipeline.builder.base.main.ComponentRepository;
 import de.julielab.jcore.pipeline.builder.base.main.Description;
 import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
@@ -18,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,7 +44,6 @@ public class StatusPrinter {
     public static void printComponentMetaData(MetaDescription metaDescription, TextIO textIO) {
         String name = metaDescription.getName();
         ComponentRepository module = metaDescription.getModule();
-        //String version = metaDescription.getVersion();
         TextIOUtils.printLines(Stream.of(
                 createPrintLine("Component Name: ", FIXED, name, DEFAULT),
                 createPrintLine("Component Module: ", FIXED, module != null ? module.getName() : "<unknown>", DEFAULT)
@@ -50,12 +54,19 @@ public class StatusPrinter {
         printComponentMetaData(description.getMetaDescription(), textIO);
     }
 
+    /**
+     * <p>Prints the title, type capabilities, parameters and external resources of a component.</p>
+     *
+     * @param description The description to print.
+     * @param verbosity   The verbosity level.
+     * @return The created output lines.
+     */
     private static List<PrintLine> getComponentStatusRecords(Description description, Verbosity verbosity) {
         List<PrintLine> records = new ArrayList<>();
         if (!description.getMetaDescription().isPear()) {
-            ParameterAdder parameterAdder = new ParameterAdder(records, verbosity);
+            DescriptorStatusLineCreator descriptorStatusLineCreator = new DescriptorStatusLineCreator(records, verbosity);
             ExternalResourcesAdder externalResourcesAdderAdder = new ExternalResourcesAdder(records, verbosity);
-            parameterAdder.accept(description);
+            descriptorStatusLineCreator.accept(description);
             if (description.getDescriptor() instanceof AnalysisEngineDescription)
                 externalResourcesAdderAdder.accept(description);
         } else {
@@ -75,10 +86,10 @@ public class StatusPrinter {
 
     private static List<PrintLine> getPipelineStatusRecords(JCoReUIMAPipeline pipeline, Verbosity verbosity) {
         List<PrintLine> records = new ArrayList<>();
-        ParameterAdder parameterAdder = new ParameterAdder(records, verbosity);
+        DescriptorStatusLineCreator descriptorStatusLineCreator = new DescriptorStatusLineCreator(records, verbosity);
         records.add(createPrintLine("Collection Reader:", HEADER));
         if (pipeline.getCrDescription() != null)
-            parameterAdder.accept(pipeline.getCrDescription());
+            descriptorStatusLineCreator.accept(pipeline.getCrDescription());
         else
             records.add(createPrintLine("    none", EMPTY));
         if (pipeline.getCmDelegates() != null && !pipeline.getCmDelegates().isEmpty()) {
@@ -118,17 +129,47 @@ public class StatusPrinter {
             }
         }
 
+        Multimap<String, String> component2unsatisfiedTypeCapability = LinkedHashMultimap.create();
+        Set<String> existingOutputCapability = new HashSet<>();
+        // Collect all types produced by the pipeline
+        if (pipeline.getCrDescription() != null)
+            pipeline.getCrDescription().getOutputCapabilities().forEach(existingOutputCapability::add);
+        pipeline.getCmDelegates().stream().flatMap(d -> d.getOutputCapabilities().stream()).forEach(existingOutputCapability::add);
+        pipeline.getAeDelegates().stream().flatMap(d -> d.getOutputCapabilities().stream()).forEach(existingOutputCapability::add);
+        pipeline.getCcDelegates().stream().flatMap(d -> d.getOutputCapabilities().stream()).forEach(existingOutputCapability::add);
+
+        // Now check all components to find unsatisfied input capabilities
+        pipeline.getCmDelegates().forEach(cm -> {
+            cm.getInputCapabilities().stream().filter(Predicate.not(existingOutputCapability::contains)).forEach(capability -> component2unsatisfiedTypeCapability.put(cm.getName(), capability));
+        });
+        pipeline.getAeDelegates().forEach(ae -> {
+            ae.getInputCapabilities().stream().filter(Predicate.not(existingOutputCapability::contains)).forEach(capability -> component2unsatisfiedTypeCapability.put(ae.getName(), capability));
+        });
+        pipeline.getCcDelegates().forEach(cc -> {
+            cc.getInputCapabilities().stream().filter(Predicate.not(existingOutputCapability::contains)).forEach(capability -> component2unsatisfiedTypeCapability.put(cc.getName(), capability));
+        });
+
+        // If there were unsatisfied input capabilities, issue warnings
+        if (!component2unsatisfiedTypeCapability.isEmpty()) {
+            records.add(createPrintLine("There are unsatisfied input capabilities:", WARN));
+            for (String componentName : component2unsatisfiedTypeCapability.keySet()) {
+                records.add(createPrintLine("    Component " + componentName + " requires: " + component2unsatisfiedTypeCapability.get(componentName).stream().collect(Collectors.joining(", ")), DEFAULT));
+            }
+        }
         return records;
     }
 
     public enum Verbosity {MINIMAL, BRIEF, VERBOSE}
 
-    private static class ParameterAdder implements Consumer<Description> {
+    /**
+     * <p>For a passed {@link Description}, adds the components name and parameters - no external resources, however - to the <tt>PrintLine</tt> record list.</p>
+     */
+    private static class DescriptorStatusLineCreator implements Consumer<Description> {
 
         private final List<PrintLine> records;
         private final Verbosity verbosity;
 
-        public ParameterAdder(List<PrintLine> records, Verbosity verbosity) {
+        public DescriptorStatusLineCreator(List<PrintLine> records, Verbosity verbosity) {
             this.records = records;
             this.verbosity = verbosity;
         }
@@ -152,6 +193,10 @@ public class StatusPrinter {
                     records.add(createPrintLine("  - " + componentName, COMPONENT_NAME));
                 else
                     records.add(createPrintLine("  - " + componentName + " (DEACTIVATED)", DEACTIVATED_COMPONENT));
+                if (verbosity == Verbosity.VERBOSE) {
+                    records.add(createPrintLine("    Input Type Capabilities:  " + String.join(",", description.getCapabilities(PipelineBuilderConstants.Descriptor.CAPABILITIES_IN)), color.apply(DEFAULT)));
+                    records.add(createPrintLine("    Output Type Capabilities: " + String.join(",", description.getCapabilities(PipelineBuilderConstants.Descriptor.CAPABILITIES_OUT)), color.apply(DEFAULT)));
+                }
                 if (verbosity.ordinal() > Verbosity.MINIMAL.ordinal()) {
                     records.add(createPrintLine("    Maven artifact: " + getArtifactString(description), color.apply(DEFAULT)));
                     if (metaData != null) {

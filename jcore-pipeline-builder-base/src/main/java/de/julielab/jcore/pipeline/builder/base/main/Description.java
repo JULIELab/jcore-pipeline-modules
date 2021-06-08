@@ -199,6 +199,11 @@ public class Description implements Serializable, Cloneable {
 
     }
 
+    /**
+     * <p>Returns the input or output capabilities as specified in the underlying UIMA descriptor of this description.</p>
+     * @param type The type of capabilities to return, i.e. {@link Descriptor#CAPABILITIES_IN} or {@link Descriptor#CAPABILITIES_OUT}-
+     * @return The requested UIMA type capabilities.
+     */
     @JsonIgnore
     public List<String> getCapabilities(String type) {
         if (!initCapabilities) {
@@ -213,7 +218,17 @@ public class Description implements Serializable, Cloneable {
             }
             initCapabilities = true;
         }
-        return this.capabilities.getOrDefault(type, null);
+        return this.capabilities.get(type);
+    }
+
+    @JsonIgnore
+    public List<String> getInputCapabilities() {
+        return getCapabilities(Descriptor.CAPABILITIES_IN);
+    }
+
+    @JsonIgnore
+    public List<String> getOutputCapabilities() {
+        return getCapabilities(Descriptor.CAPABILITIES_OUT);
     }
 
     public String getName() {
