@@ -48,6 +48,7 @@ public class IndexDialog implements ILoopablePipelineManipulationDialog {
         menuItems.add(new AddComponentDialog(categoryMap, Category.multiplier));
         menuItems.add(new AddComponentDialog(categoryMap, Category.ae));
         menuItems.add(new AddComponentDialog(categoryMap, Category.consumer));
+        menuItems.add(new AddFlowControllerDialog(categoryMap));
         menuItems.add(new ConfigurePipelineDialog());
         menuItems.add(new SavePipelineDialog());
         menuItems.add(new LoadPipelineDialog());

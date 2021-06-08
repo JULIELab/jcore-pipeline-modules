@@ -10,6 +10,7 @@ import org.apache.uima.analysis_engine.TypeOrFeature;
 import org.apache.uima.collection.CasConsumerDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.factory.ConfigurationParameterFactory;
+import org.apache.uima.flow.FlowControllerDescription;
 import org.apache.uima.resource.ResourceCreationSpecifier;
 import org.apache.uima.resource.ResourceSpecifier;
 import org.apache.uima.resource.metadata.Capability;
@@ -276,13 +277,9 @@ public class Description implements Serializable, Cloneable {
         return (AnalysisEngineDescription) specifier;
     }
 
-    /**
-     * @param descStream
-     * @throws InvalidXMLException
-     * @deprecated The resource specifier is directly set from {@link MetaDescription#loadDescriptorsFromMavenArtifact()} method
-     */
-    public void loadDescriptor(InputStream descStream) throws InvalidXMLException {
-        parseDescXml(descStream, getXmlName() != null ? getXmlName() : "<XML descriptor location not set>");
+    @JsonIgnore
+    public FlowControllerDescription getDescriptorAsFlowControllerDescriptor() {
+        return (FlowControllerDescription) specifier;
     }
 
     @Override
@@ -328,4 +325,6 @@ public class Description implements Serializable, Cloneable {
         clone.configurationParameter = null;
         return clone;
     }
+
+
 }

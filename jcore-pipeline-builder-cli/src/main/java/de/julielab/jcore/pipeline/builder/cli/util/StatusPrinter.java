@@ -89,11 +89,15 @@ public class StatusPrinter {
         if (pipeline.getAeDelegates() == null || pipeline.getAeDelegates().isEmpty())
             records.add(createPrintLine("    none", EMPTY));
         else {
+            if (pipeline.getAeFlowController() != null)
+                records.addAll(StatusPrinter.getComponentStatusRecords(pipeline.getAeFlowController(), verbosity));
             pipeline.getAeDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, verbosity)).forEach(records::addAll);
         }
 
         if (pipeline.getCcDelegates() != null && !pipeline.getCcDelegates().isEmpty()) {
             records.add(createPrintLine("CAS Consumers:", HEADER));
+            if (pipeline.getAeFlowController() != null)
+                records.addAll(StatusPrinter.getComponentStatusRecords(pipeline.getCcFlowController(), verbosity));
             pipeline.getCcDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, verbosity)).forEach(records::addAll);
         }
 

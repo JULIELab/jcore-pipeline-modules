@@ -85,6 +85,14 @@ public class JCoReUIMAPipeline {
     private List<Description> cmDelegates;
     private List<Description> ccDelegates;
     /**
+     * The flow controller set to the AE aggregate, if not null.
+     */
+    private Description aeFlowController;
+    /**
+     * The flow controller set to the CC aggregate, if not null.
+     */
+    private Description ccFlowController;
+    /**
      * All multipliers, analysis engines and, if possible, consumers are wrapped into an AAE.
      */
     private AnalysisEngineDescription aaeDesc;
@@ -156,7 +164,16 @@ public class JCoReUIMAPipeline {
     public void setCrDescription(Description crDescription) {
         avoidNamingCollisions(crDescription);
         this.crDescription = crDescription;
-        CollectionReaderDescription crDesc = crDescription.getDescriptorAsCollectionReaderDescription();
+    }
+
+    public void setAeFlowController(Description flowControllerDescription) {
+        avoidNamingCollisions(flowControllerDescription);
+        this.aeFlowController = flowControllerDescription;
+    }
+
+    public void setCcFlowController(Description flowControllerDescription) {
+        avoidNamingCollisions(flowControllerDescription);
+        this.ccFlowController = flowControllerDescription;
     }
 
     /**
@@ -215,7 +232,7 @@ public class JCoReUIMAPipeline {
                         // filter(desc -> !desc.getMetaDescription().isPear()).
                                 filter(Description::isActive).
                                 map(Description::getDescriptorAsAnalysisEngineDescription);
-                aaeDesc = createAAE(descDir, "AggregateAnalysisEngine", aeDelegates, descStream, true);
+                aaeDesc = createAAE(descDir, "AggregateAnalysisEngine", aeDelegates, descStream, true, aeFlowController);
             } else {
                 aaeDesc = null;
             }
@@ -223,7 +240,7 @@ public class JCoReUIMAPipeline {
             if (cmDelegates != null && cmDelegates.stream().filter(Description::isActive).count() > 1) {
                 Stream<AnalysisEngineDescription> descStream = cmDelegates.stream().filter(Description::isActive).
                         map(Description::getDescriptorAsAnalysisEngineDescription);
-                aaeCmDesc = createAAE(descDir, "AggregateMultiplier", cmDelegates, descStream, true);
+                aaeCmDesc = createAAE(descDir, "AggregateMultiplier", cmDelegates, descStream, true, null);
             }
             File crFile = null;
             if (crDescription != null) {
@@ -281,7 +298,7 @@ public class JCoReUIMAPipeline {
                     ccDesc = (ResourceCreationSpecifier) activeCCDescription.getDescriptor();
                     ccFile = new File(descDir.getAbsolutePath() + File.separator + activeCCs.get(0).getUimaDescPath());
                 } else if (activeCCs.size() > 1) {
-                    ccDesc = createAAE(descDir, "AggregateConsumer", ccDelegates, activeCCs.stream().map(Description::getDescriptorAsAnalysisEngineDescription), true);
+                    ccDesc = createAAE(descDir, "AggregateConsumer", ccDelegates, activeCCs.stream().map(Description::getDescriptorAsAnalysisEngineDescription), true, ccFlowController);
                     ccDesc.getMetaData().setName("JCoRe Consumer AAE");
                     ccDesc.getMetaData().setDescription("This consumer AAE descriptor directly contains the CAS consumers added " +
                             "through the JCoRe pipeline builder. The AAE serves to bundle all the components together.");
@@ -486,8 +503,8 @@ public class JCoReUIMAPipeline {
     }
 
     // I'm actually not sure why we need 'allDelegates' and 'aaeElements'. Perhaps we don't. Try it when there is time.
-    private AnalysisEngineDescription createAAE(File descDir, String name, List<Description> allDelegates, Stream<AnalysisEngineDescription> aaeElements, boolean filterDeactivated) throws ResourceInitializationException, SAXException, IOException, InvalidXMLException, PipelineIOException {
-        AnalysisEngineDescription aaeDesc = AnalysisEngineFactory.createEngineDescription(aaeElements.toArray(AnalysisEngineDescription[]::new));
+    private AnalysisEngineDescription createAAE(File descDir, String name, List<Description> allDelegates, Stream<AnalysisEngineDescription> aaeElements, boolean filterDeactivated, Description flowControllerDescription) throws ResourceInitializationException, SAXException, IOException, InvalidXMLException, PipelineIOException {
+        AnalysisEngineDescription aaeDesc = flowControllerDescription == null ? AnalysisEngineFactory.createEngineDescription(aaeElements.toArray(AnalysisEngineDescription[]::new)) : AnalysisEngineFactory.createEngineDescription(flowControllerDescription.getDescriptorAsFlowControllerDescriptor(), aaeElements.toArray(AnalysisEngineDescription[]::new));
         Map<String, MetaDataObject> delegatesWithImports = aaeDesc.getDelegateAnalysisEngineSpecifiersWithImports();
         delegatesWithImports.clear();
         List<String> flowNames = new ArrayList<>();
@@ -548,15 +565,15 @@ public class JCoReUIMAPipeline {
 
         // Store AAEs
         if (!cmDelegates.isEmpty() && cmDelegates.size() > 1) {
-            final AnalysisEngineDescription aae = createAAE(descDirAll, "AggregateMultiplier", cmDelegates, cmDelegates.stream().map(Description::getDescriptorAsAnalysisEngineDescription), false);
+            final AnalysisEngineDescription aae = createAAE(descDirAll, "AggregateMultiplier", cmDelegates, cmDelegates.stream().map(Description::getDescriptorAsAnalysisEngineDescription), false, null);
             storeDescriptor(aae, Paths.get(descDirAll.getAbsolutePath(), aae.getMetaData().getName() + ".xml").toFile());
         }
         if (!aeDelegates.isEmpty() && aeDelegates.size() > 1) {
-            final AnalysisEngineDescription aae = createAAE(descDirAll, "AggregateAnalysisEngine", aeDelegates, aeDelegates.stream().map(Description::getDescriptorAsAnalysisEngineDescription), false);
+            final AnalysisEngineDescription aae = createAAE(descDirAll, "AggregateAnalysisEngine", aeDelegates, aeDelegates.stream().map(Description::getDescriptorAsAnalysisEngineDescription), false, aeFlowController);
             storeDescriptor(aae, Paths.get(descDirAll.getAbsolutePath(), aae.getMetaData().getName() + ".xml").toFile());
         }
         if (!ccDelegates.isEmpty() && ccDelegates.size() > 1) {
-            final AnalysisEngineDescription aae = createAAE(descDirAll, "AggregateConsumer", ccDelegates, ccDelegates.stream().map(Description::getDescriptorAsAnalysisEngineDescription), false);
+            final AnalysisEngineDescription aae = createAAE(descDirAll, "AggregateConsumer", ccDelegates, ccDelegates.stream().map(Description::getDescriptorAsAnalysisEngineDescription), false, ccFlowController);
             storeDescriptor(aae, Paths.get(descDirAll.getAbsolutePath(), aae.getMetaData().getName() + ".xml").toFile());
         }
 
@@ -1069,6 +1086,8 @@ public class JCoReUIMAPipeline {
         }
     }
 
+
+
     public Stream<File> getClasspathElements() throws PipelineIOException {
         File libDir = null;
         if (loadDirectory != null)
@@ -1195,4 +1214,12 @@ public class JCoReUIMAPipeline {
         loadDirectory = null;
     }
 
+
+    public Description getAeFlowController() {
+        return aeFlowController;
+    }
+
+    public Description getCcFlowController() {
+        return ccFlowController;
+    }
 }

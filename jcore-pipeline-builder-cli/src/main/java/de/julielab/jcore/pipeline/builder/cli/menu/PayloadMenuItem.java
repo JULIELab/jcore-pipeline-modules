@@ -2,6 +2,10 @@ package de.julielab.jcore.pipeline.builder.cli.menu;
 
 import java.util.function.Function;
 
+/**
+ * <p>A MenuItem that carries an arbitrary object as payload for later retrieval upon the selected item.</p>
+ * @param <T> The class of the payload object.
+ */
 public class PayloadMenuItem<T> implements IMenuItem {
     private final T payload;
     private final Function<T, String> nameFunc;

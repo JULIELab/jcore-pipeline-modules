@@ -76,8 +76,8 @@ public class TextIOUtils {
     /**
      * Converts an array of text and prefix strings into {@link PrintElement} objects and does the exact same thing
      * as {@link #createPrintElements(String...)} except it returns the result as a {@link PrintLine}.
-     * This is only for convenience to distinguish about arbitrary lists of print elements and lists that should
-     * represent a line of output.
+     * This is only for convenience to distinguish between arbitrary lists of print elements (PrintElement) and lists that should
+     * represent a line of output (PrintLine).
      *
      * @param input An array of text and TextIO prefix identifiers, always as pairs in this order.
      * @return The converted print element list.

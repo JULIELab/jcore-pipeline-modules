@@ -29,8 +29,14 @@ public abstract class AbstractComponentSelectionDialog implements ILoopablePipel
         if (pipeline.getCmDelegates() != null && !pipeline.getCmDelegates().isEmpty() && categoriesForSelection.contains(Category.multiplier)) {
             pipeline.getCmDelegates().stream().map(ComponentSelectionMenuItem::new).forEach(itemList::add);
         }
+        if (pipeline.getAeFlowController() != null && categoriesForSelection.contains(Category.flowcontroller)) {
+            itemList.add(new ComponentSelectionMenuItem(pipeline.getAeFlowController()));
+        }
         if (pipeline.getAeDelegates() != null && !pipeline.getAeDelegates().isEmpty() && categoriesForSelection.contains(Category.ae)) {
             pipeline.getAeDelegates().stream().map(ComponentSelectionMenuItem::new).forEach(itemList::add);
+        }
+        if (pipeline.getCcFlowController() != null && categoriesForSelection.contains(Category.flowcontroller)) {
+            itemList.add(new ComponentSelectionMenuItem(pipeline.getCcFlowController()));
         }
         if (pipeline.getCcDelegates() != null && !pipeline.getCcDelegates().isEmpty() && categoriesForSelection.contains(Category.consumer))
             pipeline.getCcDelegates().stream().map(ComponentSelectionMenuItem::new).forEach(itemList::add);

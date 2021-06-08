@@ -50,7 +50,7 @@ public class PipelineBuilderConstants {
         public static final String MODULE = "module";
         public static final String BASE = "base";
 
-        public enum Category {reader, ae, consumer, multiplier}
+        public enum Category {reader, ae, consumer, multiplier, flowcontroller}
     }
 
     /**

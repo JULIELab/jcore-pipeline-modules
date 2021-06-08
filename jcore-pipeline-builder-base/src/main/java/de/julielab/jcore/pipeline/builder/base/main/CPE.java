@@ -19,17 +19,7 @@ public class CPE {
         cpe.setAllCollectionCollectionReaders(new CpeCollectionReader[]{cpeReader});
     }
 
-    public void setAnalysisEngine(Description engine) throws CpeDescriptorException {
-        CpeCasProcessors cpeCasProcessors = cpe.getCpeCasProcessors();
-        if (cpeCasProcessors == null) {
-            cpeCasProcessors = new CpeCasProcessorsImpl();
-            cpeCasProcessors.setPoolSize(24);
-            cpe.setCpeCasProcessors(cpeCasProcessors);
-        }
-        CpeIntegratedCasProcessorImpl processor = new CpeIntegratedCasProcessorImpl();
-        processor.setCpeComponentDescriptor(createCpeComponentDescriptor(engine));
-        cpeCasProcessors.addCpeCasProcessor(processor);
-    }
+
 
     private CpeComponentDescriptor createCpeComponentDescriptor(Description componentDescription) {
         return createCpeComponentDescriptor(componentDescription.getUimaDescPath());

@@ -76,6 +76,13 @@ public class AddComponentDialog implements ILoopablePipelineManipulationDialog {
                             case consumer:
                                 pipeline.addCcDesc(jCoReDescription);
                                 break;
+                            case flowcontroller:
+                                if (getName().equals(AddFlowControllerDialog.ANALYSIS_ENGINE_AGGREGATE)) {
+                                    pipeline.setAeFlowController(jCoReDescription);
+                                    break;
+                                } else if (getName().equals(AddFlowControllerDialog.CAS_CONSUMER_AGGREGATE)) {
+                                    break;
+                                }
                             default:
                                 textIO.getTextTerminal().executeWithPropertiesPrefix(ERROR, t ->
                                         t.println("Could not set the component because it belongs to the unsupported " +
