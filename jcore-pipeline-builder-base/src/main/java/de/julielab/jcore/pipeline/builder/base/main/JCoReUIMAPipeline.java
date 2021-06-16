@@ -541,7 +541,7 @@ public class JCoReUIMAPipeline {
         for (Description aeDelegate : aeDelegates)
             storeDescriptor(aeDelegate.getDescriptorAsAnalysisEngineDescription(), getDescriptorStoragePath(aeDelegate, descDirAll).toFile());
         if (ccFlowController != null)
-            storeDescriptor(ccFlowController.getDescriptorAsFlowControllerDescriptor(), getDescriptorStoragePath(aeFlowController, descDirAll).toFile());
+            storeDescriptor(ccFlowController.getDescriptorAsFlowControllerDescriptor(), getDescriptorStoragePath(ccFlowController, descDirAll).toFile());
         for (Description ccDelegate : ccDelegates)
             storeCCDescriptor(ccDelegate, descDirAll);
 
