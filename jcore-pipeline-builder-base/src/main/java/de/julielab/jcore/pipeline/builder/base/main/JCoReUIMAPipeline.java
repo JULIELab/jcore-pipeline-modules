@@ -24,6 +24,7 @@ import org.apache.uima.collection.CasConsumerDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.collection.metadata.CpeDescription;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
+import org.apache.uima.flow.FlowControllerDescription;
 import org.apache.uima.resource.ResourceCreationSpecifier;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.ResourceSpecifier;
@@ -63,7 +64,9 @@ public class JCoReUIMAPipeline {
     public static final String CPE_AAE_DESC_NAME = "cpeAAE.xml";
     private static final String SERIALIZED_CR_DESCS_FILE = "crDescriptions.json";
     private static final String SERIALIZED_CM_DESCS_FILE = "cmDescriptions.json";
+    private static final String SERIALIZED_AE_FLOW_CONTROLLER_DESCS_FILE = "aeFlowControllerDescriptions.json";
     private static final String SERIALIZED_AE_DESCS_FILE = "aeDescriptions.json";
+    private static final String SERIALIZED_CC_FLOW_CONTROLLER_DESCS_FILE = "ccFlowControllerDescriptions.json";
     private static final String SERIALIZED_CC_DESCS_FILE = "ccDescriptions.json";
     private final static Logger log = LoggerFactory.getLogger(JCoReUIMAPipeline.class);
     private static final Function<List<Description>, Stream<Import>> tsImportsExtractor = descs -> descs.stream().flatMap(desc -> {
@@ -75,6 +78,11 @@ public class JCoReUIMAPipeline {
             return null;
         return Stream.of(typeSystem.getImports());
     }).filter(Objects::nonNull);
+    /**
+     * We keep track components removed from the pipeline. If the respective changes are stored to disc,
+     * the respective descriptor files ought to be removed.
+     */
+    private final Set<String> filesToDeleteOnSave = new HashSet<>();
     /**
      * The parent POM is used for dependency resolution of the component artifacts. It can be used to resolve
      * library version conflicts using the dependencyManagement mechanism. May be <tt>null</tt>.
@@ -102,11 +110,6 @@ public class JCoReUIMAPipeline {
      * This file is only non-null when the pipeline has been loaded.
      */
     private File loadDirectory;
-    /**
-     * We keep track components removed from the pipeline. If the respective changes are stored to disc,
-     * the respective descriptor files ought to be removed.
-     */
-    private final Set<String> filesToDeleteOnSave = new HashSet<>();
 
     /**
      * <p>
@@ -164,16 +167,6 @@ public class JCoReUIMAPipeline {
     public void setCrDescription(Description crDescription) {
         avoidNamingCollisions(crDescription);
         this.crDescription = crDescription;
-    }
-
-    public void setAeFlowController(Description flowControllerDescription) {
-        avoidNamingCollisions(flowControllerDescription);
-        this.aeFlowController = flowControllerDescription;
-    }
-
-    public void setCcFlowController(Description flowControllerDescription) {
-        avoidNamingCollisions(flowControllerDescription);
-        this.ccFlowController = flowControllerDescription;
     }
 
     /**
@@ -242,7 +235,7 @@ public class JCoReUIMAPipeline {
                         map(Description::getDescriptorAsAnalysisEngineDescription);
                 aaeCmDesc = createAAE(descDir, "AggregateMultiplier", cmDelegates, descStream, true, null);
             }
-            File crFile = null;
+            File crFile;
             if (crDescription != null) {
                 crFile = getDescriptorStoragePath(crDescription, descDir).toFile();
 
@@ -309,115 +302,7 @@ public class JCoReUIMAPipeline {
             }
 
             // Storing a CPE descriptor
-            try {
-                final File cpeAAEFile = new File(descDir.getAbsolutePath() + File.separator + CPE_AAE_DESC_NAME);
-                final File cpeFile = new File(descDir.getAbsolutePath() + File.separator +
-                        "CPE.xml");
-                if (ccDelegates == null || ccDelegates.stream().map(Description::getDescriptor).noneMatch(CasConsumer.class::isInstance)) {
-
-                    final CPE cpe = new CPE();
-                    if (crDescription != null) {
-                        cpe.setCollectionReader(crDescription);
-                    }
-                    AnalysisEngineDescription cpeAAE = AnalysisEngineFactory.createEngineDescription();
-
-                    boolean multipleDeploymentAllowed = true;
-                    cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().clear();
-                    if (cmDelegates.stream().anyMatch(Description::isActive)) {
-                        Import_impl cmImport = new Import_impl();
-                        cmImport.setLocation(cmFile.getName());
-                        cmImport.setSourceUrl(cmFile.toURI().toURL());
-                        cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(aaeCmDesc.getMetaData().getName(), cmImport);
-                        final boolean cmMultipleDeploymentAllowed = aaeCmDesc.getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
-                        if (!cmMultipleDeploymentAllowed)
-                            log.warn("The CAS multiplier used for the CPE Aggregate Analysis engine does not support multiple deployments. Thus, the whole CPE will basically run singlethreaded.");
-                        multipleDeploymentAllowed &= cmMultipleDeploymentAllowed;
-                    }
-                    if (aaeDesc != null) {
-                        Import_impl aaeImport = new Import_impl();
-                        aaeImport.setLocation(aaeFile.getName());
-                        aaeImport.setSourceUrl(aaeFile.toURI().toURL());
-                        cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(aaeDesc.getMetaData().getName(), aaeImport);
-                        final boolean aaeMultipleDeploymentAllowed = aaeDesc.getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
-                        if (!aaeMultipleDeploymentAllowed)
-                            log.warn("The aggregate collecting the actual analysis engines used for the CPE Aggregate Analysis engine does not support multiple deployments. Thus, the whole CPE will basically run singlethreaded.");
-                        multipleDeploymentAllowed &= aaeMultipleDeploymentAllowed;
-
-                    }
-                    if (ccDelegates != null && ccDelegates.stream().anyMatch(Description::isActive)) {
-                        Import_impl ccImport = new Import_impl();
-                        ccImport.setLocation(ccFile.getName());
-                        ccImport.setSourceUrl(ccFile.toURI().toURL());
-                        cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(ccDesc.getMetaData().getName(), ccImport);
-                        boolean ccMultipleDeploymentAllowed = true;
-                        if (ccDesc instanceof AnalysisEngineDescription)
-                            ccMultipleDeploymentAllowed = ((AnalysisEngineDescription) ccDesc).getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
-                        else
-                            ccMultipleDeploymentAllowed = ((CasConsumerDescription) ccDesc).getCasConsumerMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
-                        if (!ccMultipleDeploymentAllowed)
-                            log.warn("The consumer (potentially an aggregate) used for the CPE Aggregate Analysis engine does not support multiple deployments. Thus, the whole CPE will basically run singlethreaded.");
-                        multipleDeploymentAllowed &= ccMultipleDeploymentAllowed;
-                    }
-                    if (!multipleDeploymentAllowed)
-                        log.warn("The sole AggregateAnalysisEngine created for the CPE cannot allow multiple deployment because one of its delegate does not. This will render multithreading ineffective.");
-                    cpeAAE.getAnalysisEngineMetaData().getOperationalProperties().setMultipleDeploymentAllowed(multipleDeploymentAllowed);
-                    Stream<ResourceCreationSpecifier> descriptorsForFlow = Stream.of(this.aaeCmDesc, aaeDesc);
-                    if (ccDelegates != null && ccDelegates.stream().anyMatch(Description::isActive))
-                        descriptorsForFlow = Stream.concat(descriptorsForFlow, Stream.of(ccDesc));
-                    String[] flow = descriptorsForFlow.filter(Objects::nonNull).map(ResourceCreationSpecifier::getMetaData).map(ResourceMetaData::getName).toArray(String[]::new);
-                    ((FixedFlow) cpeAAE.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flow);
-                    cpeAAE.toXML(
-                            FileUtilities.getWriterToFile(
-                                    cpeAAEFile));
-                    cpe.setAnalysisEngine(cpeAAEFile.getName(), "CPE AAE");
-                    // Modify the CollectionReader part of the CPE to just refer to the Collection Reader descriptor file
-                    // by relative location instead of absolute URLs.
-//                    if (crDescription != null) {
-//                        Import_impl crImport = new Import_impl();
-//                        crImport.setLocation(crFile.getName());
-//                        final CpeComponentDescriptor crDescriptor = cpeDescription.getAllCollectionCollectionReaders()[0].getCollectionIterator().
-//                                getDescriptor();
-//                        // delete the automatically generated include; we don't want an include (Absolute URLs are used)
-//                        // but an import by location (a path relative to the CPE.xml descriptor is used)
-//                        crDescriptor.setInclude(null);
-//                        crDescriptor.setImport(crImport);
-//                    }
-
-                    // Now create a single import referencing the CPE AAE XML file. UIMAfit would just write
-                    // the complete markup of all the components of the CPE AAE into the CPE descriptor.
-                    // This has two issues:
-                    // 1. CAS multipliers seem only to work within an aggregate
-                    // 2. If we modify one of the descriptor files, the CPE won't reflect the change.
-//                    Import_impl cpeAaeImport = new Import_impl();
-//                    cpeAaeImport.setLocation(cpeAAEFile.getName());
-//                    CpeComponentDescriptorImpl cpeComponentDescriptor = new CpeComponentDescriptorImpl();
-//                    cpeComponentDescriptor.setImport(cpeAaeImport);
-//                    CpeIntegratedCasProcessorImpl cpeIntegratedCasProcessor = new CpeIntegratedCasProcessorImpl();
-//                    cpeIntegratedCasProcessor.setCpeComponentDescriptor(cpeComponentDescriptor);
-//                    cpeIntegratedCasProcessor.setName("CPE AAE");
-//                    cpeIntegratedCasProcessor.setBatchSize(500);
-//                    CpeCasProcessorsImpl cpeCasProcessors = new CpeCasProcessorsImpl();
-//                    cpeCasProcessors.addCpeCasProcessor(cpeIntegratedCasProcessor);
-
-                    final CpeDescription cpeDescription = cpe.getDescription();
-//                    cpeDescription.setCpeCasProcessors(cpeCasProcessors);
-                    cpeDescription.getCpeCasProcessors().setPoolSize(24);
-                    cpeDescription.toXML(FileUtilities.getWriterToFile(
-                            cpeFile
-                    ));
-                } else {
-                    log.warn("Could not store a CPE descriptor because a CasConsumer is included in the pipeline that " +
-                            "implements a CasConsumer interface rather than the AnalysisEngine interface. Note " +
-                            "that CasConsumers are basically analysis engines since UIMA 2.0 and that there is " +
-                            "no downside in using AEs as consumers.");
-                    if (cpeAAEFile.exists())
-                        cpeAAEFile.delete();
-                    if (cpeFile.exists())
-                        cpeFile.delete();
-                }
-            } catch (Exception e) {
-                log.error("Could not store the CPE descriptor: ", e);
-            }
+            storeCPE(descDir, cmFile, aaeFile, ccFile);
         } catch (SAXException | IOException | ResourceInitializationException e) {
             throw new PipelineIOException(e);
         } catch (InvalidXMLException e) {
@@ -472,7 +357,9 @@ public class JCoReUIMAPipeline {
         try {
             serializeDescriptions(directory, SERIALIZED_CR_DESCS_FILE, crDescription);
             serializeDescriptions(directory, SERIALIZED_CM_DESCS_FILE, cmDelegates);
+            serializeDescriptions(directory, SERIALIZED_AE_FLOW_CONTROLLER_DESCS_FILE, aeFlowController);
             serializeDescriptions(directory, SERIALIZED_AE_DESCS_FILE, aeDelegates);
+            serializeDescriptions(directory, SERIALIZED_CC_FLOW_CONTROLLER_DESCS_FILE, ccFlowController);
             serializeDescriptions(directory, SERIALIZED_CC_DESCS_FILE, ccDelegates);
         } catch (IOException e) {
             throw new PipelineIOException(e);
@@ -499,6 +386,97 @@ public class JCoReUIMAPipeline {
             } catch (IOException e) {
                 throw new PipelineIOException(e);
             }
+        }
+    }
+
+    /**
+     * <p>Creates a Collection Processing Engine (CPE) descriptor for all components in the pipeline and stores it.</p>
+     *
+     * @param descDir The directory to store the descriptors to.
+     * @param cmFile  The CAS multiplier descriptor descriptor file.
+     * @param aaeFile The analysis engine aggregate descriptor file.
+     * @param ccFile  The CAS consumer aggregate descriptor file.
+     */
+    private void storeCPE(File descDir, File cmFile, File aaeFile, File ccFile) {
+        try {
+            final File cpeAAEFile = new File(descDir.getAbsolutePath() + File.separator + CPE_AAE_DESC_NAME);
+            final File cpeFile = new File(descDir.getAbsolutePath() + File.separator +
+                    "CPE.xml");
+            if (ccDelegates == null || ccDelegates.stream().map(Description::getDescriptor).noneMatch(CasConsumer.class::isInstance)) {
+
+                final CPE cpe = new CPE();
+                if (crDescription != null) {
+                    cpe.setCollectionReader(crDescription);
+                }
+                AnalysisEngineDescription cpeAAE = AnalysisEngineFactory.createEngineDescription();
+
+                boolean multipleDeploymentAllowed = true;
+                cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().clear();
+                if (cmDelegates.stream().anyMatch(Description::isActive)) {
+                    Import_impl cmImport = new Import_impl();
+                    cmImport.setLocation(cmFile.getName());
+                    cmImport.setSourceUrl(cmFile.toURI().toURL());
+                    cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(aaeCmDesc.getMetaData().getName(), cmImport);
+                    final boolean cmMultipleDeploymentAllowed = aaeCmDesc.getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
+                    if (!cmMultipleDeploymentAllowed)
+                        log.warn("The CAS multiplier used for the CPE Aggregate Analysis engine does not support multiple deployments. Thus, the whole CPE will basically run singlethreaded.");
+                    multipleDeploymentAllowed &= cmMultipleDeploymentAllowed;
+                }
+                if (aaeDesc != null) {
+                    Import_impl aaeImport = new Import_impl();
+                    aaeImport.setLocation(aaeFile.getName());
+                    aaeImport.setSourceUrl(aaeFile.toURI().toURL());
+                    cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(aaeDesc.getMetaData().getName(), aaeImport);
+                    final boolean aaeMultipleDeploymentAllowed = aaeDesc.getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
+                    if (!aaeMultipleDeploymentAllowed)
+                        log.warn("The aggregate collecting the actual analysis engines used for the CPE Aggregate Analysis engine does not support multiple deployments. Thus, the whole CPE will basically run singlethreaded.");
+                    multipleDeploymentAllowed &= aaeMultipleDeploymentAllowed;
+
+                }
+                if (ccDelegates != null && ccDelegates.stream().anyMatch(Description::isActive)) {
+                    Import_impl ccImport = new Import_impl();
+                    ccImport.setLocation(ccFile.getName());
+                    ccImport.setSourceUrl(ccFile.toURI().toURL());
+                    cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(ccDesc.getMetaData().getName(), ccImport);
+                    boolean ccMultipleDeploymentAllowed = true;
+                    if (ccDesc instanceof AnalysisEngineDescription)
+                        ccMultipleDeploymentAllowed = ((AnalysisEngineDescription) ccDesc).getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
+                    else
+                        ccMultipleDeploymentAllowed = ((CasConsumerDescription) ccDesc).getCasConsumerMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
+                    if (!ccMultipleDeploymentAllowed)
+                        log.warn("The consumer (potentially an aggregate) used for the CPE Aggregate Analysis engine does not support multiple deployments. Thus, the whole CPE will basically run singlethreaded.");
+                    multipleDeploymentAllowed &= ccMultipleDeploymentAllowed;
+                }
+                if (!multipleDeploymentAllowed)
+                    log.warn("The sole AggregateAnalysisEngine created for the CPE cannot allow multiple deployment because one of its delegate does not. This will render multithreading ineffective.");
+                cpeAAE.getAnalysisEngineMetaData().getOperationalProperties().setMultipleDeploymentAllowed(multipleDeploymentAllowed);
+                Stream<ResourceCreationSpecifier> descriptorsForFlow = Stream.of(this.aaeCmDesc, aaeDesc);
+                if (ccDelegates != null && ccDelegates.stream().anyMatch(Description::isActive))
+                    descriptorsForFlow = Stream.concat(descriptorsForFlow, Stream.of(ccDesc));
+                String[] flow = descriptorsForFlow.filter(Objects::nonNull).map(ResourceCreationSpecifier::getMetaData).map(ResourceMetaData::getName).toArray(String[]::new);
+                ((FixedFlow) cpeAAE.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flow);
+                cpeAAE.toXML(
+                        FileUtilities.getWriterToFile(
+                                cpeAAEFile));
+                cpe.setAnalysisEngine(cpeAAEFile.getName(), "CPE AAE");
+
+                final CpeDescription cpeDescription = cpe.getDescription();
+                cpeDescription.getCpeCasProcessors().setPoolSize(24);
+                cpeDescription.toXML(FileUtilities.getWriterToFile(
+                        cpeFile
+                ));
+            } else {
+                log.warn("Could not store a CPE descriptor because a CasConsumer is included in the pipeline that " +
+                        "implements a CasConsumer interface rather than the AnalysisEngine interface. Note " +
+                        "that CasConsumers are basically analysis engines since UIMA 2.0 and that there is " +
+                        "no downside in using AEs as consumers.");
+                if (cpeAAEFile.exists())
+                    cpeAAEFile.delete();
+                if (cpeFile.exists())
+                    cpeFile.delete();
+            }
+        } catch (Exception e) {
+            log.error("Could not store the CPE descriptor: ", e);
         }
     }
 
@@ -558,8 +536,12 @@ public class JCoReUIMAPipeline {
             storeDescriptor(crDescription.getDescriptorAsCollectionReaderDescription(), getDescriptorStoragePath(crDescription, descDirAll).toFile());
         for (Description cmDelegate : cmDelegates)
             storeDescriptor(cmDelegate.getDescriptorAsAnalysisEngineDescription(), getDescriptorStoragePath(cmDelegate, descDirAll).toFile());
+        if (aeFlowController != null)
+            storeDescriptor(aeFlowController.getDescriptorAsFlowControllerDescriptor(), getDescriptorStoragePath(aeFlowController, descDirAll).toFile());
         for (Description aeDelegate : aeDelegates)
             storeDescriptor(aeDelegate.getDescriptorAsAnalysisEngineDescription(), getDescriptorStoragePath(aeDelegate, descDirAll).toFile());
+        if (ccFlowController != null)
+            storeDescriptor(ccFlowController.getDescriptorAsFlowControllerDescriptor(), getDescriptorStoragePath(aeFlowController, descDirAll).toFile());
         for (Description ccDelegate : ccDelegates)
             storeCCDescriptor(ccDelegate, descDirAll);
 
@@ -678,13 +660,13 @@ public class JCoReUIMAPipeline {
         om.writeValue(FileUtilities.getWriterToFile(targetFile), descriptions);
     }
 
-    private <T> T deserializeDescriptions(File pipelineStorageDir, String sourceFileName, TypeReference<?> typeRef) throws IOException, ClassNotFoundException {
+    private <T> T deserializeDescriptions(File pipelineStorageDir, String sourceFileName, TypeReference<?> typeReference) throws IOException, ClassNotFoundException {
         File sourceFile = new File(pipelineStorageDir.getAbsolutePath() + File.separatorChar + sourceFileName);
         if (!sourceFile.exists())
             return null;
         final ObjectMapper om = new ObjectMapper();
         try (BufferedReader reader = FileUtilities.getReaderFromFile(sourceFile)) {
-            return (T) om.readValue(reader, typeRef);
+            return (T) om.readValue(reader, typeReference);
         }
     }
 
@@ -717,7 +699,11 @@ public class JCoReUIMAPipeline {
                     });
                     cmDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_CM_DESCS_FILE, new TypeReference<List<Description>>() {
                     });
+                    aeFlowController = deserializeDescriptions(loadDirectory, SERIALIZED_AE_FLOW_CONTROLLER_DESCS_FILE, new TypeReference<Description>() {
+                    });
                     aeDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_AE_DESCS_FILE, new TypeReference<List<Description>>() {
+                    });
+                    ccFlowController = deserializeDescriptions(loadDirectory, SERIALIZED_CC_FLOW_CONTROLLER_DESCS_FILE, new TypeReference<Description>() {
                     });
                     ccDelegates = deserializeDescriptions(loadDirectory, SERIALIZED_CC_DESCS_FILE, new TypeReference<List<Description>>() {
                     });
@@ -749,6 +735,7 @@ public class JCoReUIMAPipeline {
             List<AnalysisEngineDescription> aaeDescs = new ArrayList<>();
             List<ResourceCreationSpecifier> ccDescs = new ArrayList<>();
             List<ResourceCreationSpecifier> aaeCcDescs = new ArrayList<>();
+            List<ResourceCreationSpecifier> flowContrDescs = new ArrayList<>();
             for (File xmlFile : xmlFiles) {
                 // don't load the CPE AAE descriptor, it is solely needed when using the CPE descriptor on its own
                 if (xmlFile.getName().equals(CPE_AAE_DESC_NAME))
@@ -799,6 +786,8 @@ public class JCoReUIMAPipeline {
                         }
                     } else if (spec instanceof CasConsumerDescription) {
                         ccDescs.add(spec);
+                    } else if (spec instanceof FlowControllerDescription) {
+                        flowContrDescs.add(spec);
                     } else {
                         log.debug("Ignoring file " + xmlFile + " because it is no UIMA component descriptor.");
                     }
@@ -813,10 +802,7 @@ public class JCoReUIMAPipeline {
 
 
             // the descriptions are loaded at the beginning of the method, if existent
-            // When accessing aggregate engine delegates, their types are resolved. Thus, we first need to load
-            // the libraries of the pipeline
             long time = System.currentTimeMillis();
-            //getClasspathElements().forEach(JarLoader::addJarToClassPath);
             time = System.currentTimeMillis() - time;
             log.debug("Loading of dependencies took {}ms ({}s)", time, time / 1000);
             if (crDescription == null && crDescs != null && !crDescs.isEmpty())
@@ -827,6 +813,8 @@ public class JCoReUIMAPipeline {
                 aaeCmDesc = aaeCmDescs.get(0);
             if (aaeCmDescs.size() > 1)
                 setAaeDesc(descDir, cmDescs, aaeCmDescs, "CAS multiplier", desc -> aaeCmDesc = desc);
+            if (!flowContrDescs.isEmpty() && aeFlowController != null)
+                setDescriptorByName(aeFlowController, flowContrDescs);
             if (!aeDescs.isEmpty())
                 aaeDesc = aeDescs.get(0);
             if (aaeDescs.size() == 1)
@@ -837,10 +825,12 @@ public class JCoReUIMAPipeline {
             }
             if (aaeDescs.size() > 1)
                 setAaeDesc(descDir, aeDescs, aaeDescs, "analysis engine", desc -> aaeDesc = desc);
+            if (!flowContrDescs.isEmpty() && ccFlowController != null)
+                setDescriptorByName(ccFlowController, flowContrDescs);
             if (!ccDescs.isEmpty())
-                ccDesc = (ResourceCreationSpecifier) ccDescs.get(0);
+                ccDesc = ccDescs.get(0);
             if (aaeCcDescs.size() == 1)
-                ccDesc = (ResourceCreationSpecifier) aaeCcDescs.get(0);
+                ccDesc = aaeCcDescs.get(0);
             if (aaeCcDescs.size() > 1) {
                 // This should work because the pipeline should only store valid configurations. If there are multiple
                 // consumers, they must be AAEs
@@ -868,6 +858,24 @@ public class JCoReUIMAPipeline {
             throw new PipelineIOException(e);
         }
         return this;
+    }
+
+    /**
+     * <p>Sets the UIMA descriptor to the given description by matching the names between descriptor and description.</p>
+     *
+     * @param description The description to set the descriptor to.
+     * @param descriptors The list of loaded flow controller descriptors to select the matching descriptor from.
+     */
+    private void setDescriptorByName(Description description, List<ResourceCreationSpecifier> descriptors) {
+        String name = description.getName();
+        for (ResourceCreationSpecifier spec : descriptors) {
+            String descriptorName = spec.getMetaData().getName();
+            if (name.equals(descriptorName)) {
+                description.setDescriptor(spec);
+                return;
+            }
+        }
+        throw new IllegalStateException("Tried to find the UIMA descriptor for the description with name '" + name + "' but could not find one. Available descriptor names were: " + descriptors.stream().map(d -> d.getMetaData().getName()).collect(joining(", ")));
     }
 
     /**
@@ -1030,7 +1038,7 @@ public class JCoReUIMAPipeline {
         String basename = desc.getName();
         while (existingDescriptorNames.contains(desc.getName())) {
             desc.setName(basename + " " + i++);
-            ((ResourceCreationSpecifier)desc.getDescriptor()).getMetaData().setName(desc.getName());
+            ((ResourceCreationSpecifier) desc.getDescriptor()).getMetaData().setName(desc.getName());
         }
     }
 
@@ -1044,7 +1052,9 @@ public class JCoReUIMAPipeline {
         Multiset<String> names = HashMultiset.create();
         if (crDescription != null) names.add(crDescription.getName());
         cmDelegates.stream().map(Description::getName).forEach(names::add);
+        if (aeFlowController != null) names.add(aeFlowController.getName());
         aeDelegates.stream().map(Description::getName).forEach(names::add);
+        if (ccFlowController != null) names.add(ccFlowController.getName());
         ccDelegates.stream().map(Description::getName).forEach(names::add);
         return names;
     }
@@ -1085,8 +1095,6 @@ public class JCoReUIMAPipeline {
             anyExistingArtifactForComponent.ifPresent(mavenArtifact -> description.getMetaDescription().getMavenArtifact().setVersion(mavenArtifact.getVersion()));
         }
     }
-
-
 
     public Stream<File> getClasspathElements() throws PipelineIOException {
         File libDir = null;
@@ -1214,12 +1222,21 @@ public class JCoReUIMAPipeline {
         loadDirectory = null;
     }
 
-
     public Description getAeFlowController() {
         return aeFlowController;
     }
 
+    public void setAeFlowController(Description flowControllerDescription) {
+        avoidNamingCollisions(flowControllerDescription);
+        this.aeFlowController = flowControllerDescription;
+    }
+
     public Description getCcFlowController() {
         return ccFlowController;
+    }
+
+    public void setCcFlowController(Description flowControllerDescription) {
+        avoidNamingCollisions(flowControllerDescription);
+        this.ccFlowController = flowControllerDescription;
     }
 }
