@@ -81,6 +81,7 @@ public class AddComponentDialog implements ILoopablePipelineManipulationDialog {
                                     pipeline.setAeFlowController(jCoReDescription);
                                     break;
                                 } else if (getName().equals(AddFlowControllerDialog.CAS_CONSUMER_AGGREGATE)) {
+                                    pipeline.setCcFlowController(jCoReDescription);
                                     break;
                                 }
                             default:
