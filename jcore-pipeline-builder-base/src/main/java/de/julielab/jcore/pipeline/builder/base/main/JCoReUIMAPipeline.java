@@ -605,13 +605,16 @@ public class JCoReUIMAPipeline {
         if (!libDir.exists())
             libDir.mkdirs();
         Stream<Description> descriptions = Stream.empty();
-        if (crDescription != null && crDescription.getMetaDescription() != null) {
+        if (crDescription != null && crDescription.getMetaDescription() != null)
             descriptions = Stream.concat(descriptions, Stream.of(crDescription));
-        }
         if (cmDelegates != null)
             descriptions = Stream.concat(descriptions, cmDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())));
+        if (aeFlowController != null)
+            descriptions = Stream.concat(descriptions, Stream.of(aeFlowController));
         if (aeDelegates != null)
             descriptions = Stream.concat(descriptions, aeDelegates.stream().filter(d -> !d.getMetaDescription().isPear() && Objects.nonNull(d.getMetaDescription())));
+        if (ccFlowController != null)
+            descriptions = Stream.concat(descriptions, Stream.of(ccFlowController));
         if (ccDelegates != null)
             descriptions = Stream.concat(descriptions, ccDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())));
         storeArtifactsOfDescriptions(descriptions, libDir);
