@@ -107,7 +107,7 @@ public class StatusPrinter {
 
         if (pipeline.getCcDelegates() != null && !pipeline.getCcDelegates().isEmpty()) {
             records.add(createPrintLine("CAS Consumers:", HEADER));
-            if (pipeline.getAeFlowController() != null)
+            if (pipeline.getCcFlowController() != null)
                 records.addAll(StatusPrinter.getComponentStatusRecords(pipeline.getCcFlowController(), verbosity));
             pipeline.getCcDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, verbosity)).forEach(records::addAll);
         }
