@@ -482,7 +482,7 @@ public class JCoReUIMAPipeline {
 
     // I'm actually not sure why we need 'allDelegates' and 'aaeElements'. Perhaps we don't. Try it when there is time.
     private AnalysisEngineDescription createAAE(File descDir, String name, List<Description> allDelegates, Stream<AnalysisEngineDescription> aaeElements, boolean filterDeactivated, Description flowControllerDescription) throws ResourceInitializationException, SAXException, IOException, InvalidXMLException, PipelineIOException {
-        AnalysisEngineDescription aaeDesc = flowControllerDescription == null ? AnalysisEngineFactory.createEngineDescription(aaeElements.toArray(AnalysisEngineDescription[]::new)) : AnalysisEngineFactory.createEngineDescription(flowControllerDescription.getDescriptorAsFlowControllerDescriptor(), aaeElements.toArray(AnalysisEngineDescription[]::new));
+        AnalysisEngineDescription aaeDesc = flowControllerDescription == null || !flowControllerDescription.isActive() ? AnalysisEngineFactory.createEngineDescription(aaeElements.toArray(AnalysisEngineDescription[]::new)) : AnalysisEngineFactory.createEngineDescription(flowControllerDescription.getDescriptorAsFlowControllerDescriptor(), aaeElements.toArray(AnalysisEngineDescription[]::new));
         Map<String, MetaDataObject> delegatesWithImports = aaeDesc.getDelegateAnalysisEngineSpecifiersWithImports();
         delegatesWithImports.clear();
         List<String> flowNames = new ArrayList<>();
@@ -618,26 +618,6 @@ public class JCoReUIMAPipeline {
         if (ccDelegates != null)
             descriptions = Stream.concat(descriptions, ccDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())));
         storeArtifactsOfDescriptions(descriptions, libDir);
-
-//        File libDir = new File(directory.getAbsolutePath() + File.separator + DIR_LIB);
-//        if (!libDir.exists())
-//            libDir.mkdirs();
-//        if (crDescription != null && crDescription.getMetaDescription() != null) {
-//            AetherUtilities.storeArtifactWithDependencies(crDescription.getMetaDescription().getMavenArtifact(), libDir);
-//        }
-//        Consumer<Description> storeArtifacts = desc -> {
-//            try {
-//                AetherUtilities.storeArtifactWithDependencies(desc.getMetaDescription().getMavenArtifact(), libDir);
-//            } catch (MavenException e) {
-//                log.error("Could not store dependencies of description {}", desc, e);
-//            }
-//        };
-//        if (cmDelegates != null)
-//            cmDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())).forEach(storeArtifacts);
-//        if (aeDelegates != null)
-//            aeDelegates.stream().filter(d -> !d.getMetaDescription().isPear() && Objects.nonNull(d.getMetaDescription())).forEach(storeArtifacts);
-//        if (ccDelegates != null)
-//            ccDelegates.stream().filter(d -> Objects.nonNull(d.getMetaDescription())).forEach(storeArtifacts);
     }
 
     /**

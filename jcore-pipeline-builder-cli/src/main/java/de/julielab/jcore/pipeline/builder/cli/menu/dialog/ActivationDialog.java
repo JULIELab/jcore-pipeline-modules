@@ -17,7 +17,7 @@ import java.util.EnumSet;
 public class ActivationDialog extends AbstractComponentSelectionDialog {
     @Override
     public IMenuItem executeMenuItem(JCoReUIMAPipeline pipeline, TextIO textIO, Deque<String> path) throws MenuItemExecutionException {
-        init(pipeline, EnumSet.of(PipelineBuilderConstants.JcoreMeta.Category.multiplier, PipelineBuilderConstants.JcoreMeta.Category.ae, PipelineBuilderConstants.JcoreMeta.Category.consumer));
+        init(pipeline, EnumSet.of(PipelineBuilderConstants.JcoreMeta.Category.multiplier, PipelineBuilderConstants.JcoreMeta.Category.ae, PipelineBuilderConstants.JcoreMeta.Category.consumer, PipelineBuilderConstants.JcoreMeta.Category.flowcontroller));
         printPosition(textIO, path);
         StatusPrinter.printPipelineStatus(pipeline, PipelineBuilderCLI.statusVerbosity, textIO);
         IMenuItem choice = textIO.<IMenuItem>newGenericInputReader(null)

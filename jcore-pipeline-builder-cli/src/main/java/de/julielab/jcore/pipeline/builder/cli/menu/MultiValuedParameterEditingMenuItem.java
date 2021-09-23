@@ -1,11 +1,14 @@
 package de.julielab.jcore.pipeline.builder.cli.menu;
 
-import de.julielab.jcore.pipeline.builder.base.main.Description;
 import de.julielab.jcore.pipeline.builder.cli.menu.dialog.IMenuDialog;
 import de.julielab.jcore.pipeline.builder.cli.util.PrintLine;
 import de.julielab.jcore.pipeline.builder.cli.util.TextIOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.uima.resource.ConfigurableDataResourceSpecifier;
+import org.apache.uima.resource.ResourceCreationSpecifier;
+import org.apache.uima.resource.ResourceSpecifier;
 import org.apache.uima.resource.metadata.ConfigurationParameter;
+import org.apache.uima.resource.metadata.ResourceMetaData;
 import org.beryx.textio.TextIO;
 
 import java.util.ArrayList;
@@ -18,11 +21,11 @@ import static de.julielab.jcore.pipeline.builder.cli.menu.TerminalPrefixes.HEADE
 
 public class MultiValuedParameterEditingMenuItem implements IMenuDialog {
 
-    private final Description description;
+    private final ResourceSpecifier descriptor;
     private final ConfigurationParameter parameter;
 
-    public MultiValuedParameterEditingMenuItem(Description description, ConfigurationParameter parameter) {
-        this.description = description;
+    public MultiValuedParameterEditingMenuItem(ResourceSpecifier description, ConfigurationParameter parameter) {
+        this.descriptor = description;
         this.parameter = parameter;
     }
 
@@ -43,40 +46,55 @@ public class MultiValuedParameterEditingMenuItem implements IMenuDialog {
             lineStream = Stream.concat(lineStream, Stream.of(TextIOUtils.createPrintLine("No parameter description is available.", DEFAULT)));
         TextIOUtils.printLines(lineStream, textIO);
 
-        Object[] array = (Object[]) description.getConfigurationParameterValue(parameter.getName());
+        ResourceMetaData md;
+        if (descriptor instanceof ResourceCreationSpecifier) {
+            md = ((ResourceCreationSpecifier) descriptor).getMetaData();
+        } else if (descriptor instanceof ConfigurableDataResourceSpecifier) {
+            md = ((ConfigurableDataResourceSpecifier) descriptor).getMetaData();
+        } else {
+            throw new IllegalArgumentException("Unhandled descriptor type " + descriptor.getClass().getCanonicalName() + ". This type must be explicitly handled in the code, contact the developer.");
+        }
+
+        Object[] array = (Object[]) md.getConfigurationParameterSettings().getParameterValue(parameter.getName());
         if (array == null)
             array = new Object[0];
         printCurrentValues(array, textIO);
 
-        String response = textIO.<String>newGenericInputReader(null).withNumberedPossibleValues(
-                "Add element",
-                "Remove element",
-                "Back").
-                read("Select an action:");
-        switch (response) {
-            case "Add element":
-                while ((array = addValue(array, textIO)) != null) {
-                    description.setConfigurationParameterValue(parameter.getName(), array);
-                    printCurrentValues(array, textIO);
-                }
-                break;
-
-            case "Remove element":
-                Integer toRemove;
-                do {
-                    toRemove = textIO.newIntInputReader().withMinVal(0).withMaxVal(array.length).withDefaultValue(0).read("Select an item to remove or 0 for none:");
-                    if (toRemove > 0) {
-                        List<Object> objList = new ArrayList<>(Arrays.asList(array));
-                        objList.remove(toRemove - 1);
-                        array = objList.toArray(new Object[0]);
-                        description.setConfigurationParameterValue(parameter.getName(), array);
+        String response;
+        do {
+            response = textIO.<String>newGenericInputReader(null).withNumberedPossibleValues(
+                            "Add element",
+                            "Remove element",
+                            "Back").
+                    withDefaultValue("Back").
+                    read("Select an action:");
+            switch (response) {
+                case "Add element":
+                    while ((array = addValue(array, textIO)) != null) {
+                        md.getConfigurationParameterSettings().setParameterValue(parameter.getName(), array);
                         printCurrentValues(array, textIO);
                     }
-                } while (toRemove > 0);
-                break;
-        }
+                    // The loop above terminates when the input value is null which sets the local 'array' variable
+                    // to null. But the do-while continues to work on 'array' in the next round, if more user
+                    // wishes to make more changes. Thus, we need to set the complete current value to the variable.
+                    array = (Object[]) md.getConfigurationParameterSettings().getParameterValue(parameter.getName());
+                    break;
 
-
+                case "Remove element":
+                    Integer toRemove;
+                    do {
+                        toRemove = textIO.newIntInputReader().withMinVal(0).withMaxVal(array.length).withDefaultValue(0).read("Select an item to remove or 0 for none:");
+                        if (toRemove > 0) {
+                            List<Object> objList = new ArrayList<>(Arrays.asList(array));
+                            objList.remove(toRemove - 1);
+                            array = objList.toArray(new Object[0]);
+                            md.getConfigurationParameterSettings().setParameterValue(parameter.getName(), array);
+                            printCurrentValues(array, textIO);
+                        }
+                    } while (toRemove > 0);
+                    break;
+            }
+        } while (!response.equals("Back"));
     }
 
     private void printCurrentValues(Object[] array, TextIO textIO) {

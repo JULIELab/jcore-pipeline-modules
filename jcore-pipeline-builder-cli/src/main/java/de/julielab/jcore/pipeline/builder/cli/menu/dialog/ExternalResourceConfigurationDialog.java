@@ -3,6 +3,7 @@ package de.julielab.jcore.pipeline.builder.cli.menu.dialog;
 import de.julielab.jcore.pipeline.builder.base.main.Description;
 import de.julielab.jcore.pipeline.builder.cli.menu.BackMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.IMenuItem;
+import de.julielab.jcore.pipeline.builder.cli.menu.MultiValuedParameterEditingMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.menu.ParameterEditingMenuItem;
 import de.julielab.jcore.pipeline.builder.cli.util.StatusPrinter;
 import org.apache.uima.resource.ConfigurableDataResourceSpecifier;
@@ -85,8 +86,8 @@ public class ExternalResourceConfigurationDialog implements ILoopableDialog {
             // Create the items for fixed information about resources: Their resource URL, their name and their description
             // Now add items for the parameters specific to this resource.
             Stream.of(spec.getMetaData().getConfigurationParameterDeclarations().
-                    getConfigurationParameters()).
-                    map(p -> new ParameterEditingMenuItem(resourceDescription.getResourceSpecifier(), p)).
+                            getConfigurationParameters()).
+                    map(p -> p.isMultiValued() ? new MultiValuedParameterEditingMenuItem(resourceDescription.getResourceSpecifier(), p) : new ParameterEditingMenuItem(resourceDescription.getResourceSpecifier(), p)).
                     forEach(itemList::add);
             itemList.add(BackMenuItem.get());
             IMenuItem response = textIO.<IMenuItem>newGenericInputReader(null).withNumberedPossibleValues(itemList)
@@ -104,6 +105,9 @@ public class ExternalResourceConfigurationDialog implements ILoopableDialog {
                     resourceDescription.setDescription(desc);
             } else if (response instanceof ParameterEditingMenuItem) {
                 ParameterEditingMenuItem item = (ParameterEditingMenuItem) response;
+                item.setParameterValue(textIO);
+            } else if (response instanceof MultiValuedParameterEditingMenuItem) {
+                MultiValuedParameterEditingMenuItem item = (MultiValuedParameterEditingMenuItem) response;
                 item.setParameterValue(textIO);
             } else return response;
             clearTerminal(textIO);

@@ -51,7 +51,7 @@ public class DescriptorConfigurationDialog implements ILoopablePipelineManipulat
         description.getConfigurationParameters().values().stream().
                 map(p -> {
                     if (p.isMultiValued())
-                        return new MultiValuedParameterEditingMenuItem(description, p);
+                        return new MultiValuedParameterEditingMenuItem((ResourceSpecifier) description.getDescriptor(), p);
                     return new ParameterEditingMenuItem((ResourceSpecifier) description.getDescriptor(), p);
                 }).
                 forEach(itemList::add);
