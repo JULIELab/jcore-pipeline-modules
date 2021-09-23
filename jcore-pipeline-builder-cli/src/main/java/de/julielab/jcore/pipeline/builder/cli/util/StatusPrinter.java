@@ -302,7 +302,14 @@ public class StatusPrinter {
                                         String reportLevel = color.apply(DEFAULT);
                                         if (declaration.isMandatory() && (value == null || StringUtils.isBlank(value.toString())))
                                             reportLevel = color.apply(ERROR);
-                                        records.add(createPrintLine("       " + name + ": ", PARAM, (value != null ? value.toString() : "<setting not defined>"), reportLevel));
+                                        String valueString;
+                                        if (value != null && !value.getClass().isArray())
+                                            valueString = value.toString();
+                                        else if (value != null)
+                                            valueString = Arrays.toString((Object[]) value);
+                                        else
+                                            valueString = "<setting not defined>";
+                                        records.add(createPrintLine("       " + name + ": ", PARAM, valueString, reportLevel));
 
                                     }
                                 }
