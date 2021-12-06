@@ -17,7 +17,7 @@ public class ComponentSelectionMenuItem implements IMenuItem {
 
     @Override
     public String getName() {
-        return name == null ? description.getName() : name;
+        return description.isActive() ?  description.getName() : description.getName() + " (inactive)";
     }
 
     @Override
@@ -25,7 +25,4 @@ public class ComponentSelectionMenuItem implements IMenuItem {
         return getName();
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 }

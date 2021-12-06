@@ -48,7 +48,6 @@ public class ActivationDialog extends AbstractComponentSelectionDialog {
         super.init(pipeline, categories);
         // remove the back item, we will append it to the end again
         itemList.remove(itemList.size() - 1);
-        itemList.stream().filter(ComponentSelectionMenuItem.class::isInstance).map(ComponentSelectionMenuItem.class::cast).filter(item -> !item.getDescription().isActive()).forEach(item -> item.setName(item.getName() + " (inactive)"));
         itemList.add(new ActivateAllMenuItem());
         itemList.add(new DeactivateAllMenuItem());
         itemList.add(BackMenuItem.get());
