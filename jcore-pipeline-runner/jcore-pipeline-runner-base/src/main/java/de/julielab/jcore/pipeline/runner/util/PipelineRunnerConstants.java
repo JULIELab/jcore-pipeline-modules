@@ -6,6 +6,7 @@ public class PipelineRunnerConstants {
     public static final String NAME = "name";
     public static final String PIPELINEPATH = "pipelinepath";
     public static final String NUMTHREADS = "numthreads";
+    public static final String NUMTOPROCESS = "numtoprocess";
     public static final String HEAP_SIZE = "heapsize";
     public static final String JVM_OPTS = "jvmoptions";
     public static final String DUCCHOMEPATH = "ducchomepath";

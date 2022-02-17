@@ -111,7 +111,7 @@ public class CPERunner {
      * @throws CpeDescriptorException
      */
     public void createCPEDescription() throws InvalidXMLException, IOException,
-            CpeDescriptorException, PipelineIOException {
+            CpeDescriptorException {
         LOGGER.info("Creating CPE description from " + descriptorPath);
 
         cpeDescription = UIMAFramework.getXMLParser().parseCpeDescription(

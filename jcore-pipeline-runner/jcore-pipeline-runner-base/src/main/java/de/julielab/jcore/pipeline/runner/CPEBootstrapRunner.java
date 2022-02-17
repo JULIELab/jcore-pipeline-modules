@@ -46,6 +46,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             final String plp = pipeline.getLoadDirectory().getAbsolutePath();
             int numThreads = runnerConfig.containsKey(NUMTHREADS) ? runnerConfig.getInt(NUMTHREADS) : 2;
             String memory = runnerConfig.containsKey(HEAP_SIZE) ? runnerConfig.getString(HEAP_SIZE) : "2G";
+            String numToProcess = runnerConfig.containsKey(NUMTOPROCESS) ? runnerConfig.getString(NUMTOPROCESS) : "";
             String[] jvmOptions = ((runnerConfig.containsKey(JVM_OPTS) ? runnerConfig.getString(JVM_OPTS) : "") + " -Xmx"+memory).trim().split("\\s+") ;
             final File cpeRunnerJar = findCpeRunnerJar();
             Stream<File> classpathElements = pipeline.getClasspathElements();
@@ -56,7 +57,20 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             if (System.getenv("JAVA_HOME") != null)
                 javaPath = Path.of(System.getenv("JAVA_HOME"), "bin", "java").toString();
 
-            String[] cmdarray = {javaPath, "-Dfile.encoding=UTF-8", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator +  JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads), "-a", String.valueOf(numThreads+5)};
+            List<String> cmdList = Stream.of(javaPath, "-Dfile.encoding=UTF-8", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator + JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads), "-a", String.valueOf(numThreads + 5)).collect(Collectors.toList());
+            if (!numToProcess.isBlank()) {
+                try {
+                    int i = Integer.parseInt(numToProcess);
+                    if (i < 0)
+                        throw new NumberFormatException();
+                } catch (NumberFormatException e) {
+                    throw new PipelineRunningException("The " + NUMTOPROCESS + " parameter needs to empty or a semi-positive number. But it is set to " + numToProcess);
+                }
+                cmdList.add("-n");
+                cmdList.add(numToProcess);
+            }
+
+            String[] cmdarray = cmdList.toArray(new String[0]);
             if (jvmOptions.length > 0) {
                 String[] tmp = new String[cmdarray.length + jvmOptions.length];
                 tmp[0] = javaPath;
@@ -138,6 +152,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
         template.addProperty(slash(basePath, PIPELINEPATH), ".");
         template.addProperty(slash(basePath, NUMTHREADS), "1");
         template.addProperty(slash(basePath, HEAP_SIZE), "512M");
+        template.addProperty(slash(basePath, NUMTOPROCESS), "");
         template.addProperty(slash(basePath, JVM_OPTS), "");
 
     }
