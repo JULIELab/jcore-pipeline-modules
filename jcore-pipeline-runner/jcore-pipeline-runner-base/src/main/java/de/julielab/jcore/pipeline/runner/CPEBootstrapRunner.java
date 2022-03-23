@@ -57,7 +57,7 @@ public class CPEBootstrapRunner implements IPipelineRunner {
             if (System.getenv("JAVA_HOME") != null)
                 javaPath = Path.of(System.getenv("JAVA_HOME"), "bin", "java").toString();
 
-            List<String> cmdList = Stream.of(javaPath, "-Dfile.encoding=UTF-8", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator + JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads), "-a", String.valueOf(numThreads * 2)).collect(Collectors.toList());
+            List<String> cmdList = Stream.of(javaPath, "-Dfile.encoding=UTF-8", "-cp", classpath, "de.julielab.jcore.pipeline.runner.cpe.CPERunner", "-d", plp + File.separator + JCoReUIMAPipeline.DIR_DESC + File.separator + "CPE.xml", "-t", String.valueOf(numThreads), "-a", String.valueOf(numThreads * 3)).collect(Collectors.toList());
             if (!numToProcess.isBlank()) {
                 try {
                     int i = Integer.parseInt(numToProcess);
