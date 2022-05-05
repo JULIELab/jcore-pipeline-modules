@@ -117,7 +117,7 @@ public class StatusPrinter {
         Stream<Description> aeStream = pipeline.getAeDelegates() != null ? pipeline.getAeDelegates().stream() : Stream.empty();
         Stream<Description> ccStream = pipeline.getCcDelegates() != null ? pipeline.getCcDelegates().stream() : Stream.empty();
         Stream<Description> aes = Stream.concat(Stream.concat(cmStream, aeStream), ccStream).filter(d -> d.getDescriptor() instanceof AnalysisEngineDescription);
-        Map<String, List<ExternalResourceDescription>> resourcesByName = aes.map(Description::getDescriptorAsAnalysisEngineDescription).filter(ae -> ae.getResourceManagerConfiguration() != null).filter(ae -> ae.getResourceManagerConfiguration() != null).flatMap(ae -> Stream.of(ae.getResourceManagerConfiguration().getExternalResources())).collect(Collectors.groupingBy(ExternalResourceDescription::getName));
+        Map<String, List<ExternalResourceDescription>> resourcesByName = aes.filter(ae -> ae.isActive()).map(Description::getDescriptorAsAnalysisEngineDescription).filter(ae -> ae.getResourceManagerConfiguration() != null).filter(ae -> ae.getResourceManagerConfiguration() != null).flatMap(ae -> Stream.of(ae.getResourceManagerConfiguration().getExternalResources())).collect(Collectors.groupingBy(ExternalResourceDescription::getName));
         resourcesByName.entrySet().stream().filter(e -> e.getValue().size() > 1).forEach(e -> records.add(createPrintLine("Configuration error: There are multiple external resources with the name " + e.getKey() + ".\n    Go to the configuration dialog and adapt the names.", ERROR)));
 
         // Check if there is a component name repeated
@@ -139,13 +139,13 @@ public class StatusPrinter {
         pipeline.getCcDelegates().stream().flatMap(d -> d.getOutputCapabilities().stream()).forEach(existingOutputCapability::add);
 
         // Now check all components to find unsatisfied input capabilities
-        pipeline.getCmDelegates().forEach(cm -> {
+        pipeline.getCmDelegates().stream().filter(Description::isActive).forEach(cm -> {
             cm.getInputCapabilities().stream().filter(Predicate.not(existingOutputCapability::contains)).forEach(capability -> component2unsatisfiedTypeCapability.put(cm.getName(), capability));
         });
-        pipeline.getAeDelegates().forEach(ae -> {
+        pipeline.getAeDelegates().stream().filter(Description::isActive).forEach(ae -> {
             ae.getInputCapabilities().stream().filter(Predicate.not(existingOutputCapability::contains)).forEach(capability -> component2unsatisfiedTypeCapability.put(ae.getName(), capability));
         });
-        pipeline.getCcDelegates().forEach(cc -> {
+        pipeline.getCcDelegates().stream().filter(Description::isActive).forEach(cc -> {
             cc.getInputCapabilities().stream().filter(Predicate.not(existingOutputCapability::contains)).forEach(capability -> component2unsatisfiedTypeCapability.put(cc.getName(), capability));
         });
 
