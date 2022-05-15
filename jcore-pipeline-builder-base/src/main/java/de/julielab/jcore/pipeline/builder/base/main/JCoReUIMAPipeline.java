@@ -535,7 +535,7 @@ public class JCoReUIMAPipeline {
 
     private AnalysisEngineDescription createAAEWithIntegratedDelegates(File descDir, String name, List<Description> allDelegates, Stream<AnalysisEngineDescription> aaeElements, boolean filterDeactivated, Description flowControllerDescription) throws ResourceInitializationException, SAXException, IOException, InvalidXMLException, PipelineIOException {
         AnalysisEngineDescription aaeDesc = flowControllerDescription == null || !flowControllerDescription.isActive() ? AnalysisEngineFactory.createEngineDescription(aaeElements.toArray(AnalysisEngineDescription[]::new)) : AnalysisEngineFactory.createEngineDescription(flowControllerDescription.getDescriptorAsFlowControllerDescriptor(), aaeElements.toArray(AnalysisEngineDescription[]::new));
-        List<String> flowNames = new ArrayList<>();
+//        List<String> flowNames = new ArrayList<>();
         boolean multipleDeploymentAllowed = true;
         for (Description description : allDelegates) {
             final boolean currentComponentAllowsMultipleDeployment = description.getDescriptorAsAnalysisEngineDescription().getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
@@ -543,9 +543,9 @@ public class JCoReUIMAPipeline {
                 log.warn("The component {} does not allow multiple deployment. Thus, multiple deployment won't be allowed for the whole AAE with name {}.", description.getName(), name);
             }
             multipleDeploymentAllowed &= currentComponentAllowsMultipleDeployment;
-            if (description.isActive() || !filterDeactivated) {
-                flowNames.add(description.getName());
-            }
+//            if (description.isActive() || !filterDeactivated) {
+//                flowNames.add(description.getName());
+//            }
         }
         // necessary for relative resolution of imports
         aaeDesc.setSourceUrl(descDir.toURI().toURL());
@@ -561,7 +561,7 @@ public class JCoReUIMAPipeline {
             getClasspathElements().forEach(JarLoader::addJarToClassPath);
             aaeDesc.getDelegateAnalysisEngineSpecifiers();
         }
-        ((FixedFlow) aaeDesc.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flowNames.toArray(new String[0]));
+//        ((FixedFlow) aaeDesc.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flowNames.toArray(new String[0]));
         aaeDesc.getAnalysisEngineMetaData().setName(name);
         if (!multipleDeploymentAllowed) {
             log.warn("Deactivating multiple deployments for the AAE {} because at least one delegate does not support multiple deployments.", name);
