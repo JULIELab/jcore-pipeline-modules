@@ -78,6 +78,7 @@ public class JCoReUIMAPipeline {
             return null;
         return Stream.of(typeSystem.getImports());
     }).filter(Objects::nonNull);
+    public static final String AGGREGATE_ANALYSIS_ENGINE_WITH_INTEGRATED_DELEGATE_DESCRIPTORS_XML = "AggregateAnalysisEngineWithIntegratedDelegateDescriptors.xml";
     /**
      * We keep track components removed from the pipeline. If the respective changes are stored to disc,
      * the respective descriptor files ought to be removed.
@@ -278,7 +279,7 @@ public class JCoReUIMAPipeline {
                                 filter(Description::isActive).
                         map(Description::getDescriptorAsAnalysisEngineDescription);
                 final AnalysisEngineDescription integratedDelegatesAAE = createAAEWithIntegratedDelegates(descDirAll, "AggregateAnalysisEngineWithIntegratedDelegateDescriptors", aeDelegates, descStream, true, aeFlowController);
-                storeDescriptor(integratedDelegatesAAE, new File(descDirAll.getAbsolutePath() + File.separator + "AggregateAnalysisEngineWithIntegratedDelegateDescriptors.xml"));
+                storeDescriptor(integratedDelegatesAAE, new File(descDirAll.getAbsolutePath() + File.separator + AGGREGATE_ANALYSIS_ENGINE_WITH_INTEGRATED_DELEGATE_DESCRIPTORS_XML));
             } else if (aaeFile.exists()) {
                 aaeFile.delete();
             }
@@ -766,6 +767,9 @@ public class JCoReUIMAPipeline {
             for (File xmlFile : xmlFiles) {
                 // don't load the CPE AAE descriptor, it is solely needed when using the CPE descriptor on its own
                 if (xmlFile.getName().equals(CPE_AAE_DESC_NAME))
+                    continue;
+                // don't load the AAE with integrated delegate descriptors, this is just a helper
+                if (xmlFile.getName().equals(AGGREGATE_ANALYSIS_ENGINE_WITH_INTEGRATED_DELEGATE_DESCRIPTORS_XML))
                     continue;
                 XMLParser parser = UIMAFramework.getXMLParser();
                 ResourceCreationSpecifier spec = null;
