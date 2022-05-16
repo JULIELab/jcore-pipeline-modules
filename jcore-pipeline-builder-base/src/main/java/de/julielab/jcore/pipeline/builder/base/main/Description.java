@@ -207,7 +207,8 @@ public class Description implements Serializable, Cloneable {
      */
     @JsonIgnore
     public List<String> getCapabilities(String type) {
-        if (!initCapabilities) {
+        // AAEs might not have meta data
+        if (!initCapabilities && getMetaData() != null) {
             Capability[] capsArray = (Capability[]) getMetaData().getAttributeValue(Descriptor.CAPABILITIES);
             for (int i = 0; capsArray.length > 0 && i < capsArray[0].getInputs().length; i++) {
                 TypeOrFeature tof = capsArray[0].getInputs()[i];

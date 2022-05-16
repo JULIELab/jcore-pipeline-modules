@@ -993,6 +993,9 @@ public class JCoReUIMAPipeline {
         }
         Sets.SetView<String> topAAEs = Sets.difference(aaeUris, delegateUris);
         Sets.SetView<String> aesNotInAAE = Sets.difference(aeUris, delegateUris);
+        final Sets.SetView<String> delegateAAEs = Sets.difference(aaeUris, topAAEs);
+        // add the AAEs that are delegates of the top AAE to the AEs. This is required later to assemble the AAE tree structure in setAaeDescriptors
+        aaeDescs.stream().filter(aae -> delegateAAEs.contains(url2String.apply(aae.getSourceUrl()))).forEach(aeDescs::add);
 
         if (topAAEs.size() > 1)
             throw new PipelineIOException("There are multiple " + componentType + "s in " + descDir.getAbsolutePath()
