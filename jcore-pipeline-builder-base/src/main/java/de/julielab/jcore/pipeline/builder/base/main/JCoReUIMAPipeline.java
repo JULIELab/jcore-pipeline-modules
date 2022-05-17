@@ -62,6 +62,7 @@ public class JCoReUIMAPipeline {
     public static final String DIR_LIB = "lib";
     public static final String DIR_CONF = "config";
     public static final String CPE_AAE_DESC_NAME = "cpeAAE.xml";
+    public static final String AGGREGATE_ANALYSIS_ENGINE_WITH_INTEGRATED_DELEGATE_DESCRIPTORS_XML = "AggregateAnalysisEngineWithIntegratedDelegateDescriptors.xml";
     private static final String SERIALIZED_CR_DESCS_FILE = "crDescriptions.json";
     private static final String SERIALIZED_CM_DESCS_FILE = "cmDescriptions.json";
     private static final String SERIALIZED_AE_FLOW_CONTROLLER_DESCS_FILE = "aeFlowControllerDescriptions.json";
@@ -78,7 +79,6 @@ public class JCoReUIMAPipeline {
             return null;
         return Stream.of(typeSystem.getImports());
     }).filter(Objects::nonNull);
-    public static final String AGGREGATE_ANALYSIS_ENGINE_WITH_INTEGRATED_DELEGATE_DESCRIPTORS_XML = "AggregateAnalysisEngineWithIntegratedDelegateDescriptors.xml";
     /**
      * We keep track components removed from the pipeline. If the respective changes are stored to disc,
      * the respective descriptor files ought to be removed.
@@ -111,6 +111,7 @@ public class JCoReUIMAPipeline {
      * This file is only non-null when the pipeline has been loaded.
      */
     private File loadDirectory;
+    private boolean areLibrariesLoaded;
 
     /**
      * <p>
@@ -225,7 +226,7 @@ public class JCoReUIMAPipeline {
                 Stream<AnalysisEngineDescription> descStream = aeDelegates.stream().
                         // filter(desc -> !desc.getMetaDescription().isPear()).
                                 filter(Description::isActive).
-                                map(Description::getDescriptorAsAnalysisEngineDescription);
+                        map(Description::getDescriptorAsAnalysisEngineDescription);
                 aaeDesc = createAAEWithImportedDelegates(descDir, "AggregateAnalysisEngine", aeDelegates, descStream, true, aeFlowController);
             } else {
                 aaeDesc = null;
@@ -521,7 +522,7 @@ public class JCoReUIMAPipeline {
                 aaeDesc.getDelegateAnalysisEngineSpecifiers();
         } catch (InvalidXMLException e) {
             log.debug("An InvalidXMLException was thrown. This could be due to actually invalid XML but also because a type descriptor import couldn't be found. Loading dependencies.");
-            getClasspathElements().forEach(JarLoader::addJarToClassPath);
+            addLibrariesToClassPath();
             aaeDesc.getDelegateAnalysisEngineSpecifiers();
         }
         ((FixedFlow) aaeDesc.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flowNames.toArray(new String[0]));
@@ -558,7 +559,7 @@ public class JCoReUIMAPipeline {
                 aaeDesc.getDelegateAnalysisEngineSpecifiers();
         } catch (InvalidXMLException e) {
             log.debug("An InvalidXMLException was thrown. This could be due to actually invalid XML but also because a type descriptor import couldn't be found. Loading dependencies.");
-            getClasspathElements().forEach(JarLoader::addJarToClassPath);
+            addLibrariesToClassPath();
             aaeDesc.getDelegateAnalysisEngineSpecifiers();
         }
 //        ((FixedFlow) aaeDesc.getAnalysisEngineMetaData().getFlowConstraints()).setFixedFlow(flowNames.toArray(new String[0]));
@@ -932,21 +933,38 @@ public class JCoReUIMAPipeline {
                 String component = flow.getFixedFlow()[i];
                 ResourceSpecifier descriptor;
                 descriptor = specByName.get(component);
-                if (descriptor == null)
-                    throw new IllegalStateException("The " + type + " AAE specifies the component key " + component + " but no descriptor loaded from the descAll/ directory has this name. Names in the stored descriptors may not be changed outside of the Pipeline Builder or they can possibly not be loaded any more.");
-                if (i < descriptions.size()) {
+                if (descriptor == null) {
+                    // we need to check if this is an AAE with integrated descriptors
+                    addLibrariesToClassPath();
+                    final MetaDataObject metaDataObject = aae.getDelegateAnalysisEngineSpecifiersWithImports().get(component);
+                    if (metaDataObject == null)
+                        throw new IllegalStateException("The AAE '" + aae.getMetaData().getName() + "' specifies the flow component '" + component + "' but does not list it as a delegate.");
+                    // the meta data object can be two things: an import - in which case we have an error at our hands - or the descriptor itself when it was integrated into the AAE.
+                    if (!(metaDataObject instanceof AnalysisEngineDescription))
+                        throw new IllegalStateException("The " + type + " AAE specifies the component key " + component + " but no descriptor loaded from the descAll/ directory has this name. Names in the stored descriptors may not be changed outside of the Pipeline Builder or they can possibly not be loaded any more.");
+                } else if (i < descriptions.size()) {
                     if (!descByName.containsKey(component))
                         throw new IllegalStateException("The " + type + " AAE specifies the component key " + component + " but no descriptor has this name. The descriptor names and the AAE keys must match.");
                     descByName.get(component).setDescriptor(descriptor);
                 }
-
             }
             log.debug("For the {} aggregate, the following delegate descriptors were set: {}", type, String.join(", ", flow.getFixedFlow()));
+            // We might have an AAE which has been imported as a component and, thus, has a description. Then, we need to set the descriptor to the description.
+            // This is not necessary when the AAE is just the standard pipeline AAE created automatically on pipeline storage. That AAE has no description anyway.
+            descriptions.stream().filter(d -> d.getName().equals(aae.getMetaData().getName())).findAny().ifPresent(d -> d.setDescriptor(aae));
         } else {
             if (descriptions.size() > 1)
                 log.error("The {} is not an aggregate but there are {} descriptions with the following names: {}", type, descriptions.size(), descriptions.stream().map(Description::getName).collect(joining(", ")));
             descriptions.get(0).setDescriptor(aae);
         }
+    }
+
+    private void addLibrariesToClassPath() throws PipelineIOException {
+        if (!areLibrariesLoaded) {
+            log.info("Loading pipeline libraries. This is required to resolve AAE descriptor imports.");
+            getClasspathElements().forEach(JarLoader::addJarToClassPath);
+        }
+        areLibrariesLoaded = true;
     }
 
     /**
@@ -985,7 +1003,7 @@ public class JCoReUIMAPipeline {
             }
         } catch (InvalidXMLException e) {
             log.debug("An InvalidXMLException was thrown while loading descriptors from file. This could be due to actually invalid XML but also because a type descriptor import couldn't be found. Loading dependencies.");
-            getClasspathElements().forEach(JarLoader::addJarToClassPath);
+            addLibrariesToClassPath();
             delegateUris = new HashSet<>();
             for (AnalysisEngineDescription aaeDesc : aaeDescs) {
                 delegateUris.addAll(aaeDesc.getDelegateAnalysisEngineSpecifiers().values().stream().map(ResourceSpecifier::getSourceUrl).map(url2String).collect(toList()));
