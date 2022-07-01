@@ -94,7 +94,7 @@ public class StatusPrinter {
             records.add(createPrintLine("    none", EMPTY));
         if (pipeline.getCmDelegates() != null && !pipeline.getCmDelegates().isEmpty()) {
             records.add(createPrintLine("CAS Multipliers:", HEADER));
-            pipeline.getCmDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, verbosity)).forEach(records::addAll);
+            pipeline.getCmDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, d.isActive() ? verbosity : Verbosity.MINIMAL)).forEach(records::addAll);
         }
         records.add(createPrintLine("Analysis Engines:", HEADER));
         if (pipeline.getAeDelegates() == null || pipeline.getAeDelegates().isEmpty())
@@ -102,14 +102,14 @@ public class StatusPrinter {
         else {
             if (pipeline.getAeFlowController() != null)
                 records.addAll(StatusPrinter.getComponentStatusRecords(pipeline.getAeFlowController(), verbosity));
-            pipeline.getAeDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, verbosity)).forEach(records::addAll);
+            pipeline.getAeDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, d.isActive() ? verbosity : Verbosity.MINIMAL)).forEach(records::addAll);
         }
 
         if (pipeline.getCcDelegates() != null && !pipeline.getCcDelegates().isEmpty()) {
             records.add(createPrintLine("CAS Consumers:", HEADER));
             if (pipeline.getCcFlowController() != null)
                 records.addAll(StatusPrinter.getComponentStatusRecords(pipeline.getCcFlowController(), verbosity));
-            pipeline.getCcDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, verbosity)).forEach(records::addAll);
+            pipeline.getCcDelegates().stream().map(d -> StatusPrinter.getComponentStatusRecords(d, d.isActive() ? verbosity : Verbosity.MINIMAL)).forEach(records::addAll);
         }
 
         // Check if there is an external resource name repeated
