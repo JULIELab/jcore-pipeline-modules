@@ -22,6 +22,9 @@ import org.apache.uima.analysis_engine.metadata.impl.FixedFlow_impl;
 import org.apache.uima.collection.CasConsumer;
 import org.apache.uima.collection.CasConsumerDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
+import org.apache.uima.collection.base_cpm.CasProcessor;
+import org.apache.uima.collection.impl.metadata.cpe.CpeCasProcessorsImpl;
+import org.apache.uima.collection.metadata.CpeCasProcessor;
 import org.apache.uima.collection.metadata.CpeDescription;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.flow.FlowControllerDescription;
@@ -447,7 +450,7 @@ public class JCoReUIMAPipeline {
                     ccImport.setLocation(ccFile.getName());
                     ccImport.setSourceUrl(ccFile.toURI().toURL());
                     cpeAAE.getDelegateAnalysisEngineSpecifiersWithImports().put(ccDesc.getMetaData().getName(), ccImport);
-                    boolean ccMultipleDeploymentAllowed = true;
+                    boolean ccMultipleDeploymentAllowed;
                     if (ccDesc instanceof AnalysisEngineDescription)
                         ccMultipleDeploymentAllowed = ((AnalysisEngineDescription) ccDesc).getAnalysisEngineMetaData().getOperationalProperties().isMultipleDeploymentAllowed();
                     else
@@ -468,6 +471,17 @@ public class JCoReUIMAPipeline {
                         FileUtilities.getWriterToFile(
                                 cpeAAEFile));
                 cpe.setAnalysisEngine(cpeAAEFile.getName(), "CPE AAE");
+
+                for (CpeCasProcessor casProcessor : cpe.getDescription().getCpeCasProcessors().getAllCpeCasProcessors()) {
+                    // this corresponds to the following XML element in the CAS.xml:
+                    // <errorRateThreshold action="terminate" value="0/1"/>
+                    // In "value", the first number is the maximum number of errors and the second number is
+                    // the window (a number of documents) in which the maximum number of errors are allowed to happen.
+                    // We here want to express that no error is allowed by default. The CPE should just abort and
+                    // exit on errors.
+                    casProcessor.setMaxErrorCount(0);
+                    casProcessor.setMaxErrorSampleSize(1);
+                }
 
                 final CpeDescription cpeDescription = cpe.getDescription();
                 cpeDescription.getCpeCasProcessors().setPoolSize(24);

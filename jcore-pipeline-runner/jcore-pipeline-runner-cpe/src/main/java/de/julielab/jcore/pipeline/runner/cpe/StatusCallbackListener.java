@@ -16,10 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class StatusCallbackListener implements org.apache.uima.collection.StatusCallbackListener {
@@ -131,7 +128,8 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
             JCas jCas = aCas.getJCas();
             FSIterator<JCoReURI> multiplierUris = jCas.getTypeSystem().getType(JCoReURI.class.getCanonicalName()) != null ? jCas.<JCoReURI>getAnnotationIndex(JCoReURI.type).iterator() : null;
             FSIterator<RowBatch> dbMultiplierBatch = jCas.getTypeSystem().getType(RowBatch.class.getCanonicalName()) != null ? jCas.<RowBatch>getAnnotationIndex(RowBatch.type).iterator() : null;
-            List<JCoReURI> multiplierUriList = multiplierUris != null ? new ArrayList<>() : null;
+            List<JCoReURI> multiplierUriList = multiplierUris != null && multiplierUris.hasNext() ? new ArrayList<>() : Collections.emptyList();
+            List<RowBatch> rowBatchList = dbMultiplierBatch != null && dbMultiplierBatch.hasNext()? new ArrayList<>() : Collections.emptyList();
             if (multiplierUris != null && multiplierUris.hasNext()) {
                 while (multiplierUris.hasNext()) {
                     multiplierUriList.add(multiplierUris.next());
@@ -139,31 +137,33 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
                 }
             } else if (dbMultiplierBatch != null && dbMultiplierBatch.hasNext()) {
                 while (dbMultiplierBatch.hasNext()) {
-                    dbMultiplierBatch.next();
+                    rowBatchList.add(dbMultiplierBatch.next());
                     ++entityCount;
                 }
             } else {
                 ++entityCount;
             }
             String docId = "<unknown>";
+            System.out.println("MUUUH");
             try {
                 final Header header = JCasUtil.selectSingle(jCas, Header.class);
                 docId = header.getDocId();
+                System.out.println("HIER:" + header);
             } catch (IllegalArgumentException e) {
                 LOGGER.debug("Document occurred that did not have Header annotation.");
             }
             if (!aStatus.isException()) {
                 LOGGER.debug("Document with ID {} finished processing.", docId);
             } else {
-                String filename = "pipeline-error-" + docId + ".err";
+                String filename = "pipeline-error-" + docId + "-"+new Date()+".err";
                 LOGGER.error("Exception occurred while processing document with ID {}: {} Writing error message to {}", docId, aStatus.getExceptions(), filename);
                 LOGGER.error("Components failed: {}", aStatus.getFailedComponentNames());
                 LOGGER.error("Error message: {}", aStatus.getStatusMessage());
                 LOGGER.error("Process trace: {}", aStatus.getProcessTrace().toString());
                 LOGGER.error("Last exception: ", aStatus.getExceptions().get(0));
-                if (multiplierUriList != null)
-                    LOGGER.error("This CAS was created for a multiplier. The following URIs are contained: {}", multiplierUriList.stream().map(JCoReURI::getUri).collect(Collectors.toList()));
-                final String log = createLog(aStatus, multiplierUriList);
+//                if (multiplierUriList != null)
+//                    LOGGER.error("This CAS was created for a multiplier. The following URIs are contained: {}", multiplierUriList.stream().map(JCoReURI::getUri).collect(Collectors.toList()));
+                final String log = createLog(aStatus, multiplierUriList, rowBatchList);
                 try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), StandardCharsets.UTF_8))) {
                     bw.write(log);
                     bw.newLine();
@@ -180,42 +180,59 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
     /**
      * Create log entry for an exception that occured during the processing of a
      * document
-     *
-     * @param status the status that is an exception
+     *  @param status the status that is an exception
      * @param multiplierUriList
+     * @param rowBatchList
      */
-    public String createLog(EntityProcessStatus status, List<JCoReURI> multiplierUriList) {
+    public String createLog(EntityProcessStatus status, List<JCoReURI> multiplierUriList, List<RowBatch> rowBatchList) {
         String ls = System.getProperty("line.separator");
         StringBuilder builder = new StringBuilder();
 
         builder.append("Error happened on: ").append(new Date());
         builder.append(ls);
         builder.append("-------------- Failed Components -------------- ").append(ls);
-        @SuppressWarnings("rawtypes")
-        List componentNames = status.getFailedComponentNames();
+        List<String> componentNames = status.getFailedComponentNames();
         for (int i = 0; i < componentNames.size(); i++) {
             builder.append(i + 1).append(". ").append(componentNames.get(i)).append(ls);
         }
 
         builder.append("-------------- Stack Traces -------------- ").append(ls);
-        @SuppressWarnings("rawtypes")
-        List exceptions = status.getExceptions();
+        List<Exception> exceptions = status.getExceptions();
         for (Object exception : exceptions) {
             Throwable throwable = (Throwable) exception;
-            StringWriter writer = new StringWriter();
-            throwable.printStackTrace(new PrintWriter(writer));
-            builder.append(writer);
+            appendThrowableLog(builder, throwable);
+
+            while (throwable.getCause() != null) {
+                throwable = throwable.getCause();
+                appendThrowableLog(builder, throwable);
+            }
         }
 
-        if (multiplierUriList != null) {
+        if (!multiplierUriList.isEmpty()) {
             builder.append(ls);
             builder.append("This CAS was meant for a multiplier. URIs meant for the multiplier contained in this CAS:");
             for (JCoReURI jCoReURI : multiplierUriList) {
                 builder.append(jCoReURI.getUri()).append(ls);
             }
         }
+        if (!rowBatchList.isEmpty()) {
+            builder.append(ls);
+            builder.append("This CAS was meant for a database multiplier. Primary keys meant for the multiplier contained in this CAS:");
+            for (RowBatch row : rowBatchList) {
+                if (row.getIdentifiers() != null) {
+                    builder.append(String.join(",", row.getIdentifiers().toStringArray()));
+                }
+                builder.append(ls);
+            }
+        }
 
         return builder.toString();
+    }
+
+    private void appendThrowableLog(StringBuilder builder, Throwable throwable) {
+        StringWriter writer = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(writer));
+        builder.append(writer);
     }
 
     public CollectionProcessingEngine getCpe() {
