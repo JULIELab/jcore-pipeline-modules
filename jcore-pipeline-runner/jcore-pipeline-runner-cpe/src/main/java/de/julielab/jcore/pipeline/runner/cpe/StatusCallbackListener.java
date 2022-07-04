@@ -144,11 +144,9 @@ public class StatusCallbackListener implements org.apache.uima.collection.Status
                 ++entityCount;
             }
             String docId = "<unknown>";
-            System.out.println("MUUUH");
             try {
                 final Header header = JCasUtil.selectSingle(jCas, Header.class);
                 docId = header.getDocId();
-                System.out.println("HIER:" + header);
             } catch (IllegalArgumentException e) {
                 LOGGER.debug("Document occurred that did not have Header annotation.");
             }
