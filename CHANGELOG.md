@@ -1,7 +1,19 @@
 # Changelog
 
+## v0.5.0 (17/11/2022)
+- [**closed**] Support multi-valued parameters for configurable resources. [#18](https://github.com/JULIELab/jcore-pipeline-modules/issues/18)
+- [**closed**] Add flow controller support. [#17](https://github.com/JULIELab/jcore-pipeline-modules/issues/17)
+- [**closed**] Version update: Skip versions that have already been chosen [#15](https://github.com/JULIELab/jcore-pipeline-modules/issues/15)
+- [**closed**] Add checks for satisfied component type capabilities [#6](https://github.com/JULIELab/jcore-pipeline-modules/issues/6)
+
+---
+
+## v0.4.3 (07/06/2021)
+Log message updates.
+---
+
 ## v0.4.2 (22/10/2020)
-- [Release 0.4.2.](https://github.com/JULIELab/jcore-pipeline-modules/commit/5056e2fa3ba059dc6071f74733cff15cfd0e0250) - @khituras
+- [**closed**] Allow arbitrary JVM args for the CPE call [#14](https://github.com/JULIELab/jcore-pipeline-modules/issues/14)
 
 ---
 
