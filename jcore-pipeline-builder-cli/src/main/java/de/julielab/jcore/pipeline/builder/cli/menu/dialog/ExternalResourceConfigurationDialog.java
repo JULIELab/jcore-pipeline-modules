@@ -66,6 +66,7 @@ public class ExternalResourceConfigurationDialog implements ILoopableDialog {
         itemList.add(resourceUrlItem);
         itemList.add(resourceNameItem);
         itemList.add(resourceDescItem);
+        itemList.add(BackMenuItem.get());
         if (resourceDescription.getResourceSpecifier() instanceof FileResourceSpecifier) {
             IMenuItem response = textIO.<IMenuItem>newGenericInputReader(null).withNumberedPossibleValues(itemList).
                     withDefaultValue(BackMenuItem.get()).
