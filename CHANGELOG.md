@@ -1,6 +1,12 @@
 # Changelog
 
+## v0.5.2 (09/12/2022)
+- [**bug**] Fix version updates to "null" [#23](https://github.com/JULIELab/jcore-pipeline-modules/issues/23)
+
+---
+
 ## v0.5.1 (23/11/2022)
+- [**bug**] Fix bug "Invalid menu item 'Back'" in ExternalResourcesConfigurationDialog [#22](https://github.com/JULIELab/jcore-pipeline-modules/issues/22)
 
 ---
 
