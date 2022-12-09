@@ -6,6 +6,7 @@ import de.julielab.jcore.pipeline.builder.base.main.JCoReUIMAPipeline;
 import de.julielab.utilities.aether.AetherUtilities;
 import de.julielab.utilities.aether.MavenArtifact;
 import de.julielab.utilities.aether.MavenException;
+import org.apache.commons.lang3.StringUtils;
 import org.beryx.textio.TextIO;
 
 import java.util.Collections;
@@ -32,8 +33,11 @@ public class ArtifactVersionMenuItem implements IMenuItem {
         MavenArtifact artifact = description.getMetaDescription().getMavenArtifactCoordinates();
         try {
             List<String> versionList = AetherUtilities.getVersions(artifact).collect(Collectors.toList());
-            if (versionList.isEmpty()) {
-                textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.ERROR, t -> t.print("No versions available for component " + description.getName() + ", Maven artifact " + artifact));
+            if (versionList.isEmpty() && !StringUtils.isBlank(description.getMetaDescription().getMavenArtifactCoordinates().getVersion())) {
+                versionList = List.of(description.getMetaDescription().getMavenArtifactCoordinates().getVersion());
+                textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.WARN, t -> t.print("Could not retrieve any versions for component " + description.getName() + ", Maven artifact " + artifact));
+            }else if (versionList.isEmpty()) {
+                textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.ERROR, t -> t.print("No versions available for component " + description.getName() + ", Maven artifact " + artifact + " and the current artefact does not specify a version either. This is an inconsistent state."));
                 return;
             }
             // In tests, the received list was sorted ascendingly, we want it descending

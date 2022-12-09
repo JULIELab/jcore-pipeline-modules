@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.1 (23/11/2022)
+
+---
+
 ## v0.5.0 (17/11/2022)
 - [**closed**] Support multi-valued parameters for configurable resources. [#18](https://github.com/JULIELab/jcore-pipeline-modules/issues/18)
 - [**closed**] Add flow controller support. [#17](https://github.com/JULIELab/jcore-pipeline-modules/issues/17)

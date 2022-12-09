@@ -55,8 +55,12 @@ public class UpdateAllArtifactsDialog implements IMenuDialog {
                 }
                 try {
                     String newestVersion = AetherUtilities.getNewestVersion(description.getMetaDescription().getMavenArtifactCoordinates());
-                    description.getMetaDescription().getMavenArtifactCoordinates().setVersion(newestVersion);
-                    textIO.getTextTerminal().print("Set artifact version of component " + description.getName() + " to " + newestVersion + System.getProperty("line.separator"));
+                    if (newestVersion != null && ! newestVersion.isBlank()) {
+                        description.getMetaDescription().getMavenArtifactCoordinates().setVersion(newestVersion);
+                        textIO.getTextTerminal().print("Set artifact version of component " + description.getName() + " to " + newestVersion + System.getProperty("line.separator"));
+                    } else {
+                        textIO.getTextTerminal().print("Could not obtain any version for component " + description.getName() + ", retaining current version." + System.getProperty("line.separator"));
+                    }
                 } catch (MavenException e) {
                     log.error("Could not set the new version to component {}", description.getName(), e);
                 }
