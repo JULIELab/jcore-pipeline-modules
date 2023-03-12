@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.5.3 (12/03/2023)
+- [**bug**] Integrate flow controllers in version dialogs. [#24](https://github.com/JULIELab/jcore-pipeline-modules/issues/24)
+
+---
+
 ## v0.5.2 (09/12/2022)
 - [**bug**] Fix version updates to "null" [#23](https://github.com/JULIELab/jcore-pipeline-modules/issues/23)
 
