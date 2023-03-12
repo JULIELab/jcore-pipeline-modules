@@ -34,6 +34,12 @@ public class UpdateAllArtifactsDialog implements IMenuDialog {
         if (pipeline.getCcDelegates() != null && !pipeline.getCcDelegates().isEmpty())
             itemList.addAll(pipeline.getCcDelegates());
 
+        if (pipeline.getAeFlowController() != null)
+            itemList.add(pipeline.getAeFlowController());
+
+        if (pipeline.getCcFlowController() != null)
+            itemList.add(pipeline.getCcFlowController());
+
         if (itemList.isEmpty())
             textIO.getTextTerminal().executeWithPropertiesPrefix(TerminalPrefixes.WARN, t -> t.print("No components selected yet."));
 

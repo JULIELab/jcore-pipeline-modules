@@ -1208,6 +1208,10 @@ public class JCoReUIMAPipeline {
             artifactList.add(aeDelegates.stream().map(artifactExtractor));
         if (ccDelegates != null)
             artifactList.add(ccDelegates.stream().map(artifactExtractor));
+        if (aeFlowController != null)
+            artifactList.add(Stream.of(artifactExtractor.apply(aeFlowController)));
+        if (ccFlowController != null)
+            artifactList.add(Stream.of(artifactExtractor.apply(ccFlowController)));
         // We filter for null objects because PEAR components don't have a Maven artifact
         return artifactList.stream().flatMap(Function.identity()).filter(Objects::nonNull).filter(a -> Objects.nonNull(a.getArtifactId()));
     }
